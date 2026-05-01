@@ -8,7 +8,7 @@ async function main() {
     update: {},
     create: {
       id: 'default-installation',
-      isInstalled: false
+      installed: false
     }
   });
 
