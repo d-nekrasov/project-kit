@@ -9,6 +9,8 @@ import { CurrentUser as CurrentUserType } from './types/current-user.type';
 import { CurrentOrganization } from '../organization-context/decorators/current-organization.decorator';
 import { OrganizationGuard } from '../organization-context/guards/organization.guard';
 import { CurrentOrganization as CurrentOrganizationType } from '../organization-context/types/current-organization.type';
+import { Permissions } from '../permissions/decorators/permissions.decorator';
+import { PermissionsGuard } from '../permissions/guards/permissions.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -33,5 +35,13 @@ export class AuthController {
     @CurrentOrganization() organization: CurrentOrganizationType
   ): { userId: string; organization: CurrentOrganizationType } {
     return { userId, organization };
+  }
+
+  // TODO: remove or move to diagnostics controller
+  @Get('permissions-check')
+  @UseGuards(JwtAuthGuard, OrganizationGuard, PermissionsGuard)
+  @Permissions('users.read')
+  permissionsCheck(): { allowed: boolean; permission: string } {
+    return { allowed: true, permission: 'users.read' };
   }
 }

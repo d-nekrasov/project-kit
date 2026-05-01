@@ -1,10 +1,9 @@
-import { Global, Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { Module } from '@nestjs/common';
+import { PrismaModule } from '../prisma/prisma.module';
 import { CasbinService } from './casbin.service';
 
-@Global()
 @Module({
-  imports: [ConfigModule],
+  imports: [PrismaModule],
   providers: [CasbinService],
   exports: [CasbinService]
 })

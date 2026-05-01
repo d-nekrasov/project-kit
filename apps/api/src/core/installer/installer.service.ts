@@ -1,6 +1,7 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { OrganizationStatus, RoleType, UserStatus } from '@prisma/client';
 import * as argon2 from 'argon2';
+import { CasbinService } from '../../infrastructure/casbin/casbin.service';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { InstallerStatusDto } from './dto/installer-status.dto';
 import { SetupInstallerDto } from './dto/setup-installer.dto';
@@ -41,7 +42,10 @@ const ORG_ADMIN_PERMISSIONS = [
 
 @Injectable()
 export class InstallerService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly casbinService: CasbinService
+  ) {}
 
   async getStatus(): Promise<InstallerStatusDto> {
     const installation = await this.prisma.installation.findFirst({
@@ -81,7 +85,7 @@ export class InstallerService {
 
     const adminPasswordHash = await argon2.hash(dto.adminPassword);
 
-    return this.prisma.$transaction(async (tx) => {
+    const setupResult = await this.prisma.$transaction(async (tx) => {
       const installationCheck = await tx.installation.findFirst({ where: { installed: true } });
       if (installationCheck) {
         throw new ConflictException('System is already installed');
@@ -238,5 +242,8 @@ export class InstallerService {
         }
       };
     });
+
+    await this.casbinService.reloadPolicies();
+    return setupResult;
   }
 }
