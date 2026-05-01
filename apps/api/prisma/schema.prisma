@@ -38,17 +38,20 @@ enum ModuleStatus {
 model User {
   id            String             @id @default(cuid())
   email         String             @unique
+  passwordHash  String
   name          String?
   status        UserStatus         @default(ACTIVE)
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
   memberships   UserOrganization[]
+  systemRoles   UserSystemRole[]
   auditLogs     AuditLog[]
 }
 
 model Organization {
   id            String             @id @default(cuid())
   name          String
+  slug          String             @unique
   status        OrganizationStatus @default(ACTIVE)
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
@@ -63,9 +66,12 @@ model UserOrganization {
   id             String       @id @default(cuid())
   userId         String
   organizationId String
+  roleId         String
+  status         UserStatus   @default(ACTIVE)
   createdAt      DateTime     @default(now())
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  role           Role         @relation(fields: [roleId], references: [id], onDelete: Restrict)
 
   @@unique([userId, organizationId])
 }
@@ -73,22 +79,39 @@ model UserOrganization {
 model Role {
   id             String           @id @default(cuid())
   name           String
-  code           String           @unique
+  code           String
   type           RoleType
   organizationId String?
   organization   Organization?    @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  userOrganizations UserOrganization[]
+  userSystemRoles UserSystemRole[]
   permissions    RolePermission[]
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
+
+  @@unique([organizationId, code])
 }
 
 model Permission {
   id          String           @id @default(cuid())
   code        String           @unique
+  module      String
   description String?
   roles       RolePermission[]
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
+}
+
+model UserSystemRole {
+  id        String   @id @default(uuid())
+  userId    String
+  roleId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@map("user_system_roles")
 }
 
 model RolePermission {
@@ -160,7 +183,9 @@ model ModuleSetting {
 
 model Installation {
   id            String   @id @default(cuid())
-  isInstalled   Boolean  @default(false)
+  installed     Boolean  @default(false)
+  appName       String?
+  version       String?
   installedAt   DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
