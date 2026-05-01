@@ -60,3 +60,19 @@ curl -X POST http://localhost:3000/api/auth/login \
 curl http://localhost:3000/api/auth/me \
   -H "Authorization: Bearer <accessToken>"
 ```
+
+## Organization Context
+
+Protected organization-aware endpoints require:
+
+`x-organization-id: <organizationId>`
+
+`Authorization: Bearer <accessToken>`
+
+Example:
+
+```bash
+curl http://localhost:3000/api/auth/context \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>"
+```
