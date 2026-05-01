@@ -1,0 +1,177 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+enum OrganizationStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum RoleType {
+  SYSTEM
+  ORGANIZATION
+}
+
+enum SettingScope {
+  GLOBAL
+  ORGANIZATION
+  MODULE
+}
+
+enum ModuleStatus {
+  ENABLED
+  DISABLED
+}
+
+model User {
+  id            String             @id @default(cuid())
+  email         String             @unique
+  name          String?
+  status        UserStatus         @default(ACTIVE)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  memberships   UserOrganization[]
+  auditLogs     AuditLog[]
+}
+
+model Organization {
+  id            String             @id @default(cuid())
+  name          String
+  status        OrganizationStatus @default(ACTIVE)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  users         UserOrganization[]
+  settings      Setting[]
+  moduleSettings ModuleSetting[]
+  documents     Document[]
+  roles         Role[]
+}
+
+model UserOrganization {
+  id             String       @id @default(cuid())
+  userId         String
+  organizationId String
+  createdAt      DateTime     @default(now())
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+}
+
+model Role {
+  id             String           @id @default(cuid())
+  name           String
+  code           String           @unique
+  type           RoleType
+  organizationId String?
+  organization   Organization?    @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  permissions    RolePermission[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+model Permission {
+  id          String           @id @default(cuid())
+  code        String           @unique
+  description String?
+  roles       RolePermission[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model RolePermission {
+  id           String      @id @default(cuid())
+  roleId       String
+  permissionId String
+  role         Role        @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission  @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+}
+
+model Setting {
+  id             String        @id @default(cuid())
+  key            String
+  value          Json
+  scope          SettingScope
+  organizationId String?
+  moduleCode     String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([scope, organizationId, moduleCode])
+}
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  userId         String?
+  organizationId String?
+  action         String
+  payload        Json?
+  createdAt      DateTime @default(now())
+  user           User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model SystemLog {
+  id         String   @id @default(cuid())
+  level      String
+  message    String
+  context    Json?
+  createdAt  DateTime @default(now())
+}
+
+model ModuleRegistry {
+  id          String       @id @default(cuid())
+  code        String       @unique
+  name        String
+  status      ModuleStatus @default(ENABLED)
+  isCore      Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  settings    ModuleSetting[]
+}
+
+model ModuleSetting {
+  id             String         @id @default(cuid())
+  moduleId        String
+  organizationId  String?
+  key             String
+  value           Json
+  module          ModuleRegistry @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  organization    Organization?  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([moduleId, organizationId])
+}
+
+model Installation {
+  id            String   @id @default(cuid())
+  isInstalled   Boolean  @default(false)
+  installedAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Document {
+  id             String       @id @default(cuid())
+  organizationId String
+  title          String
+  content        String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
