@@ -93,3 +93,30 @@ curl http://localhost:3000/api/auth/permissions-check \
   -H "Authorization: Bearer <accessToken>" \
   -H "x-organization-id: <organizationId>"
 ```
+
+## Users
+
+All users endpoints require:
+
+`Authorization: Bearer <accessToken>`
+
+`x-organization-id: <organizationId>`
+
+Examples:
+
+```bash
+curl http://localhost:3000/api/users \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>"
+
+curl -X POST http://localhost:3000/api/users \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "manager@example.com",
+    "name": "Manager",
+    "password": "password123",
+    "roleId": "<roleId>"
+  }'
+```
