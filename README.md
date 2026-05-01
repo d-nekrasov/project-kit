@@ -32,3 +32,31 @@ Example body:
   "adminName": "Admin"
 }
 ```
+
+## Auth
+
+Login:
+
+`POST /api/auth/login`
+
+Me:
+
+`GET /api/auth/me`
+
+Authorization header:
+
+`Authorization: Bearer <accessToken>`
+
+Example:
+
+```bash
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@example.com",
+    "password": "password123"
+  }'
+
+curl http://localhost:3000/api/auth/me \
+  -H "Authorization: Bearer <accessToken>"
+```
