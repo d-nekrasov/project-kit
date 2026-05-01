@@ -6,6 +6,9 @@ import { LoginDto } from './dto/login.dto';
 import { MeResponseDto } from './dto/me-response.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser as CurrentUserType } from './types/current-user.type';
+import { CurrentOrganization } from '../organization-context/decorators/current-organization.decorator';
+import { OrganizationGuard } from '../organization-context/guards/organization.guard';
+import { CurrentOrganization as CurrentOrganizationType } from '../organization-context/types/current-organization.type';
 
 @Controller('auth')
 export class AuthController {
@@ -20,5 +23,15 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   me(@CurrentUser() user: CurrentUserType): MeResponseDto {
     return user;
+  }
+
+  // TODO: remove or move to diagnostics controller.
+  @Get('context')
+  @UseGuards(JwtAuthGuard, OrganizationGuard)
+  context(
+    @CurrentUser('id') userId: string,
+    @CurrentOrganization() organization: CurrentOrganizationType
+  ): { userId: string; organization: CurrentOrganizationType } {
+    return { userId, organization };
   }
 }

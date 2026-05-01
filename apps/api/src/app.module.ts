@@ -14,6 +14,7 @@ import { SystemLogsModule } from './core/system-logs/system-logs.module';
 import { ModuleRegistryModule } from './core/module-registry/module-registry.module';
 import { InstallerModule } from './core/installer/installer.module';
 import { DocumentsModule } from './modules/documents/documents.module';
+import { OrganizationContextModule } from './core/organization-context/organization-context.module';
 
 @Module({
   imports: [
@@ -31,7 +32,8 @@ import { DocumentsModule } from './modules/documents/documents.module';
     SystemLogsModule,
     ModuleRegistryModule,
     InstallerModule,
-    DocumentsModule
+    DocumentsModule,
+    OrganizationContextModule
   ]
 })
 export class AppModule {}
