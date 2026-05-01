@@ -76,3 +76,20 @@ curl http://localhost:3000/api/auth/context \
   -H "Authorization: Bearer <accessToken>" \
   -H "x-organization-id: <organizationId>"
 ```
+
+## Permissions
+
+Example:
+
+```ts
+@UseGuards(JwtAuthGuard, OrganizationGuard, PermissionsGuard)
+@Permissions('users.read')
+```
+
+Permission check endpoint:
+
+```bash
+curl http://localhost:3000/api/auth/permissions-check \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>"
+```
