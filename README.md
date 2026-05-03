@@ -79,6 +79,15 @@ curl http://localhost:3000/api/auth/context \
 
 ## Permissions
 
+Casbin policies are loaded into memory.
+
+Available reload modes:
+- full reload after installer setup;
+- role policy reload after role permissions changes;
+- user organization grouping reload after user role changes.
+
+Full reload remains available as a safe fallback.
+
 Example:
 
 ```ts

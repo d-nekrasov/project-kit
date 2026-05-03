@@ -138,7 +138,7 @@ export class UsersService {
       return createdUser;
     });
 
-    await this.casbinService.reloadPolicies();
+    await this.casbinService.reloadUserOrganizationRole(user.id, organizationId);
     return this.toUserResponse(user);
   }
 
@@ -184,7 +184,7 @@ export class UsersService {
     });
 
     if (dto.roleId) {
-      await this.casbinService.reloadPolicies();
+      await this.casbinService.reloadUserOrganizationRole(userId, organizationId);
     }
 
     return this.toUserResponse(user);
@@ -240,7 +240,6 @@ export class UsersService {
       include: USER_INCLUDE
     });
 
-    await this.casbinService.reloadPolicies();
     return this.toUserResponse(updatedUser);
   }
 
