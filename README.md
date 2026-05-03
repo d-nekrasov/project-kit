@@ -317,3 +317,31 @@ curl "http://localhost:3000/api/audit-logs/<logId>" \
   -H "Authorization: Bearer <accessToken>" \
   -H "x-organization-id: <organizationId>"
 ```
+
+## Module Registry
+
+All module endpoints require:
+
+`Authorization: Bearer <accessToken>`
+
+`x-organization-id: <organizationId>`
+
+Examples:
+
+```bash
+curl "http://localhost:3000/api/modules" \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>"
+
+curl "http://localhost:3000/api/modules/core" \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>"
+
+curl -X PATCH "http://localhost:3000/api/modules/documents/status" \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "DISABLED"
+  }'
+```

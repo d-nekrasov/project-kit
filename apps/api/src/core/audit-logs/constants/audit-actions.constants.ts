@@ -9,7 +9,8 @@ export const AUDIT_ACTIONS = {
   ORGANIZATION_CREATE: 'organization.create',
   ORGANIZATION_UPDATE: 'organization.update',
   ORGANIZATION_STATUS_UPDATE: 'organization.status_update',
-  SETTING_UPDATE: 'setting.update'
+  SETTING_UPDATE: 'setting.update',
+  MODULE_STATUS_UPDATE: 'module.status_update'
 } as const;
 
 export const AUDIT_ENTITY_TYPES = {
@@ -17,5 +18,6 @@ export const AUDIT_ENTITY_TYPES = {
   USER: 'user',
   ROLE: 'role',
   ORGANIZATION: 'organization',
-  SETTING: 'setting'
+  SETTING: 'setting',
+  MODULE: 'module'
 } as const;
