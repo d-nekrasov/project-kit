@@ -2,6 +2,8 @@ import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from
 import { getRequestMetadata } from '../../common/utils/request-metadata.util';
 import { CurrentUser } from '../../core/auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
+import { ModuleKey } from '../../core/module-registry/decorators/module-key.decorator';
+import { ModuleEnabledGuard } from '../../core/module-registry/guards/module-enabled.guard';
 import { CurrentUser as CurrentUserType } from '../../core/auth/types/current-user.type';
 import { CurrentOrganization } from '../../core/organization-context/decorators/current-organization.decorator';
 import { OrganizationGuard } from '../../core/organization-context/guards/organization.guard';
@@ -16,8 +18,8 @@ import { UpdateDocumentDto } from './dto/update-document.dto';
 import { DocumentsService } from './documents.service';
 
 @Controller('documents')
-@UseGuards(JwtAuthGuard, OrganizationGuard, PermissionsGuard)
-// TODO: Add ModuleEnabledGuard after module enabled/disabled runtime policy is implemented.
+@ModuleKey('documents')
+@UseGuards(JwtAuthGuard, OrganizationGuard, ModuleEnabledGuard, PermissionsGuard)
 export class DocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
 
