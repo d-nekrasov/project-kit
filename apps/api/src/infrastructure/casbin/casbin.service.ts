@@ -1,6 +1,9 @@
-import { Injectable, OnModuleInit, ServiceUnavailableException } from '@nestjs/common';
-import { RoleType, UserStatus } from '@prisma/client';
+import { Inject, Injectable, OnModuleInit, ServiceUnavailableException, forwardRef } from '@nestjs/common';
+import { RoleType, SystemLogLevel, UserStatus } from '@prisma/client';
 import { Enforcer, newEnforcer } from 'casbin';
+import { SYSTEM_LOG_EVENTS } from '../../core/system-logs/constants/system-log-events.constants';
+import { SYSTEM_LOG_SOURCES } from '../../core/system-logs/constants/system-log-sources.constants';
+import { SystemLogsService } from '../../core/system-logs/system-logs.service';
 import { parsePermissionCode } from '../../core/permissions/utils/parse-permission-code';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
@@ -16,7 +19,9 @@ export class CasbinService implements OnModuleInit {
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly prisma: PrismaService
+    private readonly prisma: PrismaService,
+    @Inject(forwardRef(() => SystemLogsService))
+    private readonly systemLogsService: SystemLogsService
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -33,13 +38,14 @@ export class CasbinService implements OnModuleInit {
   }
 
   async reloadAllPolicies(): Promise<void> {
-    await this.enqueuePolicyUpdate(async () => {
-      const enforcer = await this.ensureEnforcer();
-      this.isReady = false;
-      await enforcer.clearPolicy();
-      this.rolePolicyKeys.clear();
-      this.userOrganizationGroupingKeys.clear();
-      this.userSystemGroupingKeys.clear();
+    try {
+      await this.enqueuePolicyUpdate(async () => {
+        const enforcer = await this.ensureEnforcer();
+        this.isReady = false;
+        await enforcer.clearPolicy();
+        this.rolePolicyKeys.clear();
+        this.userOrganizationGroupingKeys.clear();
+        this.userSystemGroupingKeys.clear();
 
       const roles = await this.prisma.role.findMany({
         include: {
@@ -98,14 +104,25 @@ export class CasbinService implements OnModuleInit {
         );
       }
 
-      this.isReady = true;
-    });
+        this.isReady = true;
+      });
+    } catch (error) {
+      await this.systemLogsService.write({
+        level: SystemLogLevel.ERROR,
+        source: SYSTEM_LOG_SOURCES.CASBIN,
+        message: 'Failed to reload Casbin policies',
+        context: { event: SYSTEM_LOG_EVENTS.CASBIN_RELOAD_FAILED, method: 'reloadAllPolicies' },
+        errorStack: error instanceof Error ? error.stack ?? error.message : String(error)
+      });
+      throw error;
+    }
   }
 
   async reloadRolePolicies(roleId: string): Promise<void> {
-    await this.enqueuePolicyUpdate(async () => {
-      await this.ensureEnforcer();
-      await this.removeTrackedRolePolicies(roleId);
+    try {
+      await this.enqueuePolicyUpdate(async () => {
+        await this.ensureEnforcer();
+        await this.removeTrackedRolePolicies(roleId);
 
       const role = await this.prisma.role.findUnique({
         where: { id: roleId },
@@ -127,16 +144,27 @@ export class CasbinService implements OnModuleInit {
         return;
       }
 
-      for (const rolePermission of role.permissions) {
-        const { resource, action } = parsePermissionCode(rolePermission.permission.code);
-        await this.addPolicyTracked(role.id, role.code, domain, resource, action);
-      }
-    });
+        for (const rolePermission of role.permissions) {
+          const { resource, action } = parsePermissionCode(rolePermission.permission.code);
+          await this.addPolicyTracked(role.id, role.code, domain, resource, action);
+        }
+      });
+    } catch (error) {
+      await this.systemLogsService.write({
+        level: SystemLogLevel.ERROR,
+        source: SYSTEM_LOG_SOURCES.CASBIN,
+        message: 'Failed to reload Casbin role policies',
+        context: { event: SYSTEM_LOG_EVENTS.CASBIN_RELOAD_FAILED, method: 'reloadRolePolicies', roleId },
+        errorStack: error instanceof Error ? error.stack ?? error.message : String(error)
+      });
+      throw error;
+    }
   }
 
   async reloadUserOrganizationRole(userId: string, organizationId: string): Promise<void> {
-    await this.enqueuePolicyUpdate(async () => {
-      await this.ensureEnforcer();
+    try {
+      await this.enqueuePolicyUpdate(async () => {
+        await this.ensureEnforcer();
 
       const cacheKey = this.makeUserOrganizationCacheKey(userId, organizationId);
       await this.removeTrackedGrouping(cacheKey, 'organization');
@@ -159,34 +187,55 @@ export class CasbinService implements OnModuleInit {
         return;
       }
 
-      await this.addGroupingTracked(
-        cacheKey,
-        userId,
-        membership.role.code,
-        organizationId,
-        'organization'
-      );
-    });
+        await this.addGroupingTracked(
+          cacheKey,
+          userId,
+          membership.role.code,
+          organizationId,
+          'organization'
+        );
+      });
+    } catch (error) {
+      await this.systemLogsService.write({
+        level: SystemLogLevel.ERROR,
+        source: SYSTEM_LOG_SOURCES.CASBIN,
+        message: 'Failed to reload user organization role in Casbin',
+        context: { event: SYSTEM_LOG_EVENTS.CASBIN_RELOAD_FAILED, method: 'reloadUserOrganizationRole', userId, organizationId },
+        errorStack: error instanceof Error ? error.stack ?? error.message : String(error)
+      });
+      throw error;
+    }
   }
 
   async reloadUserSystemRoles(userId: string): Promise<void> {
-    await this.enqueuePolicyUpdate(async () => {
-      await this.ensureEnforcer();
-      await this.removeTrackedGrouping(userId, 'system');
+    try {
+      await this.enqueuePolicyUpdate(async () => {
+        await this.ensureEnforcer();
+        await this.removeTrackedGrouping(userId, 'system');
 
       const systemRoles = await this.prisma.userSystemRole.findMany({
         where: { userId },
         include: { role: true }
       });
 
-      for (const systemRole of systemRoles) {
-        if (systemRole.role.type !== RoleType.SYSTEM) {
-          continue;
-        }
+        for (const systemRole of systemRoles) {
+          if (systemRole.role.type !== RoleType.SYSTEM) {
+            continue;
+          }
 
-        await this.addGroupingTracked(userId, userId, systemRole.role.code, 'system', 'system');
-      }
-    });
+          await this.addGroupingTracked(userId, userId, systemRole.role.code, 'system', 'system');
+        }
+      });
+    } catch (error) {
+      await this.systemLogsService.write({
+        level: SystemLogLevel.ERROR,
+        source: SYSTEM_LOG_SOURCES.CASBIN,
+        message: 'Failed to reload user system roles in Casbin',
+        context: { event: SYSTEM_LOG_EVENTS.CASBIN_RELOAD_FAILED, method: 'reloadUserSystemRoles', userId },
+        errorStack: error instanceof Error ? error.stack ?? error.message : String(error)
+      });
+      throw error;
+    }
   }
 
   async enforce(
@@ -195,8 +244,19 @@ export class CasbinService implements OnModuleInit {
     resource: string,
     action: string
   ): Promise<boolean> {
-    const enforcer = await this.ensureReady();
-    return enforcer.enforce(userId, organizationId, resource, action);
+    try {
+      const enforcer = await this.ensureReady();
+      return enforcer.enforce(userId, organizationId, resource, action);
+    } catch (error) {
+      await this.systemLogsService.write({
+        level: SystemLogLevel.ERROR,
+        source: SYSTEM_LOG_SOURCES.CASBIN,
+        message: 'Casbin enforce failed',
+        context: { event: SYSTEM_LOG_EVENTS.CASBIN_ENFORCE_FAILED, userId, organizationId, resource, action },
+        errorStack: error instanceof Error ? error.stack ?? error.message : String(error)
+      });
+      throw error;
+    }
   }
 
   getEnforcer(): Enforcer {

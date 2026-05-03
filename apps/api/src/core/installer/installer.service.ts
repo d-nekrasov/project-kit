@@ -1,8 +1,11 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import { OrganizationStatus, RoleType, UserStatus } from '@prisma/client';
+import { OrganizationStatus, RoleType, SystemLogLevel, UserStatus } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { CasbinService } from '../../infrastructure/casbin/casbin.service';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
+import { SYSTEM_LOG_EVENTS } from '../system-logs/constants/system-log-events.constants';
+import { SYSTEM_LOG_SOURCES } from '../system-logs/constants/system-log-sources.constants';
+import { SystemLogsService } from '../system-logs/system-logs.service';
 import { InstallerStatusDto } from './dto/installer-status.dto';
 import { SetupInstallerDto } from './dto/setup-installer.dto';
 
@@ -44,7 +47,8 @@ const ORG_ADMIN_PERMISSIONS = [
 export class InstallerService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly casbinService: CasbinService
+    private readonly casbinService: CasbinService,
+    private readonly systemLogsService: SystemLogsService
   ) {}
 
   async getStatus(): Promise<InstallerStatusDto> {
@@ -85,11 +89,12 @@ export class InstallerService {
 
     const adminPasswordHash = await argon2.hash(dto.adminPassword);
 
-    const setupResult = await this.prisma.$transaction(async (tx) => {
-      const installationCheck = await tx.installation.findFirst({ where: { installed: true } });
-      if (installationCheck) {
-        throw new ConflictException('System is already installed');
-      }
+    try {
+      const setupResult = await this.prisma.$transaction(async (tx) => {
+        const installationCheck = await tx.installation.findFirst({ where: { installed: true } });
+        if (installationCheck) {
+          throw new ConflictException('System is already installed');
+        }
 
       const emailCheck = await tx.user.findUnique({ where: { email: dto.adminEmail } });
       if (emailCheck) {
@@ -280,22 +285,54 @@ export class InstallerService {
         });
       }
 
-      return {
-        installed: true,
-        organization: {
-          id: organization.id,
-          name: organization.name,
-          slug: organization.slug
-        },
-        admin: {
-          id: admin.id,
-          email: admin.email,
-          name: admin.name
-        }
-      };
-    });
+        return {
+          installed: true,
+          organization: {
+            id: organization.id,
+            name: organization.name,
+            slug: organization.slug
+          },
+          admin: {
+            id: admin.id,
+            email: admin.email,
+            name: admin.name
+          }
+        };
+      });
 
-    await this.casbinService.reloadAllPolicies();
-    return setupResult;
+      try {
+        await this.casbinService.reloadAllPolicies();
+      } catch (error) {
+        await this.systemLogsService.write({
+          level: SystemLogLevel.ERROR,
+          source: SYSTEM_LOG_SOURCES.INSTALLER,
+          message: 'Installer failed to reload policies',
+          context: {
+            event: SYSTEM_LOG_EVENTS.INSTALLER_POLICY_RELOAD_FAILED,
+            appName: dto.appName,
+            organizationSlug: dto.organizationSlug,
+            adminEmail: dto.adminEmail
+          },
+          errorStack: error instanceof Error ? error.stack ?? error.message : String(error)
+        });
+        throw error;
+      }
+
+      return setupResult;
+    } catch (error) {
+      await this.systemLogsService.write({
+        level: SystemLogLevel.ERROR,
+        source: SYSTEM_LOG_SOURCES.INSTALLER,
+        message: 'Installer setup failed',
+        context: {
+          event: SYSTEM_LOG_EVENTS.INSTALLER_SETUP_FAILED,
+          appName: dto.appName,
+          organizationSlug: dto.organizationSlug,
+          adminEmail: dto.adminEmail
+        },
+        errorStack: error instanceof Error ? error.stack ?? error.message : String(error)
+      });
+      throw error;
+    }
   }
 }

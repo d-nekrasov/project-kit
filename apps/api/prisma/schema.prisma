@@ -35,6 +35,14 @@ enum ModuleStatus {
   DISABLED
 }
 
+enum SystemLogLevel {
+  DEBUG
+  INFO
+  WARN
+  ERROR
+  FATAL
+}
+
 model User {
   id            String             @id @default(cuid())
   email         String             @unique
@@ -46,6 +54,7 @@ model User {
   memberships   UserOrganization[]
   systemRoles   UserSystemRole[]
   auditLogs     AuditLog[]
+  systemLogs    SystemLog[]
 }
 
 model Organization {
@@ -61,6 +70,7 @@ model Organization {
   documents     Document[]
   roles         Role[]
   auditLogs     AuditLog[]
+  systemLogs    SystemLog[]
 }
 
 model UserOrganization {
@@ -161,11 +171,23 @@ model AuditLog {
 }
 
 model SystemLog {
-  id         String   @id @default(cuid())
-  level      String
-  message    String
-  context    Json?
-  createdAt  DateTime @default(now())
+  id             String         @id @default(uuid())
+  level          SystemLogLevel
+  source         String
+  message        String
+  context        Json?
+  errorStack     String?
+  userId         String?
+  organizationId String?
+  createdAt      DateTime       @default(now())
+  user           User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  organization   Organization?  @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@index([level])
+  @@index([source])
+  @@index([userId])
+  @@index([organizationId])
+  @@index([createdAt])
 }
 
 model ModuleRegistry {
