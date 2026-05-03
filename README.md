@@ -120,3 +120,37 @@ curl -X POST http://localhost:3000/api/users \
     "roleId": "<roleId>"
   }'
 ```
+
+## Roles
+
+All roles endpoints require:
+
+`Authorization: Bearer <accessToken>`
+
+`x-organization-id: <organizationId>`
+
+Examples:
+
+```bash
+curl http://localhost:3000/api/roles \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>"
+
+curl -X POST http://localhost:3000/api/roles \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "manager",
+    "name": "Manager",
+    "permissions": ["users.read"]
+  }'
+
+curl -X PATCH http://localhost:3000/api/roles/<roleId>/permissions \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "permissions": ["users.read", "users.update"]
+  }'
+```
