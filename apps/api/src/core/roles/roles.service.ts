@@ -151,7 +151,7 @@ export class RolesService {
       return created;
     });
 
-    await this.casbinService.reloadPolicies();
+    await this.casbinService.reloadRolePolicies(role.id);
     return this.toRoleResponse(role);
   }
 
@@ -219,7 +219,7 @@ export class RolesService {
       });
     });
 
-    await this.casbinService.reloadPolicies();
+    await this.casbinService.reloadRolePolicies(role.id);
     return this.toRoleResponse(updated);
   }
 

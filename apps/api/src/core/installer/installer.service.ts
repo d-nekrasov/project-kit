@@ -243,7 +243,7 @@ export class InstallerService {
       };
     });
 
-    await this.casbinService.reloadPolicies();
+    await this.casbinService.reloadAllPolicies();
     return setupResult;
   }
 }
