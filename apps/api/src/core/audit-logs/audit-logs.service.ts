@@ -1,7 +1,10 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, SystemLogLevel } from '@prisma/client';
 import { AppLoggerService } from '../../infrastructure/logger/app-logger.service';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
+import { SYSTEM_LOG_EVENTS } from '../system-logs/constants/system-log-events.constants';
+import { SYSTEM_LOG_SOURCES } from '../system-logs/constants/system-log-sources.constants';
+import { SystemLogsService } from '../system-logs/system-logs.service';
 import { CurrentUser } from '../auth/types/current-user.type';
 import { CurrentOrganization } from '../organization-context/types/current-organization.type';
 import { AuditLogResponseDto } from './dto/audit-log-response.dto';
@@ -17,7 +20,8 @@ const AUDIT_LOG_INCLUDE = {
 export class AuditLogsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly logger: AppLoggerService
+    private readonly logger: AppLoggerService,
+    private readonly systemLogsService: SystemLogsService
   ) {}
 
   async findAll(
@@ -109,6 +113,20 @@ export class AuditLogsService {
     } catch (error) {
       const message = error instanceof Error ? error.stack ?? error.message : String(error);
       this.logger.error('Failed to write audit log', message);
+      await this.systemLogsService.write({
+        level: SystemLogLevel.ERROR,
+        source: SYSTEM_LOG_SOURCES.AUDIT_LOGS,
+        message: 'Failed to write audit log',
+        context: {
+          event: SYSTEM_LOG_EVENTS.AUDIT_WRITE_FAILED,
+          action: dto.action,
+          entityType: dto.entityType,
+          entityId: dto.entityId
+        },
+        errorStack: error instanceof Error ? error.stack ?? error.message : String(error),
+        userId: dto.userId ?? null,
+        organizationId: dto.organizationId ?? null
+      });
     }
   }
 

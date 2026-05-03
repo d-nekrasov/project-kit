@@ -258,6 +258,30 @@ curl -X PUT "http://localhost:3000/api/settings/organization.timezone" \
     "value": "Europe/Amsterdam"
   }'
 
+## System Logs
+
+All system logs endpoints require:
+
+`Authorization: Bearer <accessToken>`
+
+`x-organization-id: <organizationId>`
+
+Examples:
+
+```bash
+curl "http://localhost:3000/api/system-logs" \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>"
+
+curl "http://localhost:3000/api/system-logs?level=ERROR&source=casbin" \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>"
+
+curl "http://localhost:3000/api/system-logs/<logId>" \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>"
+```
+
 curl -X PUT "http://localhost:3000/api/settings/documents.maxFileSize" \
   -H "Authorization: Bearer <accessToken>" \
   -H "x-organization-id: <organizationId>" \
