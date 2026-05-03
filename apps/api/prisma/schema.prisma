@@ -43,6 +43,12 @@ enum SystemLogLevel {
   FATAL
 }
 
+enum DocumentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
 model User {
   id            String             @id @default(cuid())
   email         String             @unique
@@ -55,6 +61,8 @@ model User {
   systemRoles   UserSystemRole[]
   auditLogs     AuditLog[]
   systemLogs    SystemLog[]
+  createdDocuments Document[]      @relation("DocumentCreatedBy")
+  updatedDocuments Document[]      @relation("DocumentUpdatedBy")
 }
 
 model Organization {
@@ -229,11 +237,22 @@ model Installation {
 }
 
 model Document {
-  id             String       @id @default(cuid())
+  id             String         @id @default(cuid())
   organizationId String
   title          String
   content        String?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  status         DocumentStatus @default(DRAFT)
+  createdById    String
+  updatedById    String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy      User           @relation("DocumentCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  updatedBy      User?          @relation("DocumentUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([createdById])
+  @@index([updatedById])
+  @@index([createdAt])
 }

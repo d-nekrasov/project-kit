@@ -258,6 +258,130 @@ curl -X PUT "http://localhost:3000/api/settings/organization.timezone" \
     "value": "Europe/Amsterdam"
   }'
 
+curl -X PUT "http://localhost:3000/api/settings/documents.maxFileSize" \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "scope": "MODULE",
+    "module": "documents",
+    "organizationSpecific": true,
+    "value": 10485760
+  }'
+```
+
+## Module system
+
+Project Kit consists of core platform modules and explicitly connected business modules.
+
+Core modules:
+- auth
+- users
+- organizations
+- roles
+- permissions
+- settings
+- logs
+- module registry
+
+Business modules:
+- documents
+- reports
+- integrations
+- custom client modules
+
+### How modules are connected
+
+Modules are connected explicitly in `AppModule`.
+
+```ts
+@Module({
+  imports: [
+    // Core modules
+    // ...
+    DocumentsModule,
+  ],
+})
+export class AppModule {}
+```
+
+Each module can export a manifest:
+
+```ts
+export const DOCUMENTS_MODULE_MANIFEST = {
+  name: 'documents',
+  title: 'Documents',
+  version: '0.1.0',
+  permissions: [
+    'documents.read',
+    'documents.create',
+    'documents.update',
+    'documents.delete',
+  ],
+  adminMenu: [
+    {
+      label: 'Documents',
+      path: '/documents',
+      permission: 'documents.read',
+    },
+  ],
+};
+```
+
+At startup, the module registers its manifest through `ModuleRegistryService.registerModules(...)`.
+
+The registry:
+- stores module name, title, version and manifest;
+- upserts module permissions;
+- preserves disabled status on restart;
+- does not delete module data when disabled.
+
+## Documents Module
+
+Endpoints:
+- `GET /api/documents`
+- `GET /api/documents/:id`
+- `POST /api/documents`
+- `PATCH /api/documents/:id`
+- `PATCH /api/documents/:id/status`
+
+Required headers:
+- `Authorization: Bearer <accessToken>`
+- `x-organization-id: <organizationId>`
+
+Examples:
+
+```bash
+curl "http://localhost:3000/api/documents" \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>"
+
+curl -X POST "http://localhost:3000/api/documents" \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "First document",
+    "content": "Document content"
+  }'
+
+curl -X PATCH "http://localhost:3000/api/documents/<documentId>" \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Updated document"
+  }'
+
+curl -X PATCH "http://localhost:3000/api/documents/<documentId>/status" \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "PUBLISHED"
+  }'
+```
+
 ## System Logs
 
 All system logs endpoints require:
@@ -280,18 +404,6 @@ curl "http://localhost:3000/api/system-logs?level=ERROR&source=casbin" \
 curl "http://localhost:3000/api/system-logs/<logId>" \
   -H "Authorization: Bearer <accessToken>" \
   -H "x-organization-id: <organizationId>"
-```
-
-curl -X PUT "http://localhost:3000/api/settings/documents.maxFileSize" \
-  -H "Authorization: Bearer <accessToken>" \
-  -H "x-organization-id: <organizationId>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "scope": "MODULE",
-    "module": "documents",
-    "organizationSpecific": true,
-    "value": 10485760
-  }'
 ```
 
 ## Audit Logs
