@@ -228,6 +228,58 @@ export class InstallerService {
         });
       }
 
+      const appNameSetting = await tx.setting.findFirst({
+        where: {
+          key: 'app.name',
+          scope: 'GLOBAL',
+          organizationId: null,
+          moduleCode: null
+        },
+        select: { id: true }
+      });
+      if (appNameSetting) {
+        await tx.setting.update({
+          where: { id: appNameSetting.id },
+          data: { value: dto.appName }
+        });
+      } else {
+        await tx.setting.create({
+          data: {
+            key: 'app.name',
+            scope: 'GLOBAL',
+            organizationId: null,
+            moduleCode: null,
+            value: dto.appName
+          }
+        });
+      }
+
+      const appVersionSetting = await tx.setting.findFirst({
+        where: {
+          key: 'app.version',
+          scope: 'GLOBAL',
+          organizationId: null,
+          moduleCode: null
+        },
+        select: { id: true }
+      });
+      if (appVersionSetting) {
+        await tx.setting.update({
+          where: { id: appVersionSetting.id },
+          data: { value: '0.1.0' }
+        });
+      } else {
+        await tx.setting.create({
+          data: {
+            key: 'app.version',
+            scope: 'GLOBAL',
+            organizationId: null,
+            moduleCode: null,
+            value: '0.1.0'
+          }
+        });
+      }
+
       return {
         installed: true,
         organization: {
