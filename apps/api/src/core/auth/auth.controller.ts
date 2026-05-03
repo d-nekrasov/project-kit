@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { getRequestMetadata } from '../../common/utils/request-metadata.util';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { AuthResponseDto } from './dto/auth-response.dto';
@@ -17,8 +18,8 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
-  login(@Body() dto: LoginDto): Promise<AuthResponseDto> {
-    return this.authService.login(dto);
+  login(@Body() dto: LoginDto, @Req() req: { headers: Record<string, string | string[] | undefined>; ip?: string }): Promise<AuthResponseDto> {
+    return this.authService.login(dto, getRequestMetadata(req));
   }
 
   @Get('me')

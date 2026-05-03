@@ -269,3 +269,27 @@ curl -X PUT "http://localhost:3000/api/settings/documents.maxFileSize" \
     "value": 10485760
   }'
 ```
+
+## Audit Logs
+
+All audit logs endpoints require:
+
+`Authorization: Bearer <accessToken>`
+
+`x-organization-id: <organizationId>`
+
+Examples:
+
+```bash
+curl "http://localhost:3000/api/audit-logs" \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>"
+
+curl "http://localhost:3000/api/audit-logs?action=user.create" \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>"
+
+curl "http://localhost:3000/api/audit-logs/<logId>" \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>"
+```

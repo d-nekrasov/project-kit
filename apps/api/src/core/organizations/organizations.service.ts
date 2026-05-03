@@ -8,7 +8,10 @@ import {
 import { OrganizationStatus, Prisma, RoleType } from '@prisma/client';
 import { CasbinService } from '../../infrastructure/casbin/casbin.service';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
+import { RequestMetadata } from '../../common/utils/request-metadata.util';
 import { CurrentUser } from '../auth/types/current-user.type';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
+import { AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } from '../audit-logs/constants/audit-actions.constants';
 import { CurrentOrganization } from '../organization-context/types/current-organization.type';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { OrganizationResponseDto } from './dto/organization-response.dto';
@@ -39,7 +42,8 @@ const ORGANIZATION_INCLUDE = {
 export class OrganizationsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly casbinService: CasbinService
+    private readonly casbinService: CasbinService,
+    private readonly auditLogsService: AuditLogsService
   ) {}
 
   async findAll(
@@ -119,7 +123,11 @@ export class OrganizationsService {
     return this.toOrganizationResponse(organization);
   }
 
-  async create(currentUser: CurrentUser, dto: CreateOrganizationDto): Promise<OrganizationResponseDto> {
+  async create(
+    currentUser: CurrentUser,
+    dto: CreateOrganizationDto,
+    requestMetadata?: RequestMetadata
+  ): Promise<OrganizationResponseDto> {
     if (!this.isSuperAdmin(currentUser)) {
       throw new ForbiddenException('Only super admin can create organizations');
     }
@@ -185,6 +193,16 @@ export class OrganizationsService {
       where: { id: created.organization.id },
       include: ORGANIZATION_INCLUDE
     });
+    await this.auditLogsService.write({
+      action: AUDIT_ACTIONS.ORGANIZATION_CREATE,
+      entityType: AUDIT_ENTITY_TYPES.ORGANIZATION,
+      entityId: fullOrganization.id,
+      userId: currentUser.id,
+      organizationId: fullOrganization.id,
+      metadata: { name: fullOrganization.name, slug: fullOrganization.slug },
+      ip: requestMetadata?.ip,
+      userAgent: requestMetadata?.userAgent
+    });
     return this.toOrganizationResponse(fullOrganization);
   }
 
@@ -192,7 +210,8 @@ export class OrganizationsService {
     currentUser: CurrentUser,
     currentOrganization: CurrentOrganization,
     organizationId: string,
-    dto: UpdateOrganizationDto
+    dto: UpdateOrganizationDto,
+    requestMetadata?: RequestMetadata
   ): Promise<OrganizationResponseDto> {
     if (!this.isSuperAdmin(currentUser) && organizationId !== currentOrganization.id) {
       throw new NotFoundException('Organization not found');
@@ -230,6 +249,17 @@ export class OrganizationsService {
       data,
       include: ORGANIZATION_INCLUDE
     });
+    const changedFields = [dto.name !== undefined ? 'name' : null, dto.slug !== undefined ? 'slug' : null].filter(Boolean);
+    await this.auditLogsService.write({
+      action: AUDIT_ACTIONS.ORGANIZATION_UPDATE,
+      entityType: AUDIT_ENTITY_TYPES.ORGANIZATION,
+      entityId: updated.id,
+      userId: currentUser.id,
+      organizationId: updated.id,
+      metadata: { changedFields },
+      ip: requestMetadata?.ip,
+      userAgent: requestMetadata?.userAgent
+    });
 
     return this.toOrganizationResponse(updated);
   }
@@ -237,7 +267,8 @@ export class OrganizationsService {
   async updateStatus(
     currentUser: CurrentUser,
     organizationId: string,
-    status: OrganizationStatus
+    status: OrganizationStatus,
+    requestMetadata?: RequestMetadata
   ): Promise<OrganizationResponseDto> {
     if (!this.isSuperAdmin(currentUser)) {
       throw new ForbiddenException('Only super admin can change organization status');
@@ -267,6 +298,16 @@ export class OrganizationsService {
       where: { id: organizationId },
       data: { status },
       include: ORGANIZATION_INCLUDE
+    });
+    await this.auditLogsService.write({
+      action: AUDIT_ACTIONS.ORGANIZATION_STATUS_UPDATE,
+      entityType: AUDIT_ENTITY_TYPES.ORGANIZATION,
+      entityId: updated.id,
+      userId: currentUser.id,
+      organizationId: updated.id,
+      metadata: { status },
+      ip: requestMetadata?.ip,
+      userAgent: requestMetadata?.userAgent
     });
     return this.toOrganizationResponse(updated);
   }

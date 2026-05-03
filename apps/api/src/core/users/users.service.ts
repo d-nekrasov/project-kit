@@ -9,6 +9,9 @@ import { Prisma, RoleType, UserStatus } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { CasbinService } from '../../infrastructure/casbin/casbin.service';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
+import { RequestMetadata } from '../../common/utils/request-metadata.util';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
+import { AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } from '../audit-logs/constants/audit-actions.constants';
 import { CurrentUser } from '../auth/types/current-user.type';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -33,7 +36,8 @@ const USER_INCLUDE = {
 export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly casbinService: CasbinService
+    private readonly casbinService: CasbinService,
+    private readonly auditLogsService: AuditLogsService
   ) {}
 
   async findAll(
@@ -104,7 +108,12 @@ export class UsersService {
     return this.toUserResponse(user);
   }
 
-  async create(organizationId: string, dto: CreateUserDto): Promise<UserResponseDto> {
+  async create(
+    organizationId: string,
+    currentUser: CurrentUser,
+    dto: CreateUserDto,
+    requestMetadata?: RequestMetadata
+  ): Promise<UserResponseDto> {
     const email = dto.email.trim().toLowerCase();
 
     const [existingUser, role] = await Promise.all([
@@ -139,10 +148,26 @@ export class UsersService {
     });
 
     await this.casbinService.reloadUserOrganizationRole(user.id, organizationId);
+    await this.auditLogsService.write({
+      action: AUDIT_ACTIONS.USER_CREATE,
+      entityType: AUDIT_ENTITY_TYPES.USER,
+      entityId: user.id,
+      userId: currentUser.id,
+      organizationId,
+      metadata: { email, roleId: dto.roleId },
+      ip: requestMetadata?.ip,
+      userAgent: requestMetadata?.userAgent
+    });
     return this.toUserResponse(user);
   }
 
-  async update(userId: string, organizationId: string, dto: UpdateUserDto): Promise<UserResponseDto> {
+  async update(
+    userId: string,
+    currentUser: CurrentUser,
+    organizationId: string,
+    dto: UpdateUserDto,
+    requestMetadata?: RequestMetadata
+  ): Promise<UserResponseDto> {
     const membership = await this.prisma.userOrganization.findUnique({
       where: {
         userId_organizationId: {
@@ -186,6 +211,17 @@ export class UsersService {
     if (dto.roleId) {
       await this.casbinService.reloadUserOrganizationRole(userId, organizationId);
     }
+    const changedFields = [dto.name !== undefined ? 'name' : null, dto.roleId ? 'roleId' : null].filter(Boolean);
+    await this.auditLogsService.write({
+      action: AUDIT_ACTIONS.USER_UPDATE,
+      entityType: AUDIT_ENTITY_TYPES.USER,
+      entityId: user.id,
+      userId: currentUser.id,
+      organizationId,
+      metadata: { changedFields },
+      ip: requestMetadata?.ip,
+      userAgent: requestMetadata?.userAgent
+    });
 
     return this.toUserResponse(user);
   }
@@ -194,7 +230,8 @@ export class UsersService {
     userId: string,
     currentUser: CurrentUser,
     organizationId: string,
-    status: UserStatus
+    status: UserStatus,
+    requestMetadata?: RequestMetadata
   ): Promise<UserResponseDto> {
     const membership = await this.prisma.userOrganization.findUnique({
       where: {
@@ -238,6 +275,16 @@ export class UsersService {
       where: { id: userId },
       data: { status },
       include: USER_INCLUDE
+    });
+    await this.auditLogsService.write({
+      action: AUDIT_ACTIONS.USER_STATUS_UPDATE,
+      entityType: AUDIT_ENTITY_TYPES.USER,
+      entityId: updatedUser.id,
+      userId: currentUser.id,
+      organizationId,
+      metadata: { status },
+      ip: requestMetadata?.ip,
+      userAgent: requestMetadata?.userAgent
     });
 
     return this.toUserResponse(updatedUser);

@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Put, Query, Req, UseGuards } from '@nestjs/common';
+import { getRequestMetadata } from '../../common/utils/request-metadata.util';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CurrentUser as CurrentUserType } from '../auth/types/current-user.type';
@@ -47,8 +48,9 @@ export class SettingsController {
     @Param('key') key: string,
     @Body() dto: UpsertSettingDto,
     @CurrentUser() user: CurrentUserType,
-    @CurrentOrganization() organization: CurrentOrganizationType
+    @CurrentOrganization() organization: CurrentOrganizationType,
+    @Req() req: { headers: Record<string, string | string[] | undefined>; ip?: string }
   ): Promise<SettingResponseDto> {
-    return this.settingsService.upsert(key, dto, user, organization);
+    return this.settingsService.upsert(key, dto, user, organization, getRequestMetadata(req));
   }
 }

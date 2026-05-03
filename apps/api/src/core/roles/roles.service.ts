@@ -8,6 +8,10 @@ import {
 import { Prisma, RoleType } from '@prisma/client';
 import { CasbinService } from '../../infrastructure/casbin/casbin.service';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
+import { RequestMetadata } from '../../common/utils/request-metadata.util';
+import { CurrentUser } from '../auth/types/current-user.type';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
+import { AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } from '../audit-logs/constants/audit-actions.constants';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { RoleResponseDto } from './dto/role-response.dto';
 import { RolesListQueryDto } from './dto/roles-list-query.dto';
@@ -36,7 +40,8 @@ const PROTECTED_ORG_EDIT_CODES = new Set(['organization_admin']);
 export class RolesService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly casbinService: CasbinService
+    private readonly casbinService: CasbinService,
+    private readonly auditLogsService: AuditLogsService
   ) {}
 
   async findAll(
@@ -104,7 +109,12 @@ export class RolesService {
     return this.toRoleResponse(role);
   }
 
-  async create(organizationId: string, dto: CreateRoleDto): Promise<RoleResponseDto> {
+  async create(
+    organizationId: string,
+    currentUser: CurrentUser,
+    dto: CreateRoleDto,
+    requestMetadata?: RequestMetadata
+  ): Promise<RoleResponseDto> {
     const code = dto.code.trim().toLowerCase();
 
     if (RESERVED_SYSTEM_CODES.has(code)) {
@@ -152,10 +162,26 @@ export class RolesService {
     });
 
     await this.casbinService.reloadRolePolicies(role.id);
+    await this.auditLogsService.write({
+      action: AUDIT_ACTIONS.ROLE_CREATE,
+      entityType: AUDIT_ENTITY_TYPES.ROLE,
+      entityId: role.id,
+      userId: currentUser.id,
+      organizationId,
+      metadata: { code: role.code, name: role.name, permissions: permissionCodes },
+      ip: requestMetadata?.ip,
+      userAgent: requestMetadata?.userAgent
+    });
     return this.toRoleResponse(role);
   }
 
-  async update(roleId: string, organizationId: string, dto: UpdateRoleDto): Promise<RoleResponseDto> {
+  async update(
+    roleId: string,
+    currentUser: CurrentUser,
+    organizationId: string,
+    dto: UpdateRoleDto,
+    requestMetadata?: RequestMetadata
+  ): Promise<RoleResponseDto> {
     const role = await this.prisma.role.findUnique({ where: { id: roleId } });
 
     if (!role) {
@@ -178,14 +204,27 @@ export class RolesService {
       },
       include: ROLE_INCLUDE
     });
+    const changedFields = [dto.name !== undefined ? 'name' : null].filter(Boolean);
+    await this.auditLogsService.write({
+      action: AUDIT_ACTIONS.ROLE_UPDATE,
+      entityType: AUDIT_ENTITY_TYPES.ROLE,
+      entityId: updated.id,
+      userId: currentUser.id,
+      organizationId,
+      metadata: { changedFields },
+      ip: requestMetadata?.ip,
+      userAgent: requestMetadata?.userAgent
+    });
 
     return this.toRoleResponse(updated);
   }
 
   async updatePermissions(
     roleId: string,
+    currentUser: CurrentUser,
     organizationId: string,
-    dto: UpdateRolePermissionsDto
+    dto: UpdateRolePermissionsDto,
+    requestMetadata?: RequestMetadata
   ): Promise<RoleResponseDto> {
     const role = await this.prisma.role.findUnique({ where: { id: roleId } });
 
@@ -220,6 +259,16 @@ export class RolesService {
     });
 
     await this.casbinService.reloadRolePolicies(role.id);
+    await this.auditLogsService.write({
+      action: AUDIT_ACTIONS.ROLE_PERMISSIONS_UPDATE,
+      entityType: AUDIT_ENTITY_TYPES.ROLE,
+      entityId: updated.id,
+      userId: currentUser.id,
+      organizationId,
+      metadata: { permissions: dto.permissions },
+      ip: requestMetadata?.ip,
+      userAgent: requestMetadata?.userAgent
+    });
     return this.toRoleResponse(updated);
   }
 
