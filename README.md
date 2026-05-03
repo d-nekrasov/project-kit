@@ -220,3 +220,52 @@ curl -X PATCH http://localhost:3000/api/organizations/<organizationId> \
     "name": "Updated Branch"
   }'
 ```
+
+## Settings
+
+All settings endpoints require:
+
+`Authorization: Bearer <accessToken>`
+
+`x-organization-id: <organizationId>`
+
+Examples:
+
+```bash
+curl "http://localhost:3000/api/settings" \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>"
+
+curl "http://localhost:3000/api/settings/app.name?scope=GLOBAL" \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>"
+
+curl -X PUT "http://localhost:3000/api/settings/app.name" \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "scope": "GLOBAL",
+    "value": "Project Kit"
+  }'
+
+curl -X PUT "http://localhost:3000/api/settings/organization.timezone" \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "scope": "ORGANIZATION",
+    "value": "Europe/Amsterdam"
+  }'
+
+curl -X PUT "http://localhost:3000/api/settings/documents.maxFileSize" \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "scope": "MODULE",
+    "module": "documents",
+    "organizationSpecific": true,
+    "value": 10485760
+  }'
+```
