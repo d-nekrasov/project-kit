@@ -1,4 +1,11 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+  OnModuleInit,
+  ServiceUnavailableException
+} from '@nestjs/common';
 import { ModuleRegistry, ModuleStatus, Prisma, SystemLogLevel } from '@prisma/client';
 import { RequestMetadata } from '../../common/utils/request-metadata.util';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
@@ -15,6 +22,9 @@ import { AppModuleManifest } from './types/module-manifest.type';
 
 @Injectable()
 export class ModuleRegistryService implements OnModuleInit {
+  private readonly moduleStatusCache = new Map<string, ModuleStatus>();
+  private moduleStatusCacheLoaded = false;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditLogsService: AuditLogsService,
@@ -23,6 +33,52 @@ export class ModuleRegistryService implements OnModuleInit {
 
   async onModuleInit(): Promise<void> {
     await this.registerModules(CORE_MODULE_MANIFESTS);
+  }
+
+  async isModuleEnabled(name: string): Promise<boolean> {
+    const status = await this.getModuleStatus(name);
+    return status === ModuleStatus.ENABLED;
+  }
+
+  async getModuleStatus(name: string): Promise<ModuleStatus | null> {
+    if (name === 'core') {
+      return ModuleStatus.ENABLED;
+    }
+    try {
+      return await this.getCachedModuleStatus(name);
+    } catch (error) {
+      await this.systemLogsService.write({
+        level: SystemLogLevel.ERROR,
+        source: SYSTEM_LOG_SOURCES.MODULE_REGISTRY,
+        message: 'Failed to check module status',
+        context: { moduleKey: name },
+        errorStack: error instanceof Error ? error.stack ?? error.message : String(error)
+      });
+      throw new ServiceUnavailableException('Module is not available');
+    }
+  }
+
+  async loadModuleStatusCache(): Promise<void> {
+    if (this.moduleStatusCacheLoaded) {
+      return;
+    }
+    await this.refreshModuleStatusCache();
+  }
+
+  async refreshModuleStatusCache(): Promise<void> {
+    const modules = await this.prisma.moduleRegistry.findMany({
+      select: { name: true, status: true }
+    });
+    this.moduleStatusCache.clear();
+    for (const module of modules) {
+      this.moduleStatusCache.set(module.name, module.status);
+    }
+    this.moduleStatusCacheLoaded = true;
+  }
+
+  async getCachedModuleStatus(name: string): Promise<ModuleStatus | null> {
+    await this.loadModuleStatusCache();
+    return this.moduleStatusCache.get(name) ?? null;
   }
 
   async findAll(query: ModuleRegistryListQueryDto): Promise<{
@@ -97,6 +153,8 @@ export class ModuleRegistryService implements OnModuleInit {
       where: { id: module.id },
       data: { status }
     });
+    this.moduleStatusCache.set(updated.name, updated.status);
+    this.moduleStatusCacheLoaded = true;
     await this.auditLogsService.write({
       userId: currentUser.id,
       organizationId: currentOrganization.id,
@@ -163,6 +221,7 @@ export class ModuleRegistryService implements OnModuleInit {
           });
         }
       }
+      await this.refreshModuleStatusCache();
       // TODO: consider casbin reload if role-permission assignments are auto-managed here.
     } catch (error) {
       await this.systemLogsService.write({

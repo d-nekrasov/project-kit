@@ -336,6 +336,30 @@ The registry:
 - preserves disabled status on restart;
 - does not delete module data when disabled.
 
+### Runtime module guard
+
+Business module endpoints can be protected with `ModuleEnabledGuard`.
+
+```ts
+@Controller('documents')
+@ModuleKey('documents')
+@UseGuards(
+  JwtAuthGuard,
+  OrganizationGuard,
+  ModuleEnabledGuard,
+  PermissionsGuard,
+)
+export class DocumentsController {}
+```
+
+If the module is disabled in ModuleRegistry, its endpoints return `403 Forbidden`.
+
+Disabling a module:
+- does not delete module data;
+- does not delete module permissions;
+- does not remove settings;
+- only blocks runtime access and allows UI to hide menu items.
+
 ## Documents Module
 
 Endpoints:
@@ -344,6 +368,9 @@ Endpoints:
 - `POST /api/documents`
 - `PATCH /api/documents/:id`
 - `PATCH /api/documents/:id/status`
+
+Documents endpoints are protected by `ModuleEnabledGuard`.
+If module `documents` is disabled, documents API returns `403`.
 
 Required headers:
 - `Authorization: Bearer <accessToken>`
