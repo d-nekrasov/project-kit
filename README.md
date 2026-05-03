@@ -187,3 +187,36 @@ curl -X PATCH http://localhost:3000/api/roles/<roleId>/permissions \
     "permissions": ["users.read", "users.update"]
   }'
 ```
+
+## Organizations
+
+All organization endpoints require:
+
+`Authorization: Bearer <accessToken>`
+
+`x-organization-id: <organizationId>`
+
+Examples:
+
+```bash
+curl http://localhost:3000/api/organizations \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>"
+
+curl -X POST http://localhost:3000/api/organizations \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "New Branch",
+    "slug": "new-branch"
+  }'
+
+curl -X PATCH http://localhost:3000/api/organizations/<organizationId> \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Updated Branch"
+  }'
+```
