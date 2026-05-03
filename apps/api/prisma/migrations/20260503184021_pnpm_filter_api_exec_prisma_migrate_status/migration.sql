@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE "AuditLog" ALTER COLUMN "entityType" DROP DEFAULT;
+
+-- AlterTable
+ALTER TABLE "SystemLog" ALTER COLUMN "id" DROP DEFAULT,
+ALTER COLUMN "source" DROP DEFAULT;
