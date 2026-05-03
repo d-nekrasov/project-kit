@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { getRequestMetadata } from '../../common/utils/request-metadata.util';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser as CurrentUserType } from '../auth/types/current-user.type';
@@ -45,21 +46,25 @@ export class UsersController {
   @UseGuards(JwtAuthGuard, OrganizationGuard, PermissionsGuard)
   @Permissions('users.create')
   create(
+    @CurrentUser() currentUser: CurrentUserType,
     @CurrentOrganization() organization: CurrentOrganizationType,
-    @Body() dto: CreateUserDto
+    @Body() dto: CreateUserDto,
+    @Req() req: { headers: Record<string, string | string[] | undefined>; ip?: string }
   ): Promise<UserResponseDto> {
-    return this.usersService.create(organization.id, dto);
+    return this.usersService.create(organization.id, currentUser, dto, getRequestMetadata(req));
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, OrganizationGuard, PermissionsGuard)
   @Permissions('users.update')
   update(
+    @CurrentUser() currentUser: CurrentUserType,
     @CurrentOrganization() organization: CurrentOrganizationType,
     @Param('id') userId: string,
-    @Body() dto: UpdateUserDto
+    @Body() dto: UpdateUserDto,
+    @Req() req: { headers: Record<string, string | string[] | undefined>; ip?: string }
   ): Promise<UserResponseDto> {
-    return this.usersService.update(userId, organization.id, dto);
+    return this.usersService.update(userId, currentUser, organization.id, dto, getRequestMetadata(req));
   }
 
   @Patch(':id/status')
@@ -69,8 +74,9 @@ export class UsersController {
     @CurrentUser() currentUser: CurrentUserType,
     @CurrentOrganization() organization: CurrentOrganizationType,
     @Param('id') userId: string,
-    @Body() dto: UpdateUserStatusDto
+    @Body() dto: UpdateUserStatusDto,
+    @Req() req: { headers: Record<string, string | string[] | undefined>; ip?: string }
   ): Promise<UserResponseDto> {
-    return this.usersService.updateStatus(userId, currentUser, organization.id, dto.status);
+    return this.usersService.updateStatus(userId, currentUser, organization.id, dto.status, getRequestMetadata(req));
   }
 }

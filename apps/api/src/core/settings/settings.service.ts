@@ -9,6 +9,9 @@ import { Prisma, SettingScope } from '@prisma/client';
 import { CurrentUser } from '../auth/types/current-user.type';
 import { CurrentOrganization } from '../organization-context/types/current-organization.type';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
+import { RequestMetadata } from '../../common/utils/request-metadata.util';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
+import { AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } from '../audit-logs/constants/audit-actions.constants';
 import { GetSettingQueryDto } from './dto/get-setting-query.dto';
 import { SettingResponseDto } from './dto/setting-response.dto';
 import { SettingsListQueryDto } from './dto/settings-list-query.dto';
@@ -23,7 +26,10 @@ type SettingTarget = {
 
 @Injectable()
 export class SettingsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditLogsService: AuditLogsService
+  ) {}
 
   async findAll(
     query: SettingsListQueryDto,
@@ -110,7 +116,8 @@ export class SettingsService {
     keyParam: string,
     dto: UpsertSettingDto,
     user: CurrentUser,
-    organization: CurrentOrganization
+    organization: CurrentOrganization,
+    requestMetadata?: RequestMetadata
   ): Promise<SettingResponseDto> {
     const target = this.resolveSettingTarget(keyParam, dto, user, organization);
 
@@ -134,7 +141,25 @@ export class SettingsService {
       });
     });
 
-    return this.toSettingResponse(setting);
+    const response = this.toSettingResponse(setting);
+    await this.auditLogsService.write({
+      action: AUDIT_ACTIONS.SETTING_UPDATE,
+      entityType: AUDIT_ENTITY_TYPES.SETTING,
+      entityId: response.id,
+      userId: user.id,
+      organizationId: response.scope === SettingScope.GLOBAL ? null : response.organizationId,
+      metadata: {
+        key: response.key,
+        scope: response.scope,
+        moduleCode: response.module,
+        organizationSpecific: response.scope !== SettingScope.GLOBAL && !!response.organizationId,
+        valueChanged: true
+      },
+      ip: requestMetadata?.ip,
+      userAgent: requestMetadata?.userAgent
+    });
+
+    return response;
   }
 
   private resolveSettingTarget(

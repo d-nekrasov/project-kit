@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { getRequestMetadata } from '../../common/utils/request-metadata.util';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser as CurrentUserType } from '../auth/types/current-user.type';
@@ -46,9 +47,10 @@ export class OrganizationsController {
   @Permissions('organizations.create')
   create(
     @CurrentUser() currentUser: CurrentUserType,
-    @Body() dto: CreateOrganizationDto
+    @Body() dto: CreateOrganizationDto,
+    @Req() req: { headers: Record<string, string | string[] | undefined>; ip?: string }
   ): Promise<OrganizationResponseDto> {
-    return this.organizationsService.create(currentUser, dto);
+    return this.organizationsService.create(currentUser, dto, getRequestMetadata(req));
   }
 
   @Patch(':id')
@@ -58,9 +60,16 @@ export class OrganizationsController {
     @CurrentUser() currentUser: CurrentUserType,
     @CurrentOrganization() currentOrganization: CurrentOrganizationType,
     @Param('id') organizationId: string,
-    @Body() dto: UpdateOrganizationDto
+    @Body() dto: UpdateOrganizationDto,
+    @Req() req: { headers: Record<string, string | string[] | undefined>; ip?: string }
   ): Promise<OrganizationResponseDto> {
-    return this.organizationsService.update(currentUser, currentOrganization, organizationId, dto);
+    return this.organizationsService.update(
+      currentUser,
+      currentOrganization,
+      organizationId,
+      dto,
+      getRequestMetadata(req)
+    );
   }
 
   @Patch(':id/status')
@@ -69,8 +78,9 @@ export class OrganizationsController {
   updateStatus(
     @CurrentUser() currentUser: CurrentUserType,
     @Param('id') organizationId: string,
-    @Body() dto: UpdateOrganizationStatusDto
+    @Body() dto: UpdateOrganizationStatusDto,
+    @Req() req: { headers: Record<string, string | string[] | undefined>; ip?: string }
   ): Promise<OrganizationResponseDto> {
-    return this.organizationsService.updateStatus(currentUser, organizationId, dto.status);
+    return this.organizationsService.updateStatus(currentUser, organizationId, dto.status, getRequestMetadata(req));
   }
 }

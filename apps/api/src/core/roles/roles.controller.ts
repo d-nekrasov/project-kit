@@ -1,4 +1,7 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { CurrentUser as CurrentUserType } from '../auth/types/current-user.type';
+import { getRequestMetadata } from '../../common/utils/request-metadata.util';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentOrganization } from '../organization-context/decorators/current-organization.decorator';
 import { OrganizationGuard } from '../organization-context/guards/organization.guard';
@@ -43,31 +46,37 @@ export class RolesController {
   @UseGuards(JwtAuthGuard, OrganizationGuard, PermissionsGuard)
   @Permissions('roles.create')
   create(
+    @CurrentUser() currentUser: CurrentUserType,
     @CurrentOrganization() organization: CurrentOrganizationType,
-    @Body() dto: CreateRoleDto
+    @Body() dto: CreateRoleDto,
+    @Req() req: { headers: Record<string, string | string[] | undefined>; ip?: string }
   ): Promise<RoleResponseDto> {
-    return this.rolesService.create(organization.id, dto);
+    return this.rolesService.create(organization.id, currentUser, dto, getRequestMetadata(req));
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, OrganizationGuard, PermissionsGuard)
   @Permissions('roles.update')
   update(
+    @CurrentUser() currentUser: CurrentUserType,
     @CurrentOrganization() organization: CurrentOrganizationType,
     @Param('id') roleId: string,
-    @Body() dto: UpdateRoleDto
+    @Body() dto: UpdateRoleDto,
+    @Req() req: { headers: Record<string, string | string[] | undefined>; ip?: string }
   ): Promise<RoleResponseDto> {
-    return this.rolesService.update(roleId, organization.id, dto);
+    return this.rolesService.update(roleId, currentUser, organization.id, dto, getRequestMetadata(req));
   }
 
   @Patch(':id/permissions')
   @UseGuards(JwtAuthGuard, OrganizationGuard, PermissionsGuard)
   @Permissions('roles.update')
   updatePermissions(
+    @CurrentUser() currentUser: CurrentUserType,
     @CurrentOrganization() organization: CurrentOrganizationType,
     @Param('id') roleId: string,
-    @Body() dto: UpdateRolePermissionsDto
+    @Body() dto: UpdateRolePermissionsDto,
+    @Req() req: { headers: Record<string, string | string[] | undefined>; ip?: string }
   ): Promise<RoleResponseDto> {
-    return this.rolesService.updatePermissions(roleId, organization.id, dto);
+    return this.rolesService.updatePermissions(roleId, currentUser, organization.id, dto, getRequestMetadata(req));
   }
 }

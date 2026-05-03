@@ -4,6 +4,9 @@ import { JwtService } from '@nestjs/jwt';
 import { OrganizationStatus, UserStatus } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
+import { RequestMetadata } from '../../common/utils/request-metadata.util';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
+import { AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } from '../audit-logs/constants/audit-actions.constants';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { LoginDto } from './dto/login.dto';
 import { CurrentUser } from './types/current-user.type';
@@ -16,11 +19,12 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
+    private readonly auditLogsService: AuditLogsService
   ) {}
 
   // TODO: Add rate limiting for login endpoint.
-  async login(dto: LoginDto): Promise<AuthResponseDto> {
+  async login(dto: LoginDto, requestMetadata?: RequestMetadata): Promise<AuthResponseDto> {
     const normalizedEmail = dto.email.trim().toLowerCase();
     const user = await this.prisma.user.findUnique({
       where: { email: normalizedEmail },
@@ -47,6 +51,16 @@ export class AuthService {
       }))
     };
     const accessToken = await this.jwtService.signAsync(payload);
+    await this.auditLogsService.write({
+      action: AUDIT_ACTIONS.AUTH_LOGIN,
+      entityType: AUDIT_ENTITY_TYPES.AUTH,
+      entityId: user.id,
+      userId: user.id,
+      organizationId: null,
+      metadata: { email: currentUser.email },
+      ip: requestMetadata?.ip,
+      userAgent: requestMetadata?.userAgent
+    });
 
     return {
       accessToken,

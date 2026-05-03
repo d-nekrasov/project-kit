@@ -5,6 +5,7 @@ import { PassportModule } from '@nestjs/passport';
 import { CasbinModule } from '../../infrastructure/casbin/casbin.module';
 import { PrismaModule } from '../../infrastructure/prisma/prisma.module';
 import { PermissionsModule } from '../permissions/permissions.module';
+import { AuditLogsModule } from '../audit-logs/audit-logs.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -14,6 +15,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     PrismaModule,
     CasbinModule,
     PermissionsModule,
+    AuditLogsModule,
     PassportModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
