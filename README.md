@@ -103,6 +103,30 @@ curl http://localhost:3000/api/auth/permissions-check \
   -H "x-organization-id: <organizationId>"
 ```
 
+## Permissions API
+
+All permissions endpoints require:
+
+`Authorization: Bearer <accessToken>`
+
+`x-organization-id: <organizationId>`
+
+Examples:
+
+```bash
+curl http://localhost:3000/api/permissions \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>"
+
+curl http://localhost:3000/api/permissions/grouped \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>"
+
+curl http://localhost:3000/api/permissions/modules \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>"
+```
+
 ## Users
 
 All users endpoints require:
