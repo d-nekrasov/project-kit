@@ -39,6 +39,7 @@ Routes:
 - `/roles`
 - `/permissions`
 - `/organizations`
+- `/modules`
 
 The admin app uses `@project-kit/sdk` for all API calls.
 The SDK receives the access token and active organization id from admin auth storage.
@@ -121,6 +122,27 @@ Capabilities:
 
 Only `super_admin` can create organizations and change organization status.
 Non-super-admin users can see only organizations they belong to.
+
+### Modules page
+
+The `/modules` page shows registered core and business modules.
+It uses:
+- `@project-kit/sdk`
+- TanStack Query
+- Module Registry API
+- current organization context
+
+Capabilities:
+- list modules
+- search modules
+- filter by status
+- inspect module manifest
+- enable/disable modules
+- view permissions/admin menu/settings schema metadata
+
+Disabling a module does not delete data, permissions, or settings.
+Runtime access is blocked by `ModuleEnabledGuard`.
+The `core` module cannot be disabled.
 
 ## SDK
 
