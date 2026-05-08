@@ -37,6 +37,7 @@ Routes:
 - `/`
 - `/users`
 - `/roles`
+- `/permissions`
 
 The admin app uses `@project-kit/sdk` for all API calls.
 The SDK receives the access token and active organization id from admin auth storage.
@@ -78,6 +79,26 @@ Capabilities:
 - edit role permissions grouped by module
 - readonly system roles
 - protected organization_admin permissions
+
+### Permissions page
+
+The `/permissions` page is a read-only registry of permissions registered by core and modules.
+It uses:
+- `@project-kit/sdk`
+- TanStack Query
+- Permissions API
+- current organization context
+
+Capabilities:
+- list permissions
+- search permissions
+- filter by module
+- table view
+- grouped by module view
+- inspect resource/action parsed from permission code
+
+Permissions are not created from the admin UI.
+They are registered by the core platform and connected modules through manifests.
 
 ## SDK
 
