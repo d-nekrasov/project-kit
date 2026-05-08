@@ -5,6 +5,7 @@ import { ProtectedRoute } from '@/components/layout/protected-route';
 import { DashboardPage } from '@/features/dashboard/dashboard-page';
 import { InstallPage } from '@/features/installer/install-page';
 import { LoginPage } from '@/features/login/login-page';
+import { OrganizationsPage } from '@/features/organizations/organizations-page';
 import { PermissionsPage } from '@/features/permissions/permissions-page';
 import { PlaceholderPage } from '@/features/placeholders/placeholder-page';
 import { RolesPage } from '@/features/roles/roles-page';
@@ -30,7 +31,7 @@ export const router = createBrowserRouter([
           { path: 'users', element: <UsersPage /> },
           { path: 'roles', element: <RolesPage /> },
           { path: 'permissions', element: <PermissionsPage /> },
-          { path: 'organizations', element: <PlaceholderPage title="Organizations" /> },
+          { path: 'organizations', element: <OrganizationsPage /> },
           { path: 'settings', element: <PlaceholderPage title="Settings" /> },
           { path: 'modules', element: <PlaceholderPage title="Modules" /> },
           { path: 'audit-logs', element: <PlaceholderPage title="Audit Logs" /> },

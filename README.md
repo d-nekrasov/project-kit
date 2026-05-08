@@ -38,6 +38,7 @@ Routes:
 - `/users`
 - `/roles`
 - `/permissions`
+- `/organizations`
 
 The admin app uses `@project-kit/sdk` for all API calls.
 The SDK receives the access token and active organization id from admin auth storage.
@@ -99,6 +100,27 @@ Capabilities:
 
 Permissions are not created from the admin UI.
 They are registered by the core platform and connected modules through manifests.
+
+### Organizations page
+
+The `/organizations` page allows administrators to manage organizations and branches.
+It uses:
+- `@project-kit/sdk`
+- TanStack Query
+- Organizations API
+- current organization context
+
+Capabilities:
+- list organizations
+- search organizations
+- filter by status
+- create organization
+- edit organization name/slug
+- change organization status
+- display usersCount and rolesCount
+
+Only `super_admin` can create organizations and change organization status.
+Non-super-admin users can see only organizations they belong to.
 
 ## SDK
 
