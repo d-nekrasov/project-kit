@@ -2,6 +2,45 @@
 
 Monorepo skeleton for modular client web applications.
 
+## SDK
+
+`packages/sdk` contains a framework-agnostic TypeScript API client for Project Kit.
+It handles:
+- base API URL;
+- Authorization header;
+- active organization header;
+- query serialization;
+- JSON request/response handling;
+- typed API errors;
+- typed API resources.
+
+Example:
+
+```ts
+import { createProjectKitSdk } from '@project-kit/sdk';
+
+const sdk = createProjectKitSdk({
+  baseUrl: 'http://localhost:3000/api',
+  getAccessToken: () => localStorage.getItem('accessToken'),
+  getOrganizationId: () => localStorage.getItem('activeOrganizationId'),
+  onUnauthorized: () => {
+    localStorage.removeItem('accessToken');
+  }
+});
+
+const { accessToken, user } = await sdk.auth.login({
+  email: 'admin@example.com',
+  password: 'password123'
+});
+
+const users = await sdk.users.list({
+  page: 1,
+  limit: 20
+});
+```
+
+The SDK does not store tokens itself. The application decides where to store access token and active organization id.
+
 ## Quick start
 
 1. `pnpm install`
