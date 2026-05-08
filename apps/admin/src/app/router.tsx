@@ -6,6 +6,7 @@ import { DashboardPage } from '@/features/dashboard/dashboard-page';
 import { InstallPage } from '@/features/installer/install-page';
 import { LoginPage } from '@/features/login/login-page';
 import { PlaceholderPage } from '@/features/placeholders/placeholder-page';
+import { UsersPage } from '@/features/users/users-page';
 
 export const router = createBrowserRouter([
   {
@@ -24,7 +25,7 @@ export const router = createBrowserRouter([
         element: <AppLayout />,
         children: [
           { index: true, element: <DashboardPage /> },
-          { path: 'users', element: <PlaceholderPage title="Users" /> },
+          { path: 'users', element: <UsersPage /> },
           { path: 'roles', element: <PlaceholderPage title="Roles" /> },
           { path: 'permissions', element: <PlaceholderPage title="Permissions" /> },
           { path: 'organizations', element: <PlaceholderPage title="Organizations" /> },

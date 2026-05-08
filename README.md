@@ -35,9 +35,28 @@ Routes:
 - `/install`
 - `/login`
 - `/`
+- `/users`
 
 The admin app uses `@project-kit/sdk` for all API calls.
 The SDK receives the access token and active organization id from admin auth storage.
+
+### Users page
+
+The first implemented admin CRUD page is `/users`.
+It uses:
+- `@project-kit/sdk`
+- TanStack Query
+- current organization context
+- Users API
+- Roles API for role selection
+
+Capabilities:
+- list users
+- search users
+- filter by status
+- create user
+- edit user name/role
+- change status
 
 ## SDK
 
