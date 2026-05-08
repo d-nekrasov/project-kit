@@ -1,6 +1,9 @@
 {
   "name": "project-kit",
   "private": true,
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "packageManager": "pnpm@10.11.0",
   "scripts": {
     "dev": "turbo run dev",

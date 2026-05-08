@@ -2,6 +2,43 @@
 
 Monorepo skeleton for modular client web applications.
 
+## Admin App
+
+`apps/admin` is the Project Kit administration UI.
+
+Stack:
+- React
+- Vite
+- TypeScript
+- shadcn/ui
+- TanStack Query
+- React Router
+- `@project-kit/sdk`
+
+### Environment
+
+Create `apps/admin/.env`:
+
+```env
+VITE_API_URL=http://localhost:3000/api
+VITE_APP_NAME=Project Kit
+```
+
+Commands:
+
+```bash
+pnpm --filter admin dev
+pnpm --filter admin build
+```
+
+Routes:
+- `/install`
+- `/login`
+- `/`
+
+The admin app uses `@project-kit/sdk` for all API calls.
+The SDK receives the access token and active organization id from admin auth storage.
+
 ## SDK
 
 `packages/sdk` contains a framework-agnostic TypeScript API client for Project Kit.
