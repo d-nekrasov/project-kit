@@ -36,6 +36,7 @@ Routes:
 - `/login`
 - `/`
 - `/users`
+- `/roles`
 
 The admin app uses `@project-kit/sdk` for all API calls.
 The SDK receives the access token and active organization id from admin auth storage.
@@ -57,6 +58,26 @@ Capabilities:
 - create user
 - edit user name/role
 - change status
+
+### Roles page
+
+The `/roles` page allows administrators to manage organization roles.
+It uses:
+- `@project-kit/sdk`
+- TanStack Query
+- Roles API
+- Permissions grouped API
+- current organization context
+
+Capabilities:
+- list roles
+- search roles
+- include system roles
+- create organization role
+- edit role name
+- edit role permissions grouped by module
+- readonly system roles
+- protected organization_admin permissions
 
 ## SDK
 
