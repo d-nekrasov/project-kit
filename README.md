@@ -41,6 +41,7 @@ Routes:
 - `/organizations`
 - `/modules`
 - `/settings`
+- `/audit-logs`
 - `/documents`
 
 The admin app uses `@project-kit/sdk` for all API calls.
@@ -185,6 +186,22 @@ Capabilities:
 - display createdBy and updatedBy
 
 If the `documents` module is disabled in Module Registry, the API returns `403 Module is disabled`, and the page shows a module disabled state.
+
+### Audit Logs page
+
+The `/audit-logs` page shows user actions and security-relevant events.
+It uses:
+- `@project-kit/sdk`
+- TanStack Query
+- Audit Logs API
+- current organization context
+
+Capabilities:
+- list audit logs
+- filter by action, entity type, entity id, user id, organization id and date range
+- search logs
+- view detailed metadata JSON
+- inspect actor, organization, IP and user agent
 
 ## SDK
 

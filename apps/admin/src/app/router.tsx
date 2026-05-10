@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 
 import { AppLayout } from '@/components/layout/app-layout';
 import { ProtectedRoute } from '@/components/layout/protected-route';
+import { AuditLogsPage } from '@/features/audit-logs/audit-logs-page';
 import { DashboardPage } from '@/features/dashboard/dashboard-page';
 import { DocumentsPage } from '@/features/documents/documents-page';
 import { InstallPage } from '@/features/installer/install-page';
@@ -37,7 +38,7 @@ export const router = createBrowserRouter([
           { path: 'organizations', element: <OrganizationsPage /> },
           { path: 'modules', element: <ModulesPage /> },
           { path: 'settings', element: <SettingsPage /> },
-          { path: 'audit-logs', element: <PlaceholderPage title="Audit Logs" /> },
+          { path: 'audit-logs', element: <AuditLogsPage /> },
           { path: 'system-logs', element: <PlaceholderPage title="System Logs" /> },
           { path: 'documents', element: <DocumentsPage /> }
         ]
