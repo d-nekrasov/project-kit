@@ -40,6 +40,7 @@ Routes:
 - `/permissions`
 - `/organizations`
 - `/modules`
+- `/settings`
 
 The admin app uses `@project-kit/sdk` for all API calls.
 The SDK receives the access token and active organization id from admin auth storage.
@@ -143,6 +144,25 @@ Capabilities:
 Disabling a module does not delete data, permissions, or settings.
 Runtime access is blocked by `ModuleEnabledGuard`.
 The `core` module cannot be disabled.
+
+### Settings page
+
+The `/settings` page manages global, organization and module settings.
+It uses:
+- `@project-kit/sdk`
+- TanStack Query
+- Settings API
+- Module Registry API
+- current organization context
+
+Capabilities:
+- list/search/filter settings
+- create/update settings
+- edit JSON values
+- inspect module settings schema
+
+Global settings and global module settings can be updated only by `super_admin`.
+Organization settings are always scoped to the active organization.
 
 ## SDK
 
