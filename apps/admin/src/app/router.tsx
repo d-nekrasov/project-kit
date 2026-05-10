@@ -3,6 +3,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/app-layout';
 import { ProtectedRoute } from '@/components/layout/protected-route';
 import { DashboardPage } from '@/features/dashboard/dashboard-page';
+import { DocumentsPage } from '@/features/documents/documents-page';
 import { InstallPage } from '@/features/installer/install-page';
 import { LoginPage } from '@/features/login/login-page';
 import { ModulesPage } from '@/features/modules/modules-page';
@@ -38,7 +39,7 @@ export const router = createBrowserRouter([
           { path: 'settings', element: <SettingsPage /> },
           { path: 'audit-logs', element: <PlaceholderPage title="Audit Logs" /> },
           { path: 'system-logs', element: <PlaceholderPage title="System Logs" /> },
-          { path: 'documents', element: <PlaceholderPage title="Documents" /> }
+          { path: 'documents', element: <DocumentsPage /> }
         ]
       }
     ]
