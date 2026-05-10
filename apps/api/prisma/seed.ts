@@ -8,18 +8,25 @@ async function main() {
     update: {},
     create: {
       id: 'default-installation',
-      isInstalled: false
+      installed: false
     }
   });
 
   await prisma.moduleRegistry.upsert({
-    where: { code: 'documents' },
+    where: { name: 'documents' },
     update: {},
     create: {
-      code: 'documents',
-      name: 'Documents',
+      name: 'documents',
+      title: 'Documents',
+      version: '0.1.0',
+      description: 'Document management module',
       status: ModuleStatus.ENABLED,
-      isCore: false
+      manifest: {
+        name: 'documents',
+        title: 'Documents',
+        version: '0.1.0'
+      },
+      installedAt: new Date()
     }
   });
 }

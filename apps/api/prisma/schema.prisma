@@ -35,20 +35,40 @@ enum ModuleStatus {
   DISABLED
 }
 
+enum SystemLogLevel {
+  DEBUG
+  INFO
+  WARN
+  ERROR
+  FATAL
+}
+
+enum DocumentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
 model User {
   id            String             @id @default(cuid())
   email         String             @unique
+  passwordHash  String
   name          String?
   status        UserStatus         @default(ACTIVE)
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
   memberships   UserOrganization[]
+  systemRoles   UserSystemRole[]
   auditLogs     AuditLog[]
+  systemLogs    SystemLog[]
+  createdDocuments Document[]      @relation("DocumentCreatedBy")
+  updatedDocuments Document[]      @relation("DocumentUpdatedBy")
 }
 
 model Organization {
   id            String             @id @default(cuid())
   name          String
+  slug          String             @unique
   status        OrganizationStatus @default(ACTIVE)
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
@@ -57,15 +77,20 @@ model Organization {
   moduleSettings ModuleSetting[]
   documents     Document[]
   roles         Role[]
+  auditLogs     AuditLog[]
+  systemLogs    SystemLog[]
 }
 
 model UserOrganization {
   id             String       @id @default(cuid())
   userId         String
   organizationId String
+  roleId         String
+  status         UserStatus   @default(ACTIVE)
   createdAt      DateTime     @default(now())
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  role           Role         @relation(fields: [roleId], references: [id], onDelete: Restrict)
 
   @@unique([userId, organizationId])
 }
@@ -73,22 +98,39 @@ model UserOrganization {
 model Role {
   id             String           @id @default(cuid())
   name           String
-  code           String           @unique
+  code           String
   type           RoleType
   organizationId String?
   organization   Organization?    @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  userOrganizations UserOrganization[]
+  userSystemRoles UserSystemRole[]
   permissions    RolePermission[]
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
+
+  @@unique([organizationId, code])
 }
 
 model Permission {
   id          String           @id @default(cuid())
   code        String           @unique
+  module      String
   description String?
   roles       RolePermission[]
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
+}
+
+model UserSystemRole {
+  id        String   @id @default(uuid())
+  userId    String
+  roleId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@map("user_system_roles")
 }
 
 model RolePermission {
@@ -116,31 +158,57 @@ model Setting {
 }
 
 model AuditLog {
-  id             String   @id @default(cuid())
+  id             String   @id @default(uuid())
   userId         String?
   organizationId String?
   action         String
-  payload        Json?
+  entityType     String
+  entityId       String?
+  metadata       Json?
+  ip             String?
+  userAgent      String?
   createdAt      DateTime @default(now())
   user           User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([action])
+  @@index([entityType])
+  @@index([createdAt])
 }
 
 model SystemLog {
-  id         String   @id @default(cuid())
-  level      String
-  message    String
-  context    Json?
-  createdAt  DateTime @default(now())
+  id             String         @id @default(uuid())
+  level          SystemLogLevel
+  source         String
+  message        String
+  context        Json?
+  errorStack     String?
+  userId         String?
+  organizationId String?
+  createdAt      DateTime       @default(now())
+  user           User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  organization   Organization?  @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@index([level])
+  @@index([source])
+  @@index([userId])
+  @@index([organizationId])
+  @@index([createdAt])
 }
 
 model ModuleRegistry {
-  id          String       @id @default(cuid())
-  code        String       @unique
-  name        String
-  status      ModuleStatus @default(ENABLED)
-  isCore      Boolean      @default(false)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id          String          @id @default(cuid())
+  name        String          @unique
+  title       String
+  version     String
+  description String?
+  status      ModuleStatus    @default(ENABLED)
+  manifest    Json?
+  installedAt DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
   settings    ModuleSetting[]
 }
 
@@ -160,18 +228,31 @@ model ModuleSetting {
 
 model Installation {
   id            String   @id @default(cuid())
-  isInstalled   Boolean  @default(false)
+  installed     Boolean  @default(false)
+  appName       String?
+  version       String?
   installedAt   DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
 
 model Document {
-  id             String       @id @default(cuid())
+  id             String         @id @default(cuid())
   organizationId String
   title          String
   content        String?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  status         DocumentStatus @default(DRAFT)
+  createdById    String
+  updatedById    String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy      User           @relation("DocumentCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  updatedBy      User?          @relation("DocumentUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([createdById])
+  @@index([updatedById])
+  @@index([createdAt])
 }
