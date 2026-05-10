@@ -41,6 +41,7 @@ Routes:
 - `/organizations`
 - `/modules`
 - `/settings`
+- `/documents`
 
 The admin app uses `@project-kit/sdk` for all API calls.
 The SDK receives the access token and active organization id from admin auth storage.
@@ -163,6 +164,27 @@ Capabilities:
 
 Global settings and global module settings can be updated only by `super_admin`.
 Organization settings are always scoped to the active organization.
+
+### Documents page
+
+The `/documents` page is the first business module UI.
+It uses:
+- `@project-kit/sdk`
+- TanStack Query
+- Documents API
+- current organization context
+- ModuleEnabledGuard on backend
+
+Capabilities:
+- list documents
+- search documents
+- filter by status
+- create document
+- edit document
+- change document status
+- display createdBy and updatedBy
+
+If the `documents` module is disabled in Module Registry, the API returns `403 Module is disabled`, and the page shows a module disabled state.
 
 ## SDK
 
