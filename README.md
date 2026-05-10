@@ -42,6 +42,7 @@ Routes:
 - `/modules`
 - `/settings`
 - `/audit-logs`
+- `/system-logs`
 - `/documents`
 
 The admin app uses `@project-kit/sdk` for all API calls.
@@ -202,6 +203,25 @@ Capabilities:
 - search logs
 - view detailed metadata JSON
 - inspect actor, organization, IP and user agent
+
+### System Logs page
+
+The `/system-logs` page shows technical and runtime events from the platform.
+It uses:
+- `@project-kit/sdk`
+- TanStack Query
+- System Logs API
+- current organization context
+
+Capabilities:
+- list system logs
+- filter by level, source, user id, organization id and date range
+- search logs
+- view detailed context JSON
+- inspect error stack traces
+
+System logs are for technical diagnostics.
+User actions are stored separately in Audit Logs.
 
 ## SDK
 

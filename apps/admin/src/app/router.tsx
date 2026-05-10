@@ -10,9 +10,9 @@ import { LoginPage } from '@/features/login/login-page';
 import { ModulesPage } from '@/features/modules/modules-page';
 import { OrganizationsPage } from '@/features/organizations/organizations-page';
 import { PermissionsPage } from '@/features/permissions/permissions-page';
-import { PlaceholderPage } from '@/features/placeholders/placeholder-page';
 import { RolesPage } from '@/features/roles/roles-page';
 import { SettingsPage } from '@/features/settings/settings-page';
+import { SystemLogsPage } from '@/features/system-logs/system-logs-page';
 import { UsersPage } from '@/features/users/users-page';
 
 export const router = createBrowserRouter([
@@ -39,7 +39,7 @@ export const router = createBrowserRouter([
           { path: 'modules', element: <ModulesPage /> },
           { path: 'settings', element: <SettingsPage /> },
           { path: 'audit-logs', element: <AuditLogsPage /> },
-          { path: 'system-logs', element: <PlaceholderPage title="System Logs" /> },
+          { path: 'system-logs', element: <SystemLogsPage /> },
           { path: 'documents', element: <DocumentsPage /> }
         ]
       }
