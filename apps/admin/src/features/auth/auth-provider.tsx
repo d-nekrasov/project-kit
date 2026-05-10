@@ -4,6 +4,7 @@ import type { CurrentUser } from '@project-kit/sdk';
 
 import { AuthContext, type AuthContextValue } from '@/features/auth/auth-context';
 import {
+  clearActiveOrganizationId,
   clearAuthStorage,
   getAccessToken,
   getActiveOrganizationId,
@@ -47,7 +48,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       if (nextOrgId) {
         setActiveOrganizationId(nextOrgId);
       } else {
-        clearAuthStorage();
+        clearActiveOrganizationId();
       }
 
       setUser(nextUser);
@@ -72,6 +73,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
     const orgId = resolveOrganization(result.user, getActiveOrganizationId());
     if (orgId) {
       setActiveOrganizationId(orgId);
+    } else {
+      clearActiveOrganizationId();
     }
 
     setUser(result.user);
