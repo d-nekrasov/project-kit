@@ -2,6 +2,10 @@
 
 Monorepo skeleton for modular client web applications.
 
+## MVP smoke test
+
+See `docs/smoke-test.md`.
+
 ## Admin App
 
 `apps/admin` is the Project Kit administration UI.
