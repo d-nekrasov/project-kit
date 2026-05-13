@@ -3,13 +3,14 @@ import { CasbinModule } from '../../infrastructure/casbin/casbin.module';
 import { PrismaModule } from '../../infrastructure/prisma/prisma.module';
 import { AuditLogsModule } from '../audit-logs/audit-logs.module';
 import { PermissionsModule } from '../permissions/permissions.module';
+import { RbacSyncModule } from '../rbac-sync/rbac-sync.module';
 import { SystemLogsModule } from '../system-logs/system-logs.module';
 import { ModuleEnabledGuard } from './guards/module-enabled.guard';
 import { ModuleRegistryController } from './module-registry.controller';
 import { ModuleRegistryService } from './module-registry.service';
 
 @Module({
-  imports: [PrismaModule, CasbinModule, PermissionsModule, AuditLogsModule, SystemLogsModule],
+  imports: [PrismaModule, CasbinModule, PermissionsModule, AuditLogsModule, SystemLogsModule, RbacSyncModule],
   controllers: [ModuleRegistryController],
   providers: [ModuleRegistryService, ModuleEnabledGuard],
   exports: [ModuleRegistryService, ModuleEnabledGuard]
