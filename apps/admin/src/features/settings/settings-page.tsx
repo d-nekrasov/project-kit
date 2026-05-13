@@ -64,7 +64,8 @@ export function SettingsPage() {
 
   const modulesQuery = useQuery({
     queryKey: settingsQueryKeys.modules,
-    queryFn: () => sdk.modules.list({ page: 1, limit: 200 })
+    queryFn: () => sdk.modules.list({ page: 1, limit: 200 }),
+    enabled: auth.hasPermission('modules.read')
   });
 
   const upsertMutation = useMutation({
@@ -82,7 +83,7 @@ export function SettingsPage() {
     }
   });
 
-  const modules = modulesQuery.data?.items ?? [];
+  const modules = modulesQuery.isError ? [] : modulesQuery.data?.items ?? [];
   const modulesWithSchema = modules.filter((item) => Boolean(item.manifest?.settingsSchema));
 
   const pageError = settingsQuery.isError
@@ -91,8 +92,8 @@ export function SettingsPage() {
       ? getApiErrorMessage(modulesQuery.error)
       : null;
 
-  const meta = settingsQuery.data?.meta;
-  const settings = settingsQuery.data?.items ?? [];
+  const meta = settingsQuery.isError ? undefined : settingsQuery.data?.meta;
+  const settings = settingsQuery.isError ? [] : settingsQuery.data?.items ?? [];
 
   if (auth.isLoading) {
     return <LoadingScreen />;

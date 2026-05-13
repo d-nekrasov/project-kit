@@ -114,8 +114,8 @@ export function OrganizationsPage() {
     }
   });
 
-  const organizationsMeta = organizationsQuery.data?.meta;
-  const organizations = organizationsQuery.data?.items ?? [];
+  const organizationsMeta = organizationsQuery.isError ? undefined : organizationsQuery.data?.meta;
+  const organizations = organizationsQuery.isError ? [] : organizationsQuery.data?.items ?? [];
   const pageError = organizationsQuery.isError ? getApiErrorMessage(organizationsQuery.error) : null;
 
   return (

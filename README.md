@@ -51,6 +51,8 @@ Routes:
 
 The admin app uses `@project-kit/sdk` for all API calls.
 The SDK receives the access token and active organization id from admin auth storage.
+Admin routes and sidebar items are filtered by effective permissions from `GET /api/auth/permissions`.
+TanStack Query cache is cleared on login, logout, unauthorized responses, and active organization changes.
 
 ### Users page
 
@@ -307,6 +309,10 @@ Me:
 
 `GET /api/auth/me`
 
+Effective permissions for the active organization:
+
+`GET /api/auth/permissions`
+
 Authorization header:
 
 `Authorization: Bearer <accessToken>`
@@ -323,6 +329,10 @@ curl -X POST http://localhost:3000/api/auth/login \
 
 curl http://localhost:3000/api/auth/me \
   -H "Authorization: Bearer <accessToken>"
+
+curl http://localhost:3000/api/auth/permissions \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>"
 ```
 
 ## Organization Context

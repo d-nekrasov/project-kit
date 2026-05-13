@@ -81,11 +81,11 @@ export function SystemLogsPage() {
     enabled: Boolean(selectedLogId)
   });
 
-  const logs = systemLogsQuery.data?.items ?? [];
-  const meta = systemLogsQuery.data?.meta;
+  const logs = systemLogsQuery.isError ? [] : systemLogsQuery.data?.items ?? [];
+  const meta = systemLogsQuery.isError ? undefined : systemLogsQuery.data?.meta;
   const pageError = systemLogsQuery.isError ? getApiErrorMessage(systemLogsQuery.error) : null;
   const detailError = detailQuery.isError ? getApiErrorMessage(detailQuery.error) : null;
-  const detailLog = detailQuery.data ?? selectedLog;
+  const detailLog = detailQuery.isError ? null : detailQuery.data ?? selectedLog;
   const detailOpen = Boolean(selectedLogId);
 
   if (auth.isLoading) {

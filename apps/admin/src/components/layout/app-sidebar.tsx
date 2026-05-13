@@ -3,28 +3,32 @@ import { Link, useLocation } from 'react-router-dom';
 
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/features/auth/use-auth';
+import { ROUTE_PERMISSIONS } from '@/lib/route-permissions';
 import { sdk } from '@/lib/sdk';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 
 const coreMenu = [
-  { label: 'Dashboard', path: '/' },
-  { label: 'Users', path: '/users' },
-  { label: 'Organizations', path: '/organizations' },
-  { label: 'Roles', path: '/roles' },
-  { label: 'Permissions', path: '/permissions' },
-  { label: 'Settings', path: '/settings' },
-  { label: 'Modules', path: '/modules' },
-  { label: 'Audit Logs', path: '/audit-logs' },
-  { label: 'System Logs', path: '/system-logs' },
-  { label: 'Documents', path: '/documents' }
+  { label: 'Dashboard', path: '/', permission: ROUTE_PERMISSIONS['/'] },
+  { label: 'Users', path: '/users', permission: ROUTE_PERMISSIONS['/users'] },
+  { label: 'Organizations', path: '/organizations', permission: ROUTE_PERMISSIONS['/organizations'] },
+  { label: 'Roles', path: '/roles', permission: ROUTE_PERMISSIONS['/roles'] },
+  { label: 'Permissions', path: '/permissions', permission: ROUTE_PERMISSIONS['/permissions'] },
+  { label: 'Settings', path: '/settings', permission: ROUTE_PERMISSIONS['/settings'] },
+  { label: 'Modules', path: '/modules', permission: ROUTE_PERMISSIONS['/modules'] },
+  { label: 'Audit Logs', path: '/audit-logs', permission: ROUTE_PERMISSIONS['/audit-logs'] },
+  { label: 'System Logs', path: '/system-logs', permission: ROUTE_PERMISSIONS['/system-logs'] },
+  { label: 'Documents', path: '/documents', permission: ROUTE_PERMISSIONS['/documents'] }
 ];
 
 export function AppSidebar() {
+  const auth = useAuth();
   const location = useLocation();
   const modulesQuery = useQuery({
     queryKey: ['modules', 'enabled-menu'],
-    queryFn: () => sdk.modules.list({ page: 1, limit: 100 })
+    queryFn: () => sdk.modules.list({ page: 1, limit: 100 }),
+    enabled: auth.hasPermission('modules.read')
   });
 
   const moduleMenu = useMemo(() => {
@@ -39,7 +43,10 @@ export function AppSidebar() {
   }, [modulesQuery.data]);
 
   const moduleMenuPaths = new Set(moduleMenu.map((item) => item.path));
-  const navItems = [...coreMenu, ...moduleMenu.filter((item) => !coreMenu.some((core) => core.path === item.path))];
+  const navItems = [
+    ...coreMenu,
+    ...moduleMenu.filter((item) => !coreMenu.some((core) => core.path === item.path))
+  ].filter((item) => !item.permission || auth.hasPermission(item.permission));
 
   return (
     <aside className="w-64 shrink-0 border-r border-slate-200 bg-white p-4">
