@@ -38,3 +38,12 @@ export type PermissionsCheckResponse = {
   allowed: boolean;
   permission: string;
 };
+
+export type AuthPermissionsResponse = {
+  permissions: string[];
+  systemRoles: string[];
+  organization: {
+    id: string;
+    role: string;
+  };
+};

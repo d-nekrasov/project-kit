@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { OrganizationStatus, UserStatus } from '@prisma/client';
@@ -11,6 +11,7 @@ import { AuthResponseDto } from './dto/auth-response.dto';
 import { LoginDto } from './dto/login.dto';
 import { CurrentUser } from './types/current-user.type';
 import { JwtPayload } from './types/jwt-payload.type';
+import { CurrentOrganization } from '../organization-context/types/current-organization.type';
 
 const INVALID_CREDENTIALS_MESSAGE = 'Invalid email or password';
 
@@ -72,6 +73,67 @@ export class AuthService {
 
   async getCurrentUserById(userId: string): Promise<CurrentUser> {
     return this.buildCurrentUser(userId);
+  }
+
+  async getEffectivePermissions(
+    currentUser: CurrentUser,
+    currentOrganization: CurrentOrganization
+  ): Promise<{
+    permissions: string[];
+    systemRoles: string[];
+    organization: { id: string; role: string };
+  }> {
+    if (currentUser.systemRoles.includes('super_admin')) {
+      const permissions = await this.prisma.permission.findMany({
+        select: { code: true },
+        orderBy: { code: 'asc' }
+      });
+
+      return {
+        permissions: permissions.map((permission) => permission.code),
+        systemRoles: currentUser.systemRoles,
+        organization: {
+          id: currentOrganization.id,
+          role: currentOrganization.role
+        }
+      };
+    }
+
+    const membership = await this.prisma.userOrganization.findFirst({
+      where: {
+        userId: currentUser.id,
+        organizationId: currentOrganization.id,
+        status: UserStatus.ACTIVE,
+        user: { status: UserStatus.ACTIVE },
+        organization: { status: OrganizationStatus.ACTIVE }
+      },
+      include: {
+        role: {
+          include: {
+            permissions: {
+              include: {
+                permission: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!membership) {
+      throw new ForbiddenException('You do not have access to this organization');
+    }
+
+    return {
+      permissions: membership.role.permissions
+        .map((rolePermission) => rolePermission.permission.code)
+        .sort((a, b) => a.localeCompare(b)),
+      systemRoles: currentUser.systemRoles,
+      organization: {
+        id: currentOrganization.id,
+        role: membership.role.code
+      }
+    };
   }
 
   private async buildCurrentUser(userId: string): Promise<CurrentUser> {

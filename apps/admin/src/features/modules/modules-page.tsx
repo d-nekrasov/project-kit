@@ -82,11 +82,11 @@ export function ModulesPage() {
     }
   });
 
-  const modulesMeta = modulesQuery.data?.meta;
-  const modules = modulesQuery.data?.items ?? [];
+  const modulesMeta = modulesQuery.isError ? undefined : modulesQuery.data?.meta;
+  const modules = modulesQuery.isError ? [] : modulesQuery.data?.items ?? [];
   const pageError = modulesQuery.isError ? getApiErrorMessage(modulesQuery.error) : null;
 
-  const manifestDialogModule = moduleDetailQuery.data ?? manifestModule;
+  const manifestDialogModule = moduleDetailQuery.isError ? null : moduleDetailQuery.data ?? manifestModule;
 
   if (auth.isLoading) {
     return <LoadingScreen />;

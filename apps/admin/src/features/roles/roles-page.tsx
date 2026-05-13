@@ -112,8 +112,8 @@ export function RolesPage() {
     }
   });
 
-  const rolesMeta = rolesQuery.data?.meta;
-  const roles = rolesQuery.data?.items ?? [];
+  const rolesMeta = rolesQuery.isError ? undefined : rolesQuery.data?.meta;
+  const roles = rolesQuery.isError ? [] : rolesQuery.data?.items ?? [];
   const pageError = rolesQuery.isError ? getApiErrorMessage(rolesQuery.error) : null;
 
   return (
@@ -223,7 +223,7 @@ export function RolesPage() {
       <RolePermissionsDialog
         open={Boolean(permissionsRole)}
         role={permissionsRole}
-        permissionGroups={permissionsQuery.data?.groups ?? []}
+        permissionGroups={permissionsQuery.isError ? [] : permissionsQuery.data?.groups ?? []}
         isLoading={permissionsQuery.isLoading}
         isSubmitting={updateRolePermissionsMutation.isPending}
         errorMessage={

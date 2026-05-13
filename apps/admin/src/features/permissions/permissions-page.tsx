@@ -83,7 +83,10 @@ export function PermissionsPage() {
           ? getApiErrorMessage(groupedQuery.error)
           : null;
 
-  const permissionsMeta = permissionsQuery.data?.meta;
+  const permissionsMeta = permissionsQuery.isError ? undefined : permissionsQuery.data?.meta;
+  const modules = modulesQuery.isError ? [] : modulesQuery.data?.items ?? [];
+  const permissions = permissionsQuery.isError ? [] : permissionsQuery.data?.items ?? [];
+  const permissionGroups = groupedQuery.isError ? [] : groupedQuery.data?.groups ?? [];
 
   return (
     <div className="space-y-6">
@@ -104,7 +107,7 @@ export function PermissionsPage() {
           setModule(value);
           setPage(1);
         }}
-        modules={modulesQuery.data?.items ?? []}
+        modules={modules}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         isModulesLoading={modulesQuery.isLoading}
@@ -113,9 +116,9 @@ export function PermissionsPage() {
       {pageError ? <ErrorState message={pageError} /> : null}
 
       {viewMode === 'table' ? (
-        <PermissionsTable permissions={permissionsQuery.data?.items ?? []} isLoading={permissionsQuery.isLoading} />
+        <PermissionsTable permissions={permissions} isLoading={permissionsQuery.isLoading} />
       ) : (
-        <PermissionsGroupedView groups={groupedQuery.data?.groups ?? []} isLoading={groupedQuery.isLoading} />
+        <PermissionsGroupedView groups={permissionGroups} isLoading={groupedQuery.isLoading} />
       )}
 
       {viewMode === 'table' ? (

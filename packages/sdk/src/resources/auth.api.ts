@@ -1,6 +1,7 @@
 import type { ApiClient } from '../client/api-client';
 import type {
   AuthContextResponse,
+  AuthPermissionsResponse,
   AuthResponse,
   CurrentUser,
   LoginDto,
@@ -19,6 +20,10 @@ export class AuthApi {
 
   me(): Promise<CurrentUser> {
     return this.client.get<CurrentUser>('/auth/me');
+  }
+
+  permissions(): Promise<AuthPermissionsResponse> {
+    return this.client.get<AuthPermissionsResponse>('/auth/permissions');
   }
 
   // TODO: remove when diagnostics module is introduced.

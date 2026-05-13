@@ -83,11 +83,11 @@ export function AuditLogsPage() {
     enabled: Boolean(selectedLogId)
   });
 
-  const logs = auditLogsQuery.data?.items ?? [];
-  const meta = auditLogsQuery.data?.meta;
+  const logs = auditLogsQuery.isError ? [] : auditLogsQuery.data?.items ?? [];
+  const meta = auditLogsQuery.isError ? undefined : auditLogsQuery.data?.meta;
   const pageError = auditLogsQuery.isError ? getApiErrorMessage(auditLogsQuery.error) : null;
   const detailError = detailQuery.isError ? getApiErrorMessage(detailQuery.error) : null;
-  const detailLog = detailQuery.data ?? selectedLog;
+  const detailLog = detailQuery.isError ? null : detailQuery.data ?? selectedLog;
   const detailOpen = Boolean(selectedLogId);
 
   if (auth.isLoading) {
@@ -219,4 +219,3 @@ export function AuditLogsPage() {
     </div>
   );
 }
-

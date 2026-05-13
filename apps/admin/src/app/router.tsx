@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 
 import { AppLayout } from '@/components/layout/app-layout';
 import { ProtectedRoute } from '@/components/layout/protected-route';
+import { RequirePermission } from '@/components/layout/require-permission';
 import { AuditLogsPage } from '@/features/audit-logs/audit-logs-page';
 import { DashboardPage } from '@/features/dashboard/dashboard-page';
 import { DocumentsPage } from '@/features/documents/documents-page';
@@ -14,6 +15,7 @@ import { RolesPage } from '@/features/roles/roles-page';
 import { SettingsPage } from '@/features/settings/settings-page';
 import { SystemLogsPage } from '@/features/system-logs/system-logs-page';
 import { UsersPage } from '@/features/users/users-page';
+import { ROUTE_PERMISSIONS } from '@/lib/route-permissions';
 
 export const router = createBrowserRouter([
   {
@@ -32,15 +34,78 @@ export const router = createBrowserRouter([
         element: <AppLayout />,
         children: [
           { index: true, element: <DashboardPage /> },
-          { path: 'users', element: <UsersPage /> },
-          { path: 'roles', element: <RolesPage /> },
-          { path: 'permissions', element: <PermissionsPage /> },
-          { path: 'organizations', element: <OrganizationsPage /> },
-          { path: 'modules', element: <ModulesPage /> },
-          { path: 'settings', element: <SettingsPage /> },
-          { path: 'audit-logs', element: <AuditLogsPage /> },
-          { path: 'system-logs', element: <SystemLogsPage /> },
-          { path: 'documents', element: <DocumentsPage /> }
+          {
+            path: 'users',
+            element: (
+              <RequirePermission permission={ROUTE_PERMISSIONS['/users']}>
+                <UsersPage />
+              </RequirePermission>
+            )
+          },
+          {
+            path: 'roles',
+            element: (
+              <RequirePermission permission={ROUTE_PERMISSIONS['/roles']}>
+                <RolesPage />
+              </RequirePermission>
+            )
+          },
+          {
+            path: 'permissions',
+            element: (
+              <RequirePermission permission={ROUTE_PERMISSIONS['/permissions']}>
+                <PermissionsPage />
+              </RequirePermission>
+            )
+          },
+          {
+            path: 'organizations',
+            element: (
+              <RequirePermission permission={ROUTE_PERMISSIONS['/organizations']}>
+                <OrganizationsPage />
+              </RequirePermission>
+            )
+          },
+          {
+            path: 'modules',
+            element: (
+              <RequirePermission permission={ROUTE_PERMISSIONS['/modules']}>
+                <ModulesPage />
+              </RequirePermission>
+            )
+          },
+          {
+            path: 'settings',
+            element: (
+              <RequirePermission permission={ROUTE_PERMISSIONS['/settings']}>
+                <SettingsPage />
+              </RequirePermission>
+            )
+          },
+          {
+            path: 'audit-logs',
+            element: (
+              <RequirePermission permission={ROUTE_PERMISSIONS['/audit-logs']}>
+                <AuditLogsPage />
+              </RequirePermission>
+            )
+          },
+          {
+            path: 'system-logs',
+            element: (
+              <RequirePermission permission={ROUTE_PERMISSIONS['/system-logs']}>
+                <SystemLogsPage />
+              </RequirePermission>
+            )
+          },
+          {
+            path: 'documents',
+            element: (
+              <RequirePermission permission={ROUTE_PERMISSIONS['/documents']}>
+                <DocumentsPage />
+              </RequirePermission>
+            )
+          }
         ]
       }
     ]

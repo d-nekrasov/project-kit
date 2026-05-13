@@ -102,8 +102,8 @@ export function UsersPage() {
     }
   });
 
-  const usersMeta = usersQuery.data?.meta;
-  const users = usersQuery.data?.items ?? [];
+  const usersMeta = usersQuery.isError ? undefined : usersQuery.data?.meta;
+  const users = usersQuery.isError ? [] : usersQuery.data?.items ?? [];
 
   const pageError = usersQuery.isError ? getApiErrorMessage(usersQuery.error) : null;
 
