@@ -8,6 +8,8 @@ export type CurrentUserOrganization = {
   name: string;
   slug: string;
   role: string;
+  roleId?: string;
+  roleName?: string;
 };
 
 export type CurrentUser = {

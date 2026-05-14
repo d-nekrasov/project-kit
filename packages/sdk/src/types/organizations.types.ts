@@ -1,6 +1,6 @@
 import type { ISODateString, PaginatedResponse } from './common.types';
 
-export type OrganizationStatus = 'ACTIVE' | 'INACTIVE';
+export type OrganizationStatus = 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
 
 export type OrganizationResponse = {
   id: string;

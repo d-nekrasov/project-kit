@@ -69,8 +69,14 @@ Capabilities:
 - search users
 - filter by status
 - create user
+- choose target organization during user creation where permissions allow it
 - edit user name/role
 - change status
+- open user detail at `/users/:id`
+- view user memberships, system roles and audit-relevant metadata
+- manage organization memberships where permissions allow it
+
+The user menu also includes `/profile`, where any authenticated user can view their own account and update only their display name.
 
 ### Roles page
 
@@ -403,11 +409,12 @@ curl http://localhost:3000/api/permissions/modules \
 
 ## Users
 
-All users endpoints require:
+Users endpoints require:
 
 `Authorization: Bearer <accessToken>`
 
-`x-organization-id: <organizationId>`
+Most admin-scoped endpoints also require `x-organization-id: <organizationId>`.
+Self profile endpoints (`GET /api/users/me`, `PATCH /api/users/me`) do not require an organization header.
 
 Examples:
 
@@ -424,9 +431,19 @@ curl -X POST http://localhost:3000/api/users \
     "email": "manager@example.com",
     "name": "Manager",
     "password": "password123",
-    "roleId": "<roleId>"
+    "roleId": "<roleId>",
+    "organizationId": "<optionalOrganizationId>"
   }'
 ```
+
+Implemented users endpoints include:
+- `GET /api/users/me`
+- `PATCH /api/users/me`
+- `GET /api/users/:id`
+- `PATCH /api/users/:id`
+- `POST /api/users`
+- `PATCH /api/users/:id/status`
+- `PUT /api/users/:id/organizations`
 
 ## Roles
 

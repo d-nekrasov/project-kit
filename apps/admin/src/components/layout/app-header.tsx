@@ -38,6 +38,15 @@ export function AppHeader() {
               <div className="px-2 py-1 text-xs text-slate-500">{auth.user?.email}</div>
               <DropdownMenuItem
                 onClick={() => {
+                  setMenuOpen(false);
+                  navigate('/profile');
+                }}
+              >
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  setMenuOpen(false);
                   auth.logout();
                   navigate('/login');
                 }}

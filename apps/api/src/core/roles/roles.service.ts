@@ -46,6 +46,7 @@ export class RolesService {
 
   async findAll(
     organizationId: string,
+    currentUser: CurrentUser,
     query: RolesListQueryDto
   ): Promise<{
     items: RoleResponseDto[];
@@ -55,11 +56,17 @@ export class RolesService {
     const limit = Math.min(query.limit ?? 20, 100);
     const skip = (page - 1) * limit;
     const search = query.search?.trim();
+    const isSuperAdmin = currentUser.systemRoles.includes('super_admin');
+    const targetOrganizationId = query.organizationId ?? organizationId;
+
+    if (targetOrganizationId !== organizationId && !isSuperAdmin) {
+      throw new ForbiddenException('You cannot list roles for another organization');
+    }
 
     const where: Prisma.RoleWhereInput = {
       OR: query.includeSystem
-        ? [{ type: RoleType.SYSTEM }, { type: RoleType.ORGANIZATION, organizationId }]
-        : [{ type: RoleType.ORGANIZATION, organizationId }],
+        ? [{ type: RoleType.SYSTEM }, { type: RoleType.ORGANIZATION, organizationId: targetOrganizationId }]
+        : [{ type: RoleType.ORGANIZATION, organizationId: targetOrganizationId }],
       ...(search
         ? {
             AND: [
