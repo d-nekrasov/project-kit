@@ -4,6 +4,7 @@ export const AUDIT_ACTIONS = {
   USER_UPDATE: 'user.update',
   USER_PROFILE_UPDATE: 'user.profile_update',
   USER_ORGANIZATIONS_UPDATE: 'user.organizations_update',
+  USER_ORGANIZATION_REMOVE: 'user.organization_remove',
   USER_STATUS_UPDATE: 'user.status_update',
   ROLE_CREATE: 'role.create',
   ROLE_UPDATE: 'role.update',

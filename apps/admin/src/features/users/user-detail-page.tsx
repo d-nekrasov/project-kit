@@ -78,10 +78,31 @@ export function UserDetailPage() {
     },
     onSuccess: async (updatedUser) => {
       setOrganizationsOpen(false);
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: usersQueryKeys.all }),
-        auth.user?.id === updatedUser.id ? auth.refreshMe() : Promise.resolve()
-      ]);
+      if (auth.user?.id === updatedUser.id) {
+        queryClient.clear();
+        await auth.refreshMe();
+        return;
+      }
+
+      await queryClient.invalidateQueries({ queryKey: usersQueryKeys.all });
+    }
+  });
+
+  const removeOrganizationMutation = useMutation({
+    mutationFn: (organizationId: string) => {
+      if (!id) {
+        throw new Error('User is not selected');
+      }
+      return sdk.users.removeOrganization(id, organizationId);
+    },
+    onSuccess: async (updatedUser) => {
+      if (auth.user?.id === updatedUser.id) {
+        queryClient.clear();
+        await auth.refreshMe();
+        return;
+      }
+
+      await queryClient.invalidateQueries({ queryKey: usersQueryKeys.all });
     }
   });
 
@@ -145,12 +166,17 @@ export function UserDetailPage() {
       <UserOrganizationsDialog
         open={organizationsOpen}
         user={user}
-        isSubmitting={updateOrganizationsMutation.isPending}
+        isSubmitting={updateOrganizationsMutation.isPending || removeOrganizationMutation.isPending}
         errorMessage={
-          updateOrganizationsMutation.isError ? getApiErrorMessage(updateOrganizationsMutation.error) : null
+          updateOrganizationsMutation.isError
+            ? getApiErrorMessage(updateOrganizationsMutation.error)
+            : removeOrganizationMutation.isError
+              ? getApiErrorMessage(removeOrganizationMutation.error)
+              : null
         }
         onOpenChange={setOrganizationsOpen}
         onSubmit={(rows) => updateOrganizationsMutation.mutate(rows)}
+        onRemove={(organizationId) => removeOrganizationMutation.mutate(organizationId)}
       />
     </div>
   );

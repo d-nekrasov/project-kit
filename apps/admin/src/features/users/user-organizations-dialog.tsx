@@ -1,6 +1,6 @@
 import type { RoleResponse, UserOrganization, UserResponse, UserStatus } from '@project-kit/sdk';
 import { useQueries, useQuery } from '@tanstack/react-query';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -31,6 +31,7 @@ type UserOrganizationsDialogProps = {
   errorMessage?: string | null;
   onOpenChange: (open: boolean) => void;
   onSubmit: (rows: MembershipRow[]) => void;
+  onRemove: (organizationId: string) => void;
 };
 
 function toRows(organizations: UserOrganization[]): MembershipRow[] {
@@ -47,7 +48,8 @@ export function UserOrganizationsDialog({
   isSubmitting,
   errorMessage,
   onOpenChange,
-  onSubmit
+  onSubmit,
+  onRemove
 }: UserOrganizationsDialogProps) {
   const auth = useAuth();
   const isSuperAdmin = auth.hasSystemRole('super_admin');
@@ -120,6 +122,29 @@ export function UserOrganizationsDialog({
     setNewOrganizationId('');
   }
 
+  function removeMembership(row: MembershipRow) {
+    if (!user) {
+      return;
+    }
+
+    const existingMembership = user.organizations.find((organization) => organization.id === row.organizationId);
+    if (!existingMembership) {
+      setRows((currentRows) =>
+        currentRows.filter((currentRow) => currentRow.organizationId !== row.organizationId)
+      );
+      return;
+    }
+
+    const organizationName = existingMembership.name;
+    if (
+      window.confirm(
+        `Remove organization membership?\n\n${user.email} will lose access to ${organizationName}.`
+      )
+    ) {
+      onRemove(row.organizationId);
+    }
+  }
+
   return (
     <Dialog open={open}>
       <DialogContent className="max-w-3xl">
@@ -142,6 +167,15 @@ export function UserOrganizationsDialog({
               const organization = user.organizations.find((item) => item.id === row.organizationId);
               const listedOrganization = organizationsQuery.data?.find((item) => item.id === row.organizationId);
               const roles = rolesByOrganizationId.get(row.organizationId) ?? [];
+              const activeRowsAfterRemove = rows.filter(
+                (item) => item.organizationId !== row.organizationId && item.status === 'ACTIVE'
+              ).length;
+              const isCurrentUserActiveOrganization =
+                user.id === auth.user?.id && row.organizationId === auth.activeOrganizationId;
+              const removeDisabled =
+                isSubmitting ||
+                isCurrentUserActiveOrganization ||
+                (user.status === 'ACTIVE' && row.status === 'ACTIVE' && activeRowsAfterRemove === 0);
               return (
                 <div key={row.organizationId} className="grid gap-3 rounded-md border p-3 md:grid-cols-[1fr_1fr_150px_auto]">
                   <div>
@@ -180,13 +214,30 @@ export function UserOrganizationsDialog({
                     </Select>
                   </div>
                   {isSuperAdmin ? (
-                    <div className="flex items-end">
+                    <div className="flex items-end gap-2">
                       <Button
                         type="button"
                         variant="outline"
                         onClick={() => updateRow(row.organizationId, { status: 'INACTIVE' })}
+                        disabled={isSubmitting}
                       >
                         Mark inactive
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => removeMembership(row)}
+                        disabled={removeDisabled}
+                        title={
+                          isCurrentUserActiveOrganization
+                            ? 'You cannot remove yourself from the active organization'
+                            : removeDisabled
+                              ? 'Active user must keep at least one active membership'
+                              : 'Remove membership'
+                        }
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Remove membership</span>
                       </Button>
                     </div>
                   ) : null}
