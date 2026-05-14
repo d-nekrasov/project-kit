@@ -5,6 +5,7 @@ export const AUDIT_ACTION_OPTIONS = [
   'auth.login',
   'user.create',
   'user.update',
+  'user.organization_remove',
   'user.status_update',
   'role.create',
   'role.update',
@@ -54,4 +55,3 @@ export type AuditLogDetailDialogProps = {
   error?: string | null;
   onOpenChange: (open: boolean) => void;
 };
-

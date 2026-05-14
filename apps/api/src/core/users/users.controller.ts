@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { getRequestMetadata } from '../../common/utils/request-metadata.util';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -101,6 +101,25 @@ export class UsersController {
       currentUser,
       organization.id,
       dto,
+      getRequestMetadata(req)
+    );
+  }
+
+  @Delete(':id/organizations/:organizationId')
+  @UseGuards(JwtAuthGuard, OrganizationGuard, PermissionsGuard)
+  @Permissions('users.update')
+  removeOrganization(
+    @CurrentUser() currentUser: CurrentUserType,
+    @CurrentOrganization() organization: CurrentOrganizationType,
+    @Param('id') userId: string,
+    @Param('organizationId') organizationId: string,
+    @Req() req: { headers: Record<string, string | string[] | undefined>; ip?: string }
+  ): Promise<UserResponseDto> {
+    return this.usersService.removeOrganization(
+      userId,
+      currentUser,
+      organization.id,
+      organizationId,
       getRequestMetadata(req)
     );
   }

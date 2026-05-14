@@ -44,4 +44,8 @@ export class UsersApi {
   updateOrganizations(id: string, dto: UpdateUserOrganizationsDto): Promise<UserResponse> {
     return this.client.put<UserResponse>(`/users/${id}/organizations`, dto);
   }
+
+  removeOrganization(id: string, organizationId: string): Promise<UserResponse> {
+    return this.client.delete<UserResponse>(`/users/${id}/organizations/${organizationId}`);
+  }
 }

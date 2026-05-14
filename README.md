@@ -75,6 +75,9 @@ Capabilities:
 - open user detail at `/users/:id`
 - view user memberships, system roles and audit-relevant metadata
 - manage organization memberships where permissions allow it
+- remove organization memberships as a super admin when the user keeps at least one active membership
+
+Moving a user between organizations is done by adding or activating the target organization membership with a role from that organization, then removing the old membership. Inactive memberships do not grant permissions and are not returned in `/auth/me` for organization switching.
 
 The user menu also includes `/profile`, where any authenticated user can view their own account and update only their display name.
 
@@ -364,7 +367,7 @@ Casbin policies are loaded into memory.
 Available reload modes:
 - full reload after installer setup;
 - role policy reload after role permissions changes;
-- user organization grouping reload after user role changes.
+- user organization grouping reload after user role, status, add, remove, or organization membership changes.
 
 Full reload remains available as a safe fallback.
 

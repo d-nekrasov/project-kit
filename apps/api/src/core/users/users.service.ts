@@ -366,7 +366,7 @@ export class UsersService {
   ): Promise<UserResponseDto> {
     const targetUser = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true }
+      select: { id: true, status: true }
     });
     if (!targetUser) {
       throw new NotFoundException('User not found');
@@ -388,11 +388,11 @@ export class UsersService {
       }
     }
 
-    const affectedOrganizationIds = new Set<string>();
     const existingMemberships = await this.prisma.userOrganization.findMany({
       where: { userId },
       include: { organization: true }
     });
+    const affectedOrganizationIds = new Set(existingMemberships.map((membership) => membership.organizationId));
     const existingByOrganizationId = new Map(
       existingMemberships.map((membership) => [membership.organizationId, membership])
     );
@@ -421,6 +421,28 @@ export class UsersService {
       (!nextCurrentMembership || (nextCurrentMembership.status ?? UserStatus.ACTIVE) !== UserStatus.ACTIVE)
     ) {
       throw new BadRequestException('You cannot remove yourself from the active organization');
+    }
+
+    const projectedActiveMemberships = new Map<string, UserStatus>();
+    for (const existing of existingMemberships) {
+      projectedActiveMemberships.set(existing.organizationId, existing.status);
+    }
+    for (const requested of requestedOrganizations) {
+      projectedActiveMemberships.set(requested.organizationId, requested.status ?? UserStatus.ACTIVE);
+    }
+    if (isSuperAdmin) {
+      const requestedSet = new Set(requestedOrganizationIds);
+      for (const existing of existingMemberships) {
+        if (!requestedSet.has(existing.organizationId)) {
+          projectedActiveMemberships.set(existing.organizationId, UserStatus.INACTIVE);
+        }
+      }
+    }
+    if (
+      targetUser.status === UserStatus.ACTIVE &&
+      ![...projectedActiveMemberships.values()].some((status) => status === UserStatus.ACTIVE)
+    ) {
+      throw new BadRequestException('Active user must have at least one active organization membership');
     }
 
     const user = await this.prisma.$transaction(async (tx) => {
@@ -477,6 +499,14 @@ export class UsersService {
       return tx.user.findUniqueOrThrow({ where: { id: userId }, include: USER_INCLUDE });
     });
 
+    const afterMemberships = await this.prisma.userOrganization.findMany({
+      where: { userId },
+      select: { organizationId: true }
+    });
+    for (const membership of afterMemberships) {
+      affectedOrganizationIds.add(membership.organizationId);
+    }
+
     await Promise.all(
       [...affectedOrganizationIds].map((affectedOrganizationId) =>
         this.casbinService.reloadUserOrganizationRole(userId, affectedOrganizationId)
@@ -495,6 +525,81 @@ export class UsersService {
           status: membership.status ?? UserStatus.ACTIVE
         }))
       },
+      ip: requestMetadata?.ip,
+      userAgent: requestMetadata?.userAgent
+    });
+
+    return this.toUserResponse(user);
+  }
+
+  async removeOrganization(
+    userId: string,
+    currentUser: CurrentUser,
+    currentOrganizationId: string,
+    organizationId: string,
+    requestMetadata?: RequestMetadata
+  ): Promise<UserResponseDto> {
+    if (!this.isSuperAdmin(currentUser)) {
+      throw new ForbiddenException('Only super admins can remove organization memberships');
+    }
+    if (currentUser.id === userId && organizationId === currentOrganizationId) {
+      throw new BadRequestException('You cannot remove yourself from the active organization');
+    }
+
+    const membership = await this.prisma.userOrganization.findUnique({
+      where: {
+        userId_organizationId: {
+          userId,
+          organizationId
+        }
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            status: true
+          }
+        }
+      }
+    });
+    if (!membership) {
+      throw new NotFoundException('Organization membership not found');
+    }
+
+    const activeMembershipsCount = await this.prisma.userOrganization.count({
+      where: {
+        userId,
+        status: UserStatus.ACTIVE
+      }
+    });
+    if (
+      membership.user.status === UserStatus.ACTIVE &&
+      activeMembershipsCount - (membership.status === UserStatus.ACTIVE ? 1 : 0) <= 0
+    ) {
+      throw new BadRequestException('Active user must have at least one active organization membership');
+    }
+
+    const user = await this.prisma.$transaction(async (tx) => {
+      await tx.userOrganization.delete({
+        where: {
+          userId_organizationId: {
+            userId,
+            organizationId
+          }
+        }
+      });
+
+      return tx.user.findUniqueOrThrow({ where: { id: userId }, include: USER_INCLUDE });
+    });
+
+    await this.casbinService.reloadUserOrganizationRole(userId, organizationId);
+    await this.auditLogsService.write({
+      action: AUDIT_ACTIONS.USER_ORGANIZATION_REMOVE,
+      entityType: AUDIT_ENTITY_TYPES.USER,
+      entityId: userId,
+      userId: currentUser.id,
+      organizationId: currentOrganizationId,
+      metadata: { organizationId },
       ip: requestMetadata?.ip,
       userAgent: requestMetadata?.userAgent
     });
