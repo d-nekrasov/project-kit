@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { getRequestMetadata } from '../../common/utils/request-metadata.util';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -9,6 +9,8 @@ import { CurrentOrganization as CurrentOrganizationType } from '../organization-
 import { Permissions } from '../permissions/decorators/permissions.decorator';
 import { PermissionsGuard } from '../permissions/guards/permissions.guard';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateMyProfileDto } from './dto/update-my-profile.dto';
+import { UpdateUserOrganizationsDto } from './dto/update-user-organizations.dto';
 import { UpdateUserStatusDto } from './dto/update-user-status.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
@@ -32,14 +34,31 @@ export class UsersController {
     return this.usersService.findAll(organization.id, query);
   }
 
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  findMe(@CurrentUser() currentUser: CurrentUserType): Promise<UserResponseDto> {
+    return this.usersService.findMe(currentUser.id);
+  }
+
+  @Patch('me')
+  @UseGuards(JwtAuthGuard)
+  updateMe(
+    @CurrentUser() currentUser: CurrentUserType,
+    @Body() dto: UpdateMyProfileDto,
+    @Req() req: { headers: Record<string, string | string[] | undefined>; ip?: string }
+  ): Promise<UserResponseDto> {
+    return this.usersService.updateMe(currentUser, dto, getRequestMetadata(req));
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard, OrganizationGuard, PermissionsGuard)
   @Permissions('users.read')
   findById(
+    @CurrentUser() currentUser: CurrentUserType,
     @CurrentOrganization() organization: CurrentOrganizationType,
     @Param('id') userId: string
   ): Promise<UserResponseDto> {
-    return this.usersService.findByIdInOrganization(userId, organization.id);
+    return this.usersService.findByIdInOrganization(userId, currentUser, organization.id);
   }
 
   @Post()
@@ -65,6 +84,25 @@ export class UsersController {
     @Req() req: { headers: Record<string, string | string[] | undefined>; ip?: string }
   ): Promise<UserResponseDto> {
     return this.usersService.update(userId, currentUser, organization.id, dto, getRequestMetadata(req));
+  }
+
+  @Put(':id/organizations')
+  @UseGuards(JwtAuthGuard, OrganizationGuard, PermissionsGuard)
+  @Permissions('users.update')
+  updateOrganizations(
+    @CurrentUser() currentUser: CurrentUserType,
+    @CurrentOrganization() organization: CurrentOrganizationType,
+    @Param('id') userId: string,
+    @Body() dto: UpdateUserOrganizationsDto,
+    @Req() req: { headers: Record<string, string | string[] | undefined>; ip?: string }
+  ): Promise<UserResponseDto> {
+    return this.usersService.updateOrganizations(
+      userId,
+      currentUser,
+      organization.id,
+      dto,
+      getRequestMetadata(req)
+    );
   }
 
   @Patch(':id/status')

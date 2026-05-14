@@ -1,6 +1,8 @@
 import type { ApiClient } from '../client/api-client';
 import type {
   CreateUserDto,
+  UpdateMyProfileDto,
+  UpdateUserOrganizationsDto,
   UpdateUserDto,
   UpdateUserStatusDto,
   UserResponse,
@@ -13,6 +15,14 @@ export class UsersApi {
 
   list(query?: UsersListQuery): Promise<UsersListResponse> {
     return this.client.get<UsersListResponse>('/users', { query });
+  }
+
+  me(): Promise<UserResponse> {
+    return this.client.get<UserResponse>('/users/me');
+  }
+
+  updateMe(dto: UpdateMyProfileDto): Promise<UserResponse> {
+    return this.client.patch<UserResponse>('/users/me', dto);
   }
 
   getById(id: string): Promise<UserResponse> {
@@ -29,5 +39,9 @@ export class UsersApi {
 
   updateStatus(id: string, dto: UpdateUserStatusDto): Promise<UserResponse> {
     return this.client.patch<UserResponse>(`/users/${id}/status`, dto);
+  }
+
+  updateOrganizations(id: string, dto: UpdateUserOrganizationsDto): Promise<UserResponse> {
+    return this.client.put<UserResponse>(`/users/${id}/organizations`, dto);
   }
 }

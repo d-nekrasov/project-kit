@@ -9,4 +9,8 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   roleId?: string;
+
+  @IsOptional()
+  @IsString()
+  organizationId?: string;
 }

@@ -2,6 +2,8 @@ export const AUDIT_ACTIONS = {
   AUTH_LOGIN: 'auth.login',
   USER_CREATE: 'user.create',
   USER_UPDATE: 'user.update',
+  USER_PROFILE_UPDATE: 'user.profile_update',
+  USER_ORGANIZATIONS_UPDATE: 'user.organizations_update',
   USER_STATUS_UPDATE: 'user.status_update',
   ROLE_CREATE: 'role.create',
   ROLE_UPDATE: 'role.update',

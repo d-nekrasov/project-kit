@@ -23,13 +23,14 @@ export class RolesController {
   @UseGuards(JwtAuthGuard, OrganizationGuard, PermissionsGuard)
   @Permissions('roles.read')
   findAll(
+    @CurrentUser() currentUser: CurrentUserType,
     @CurrentOrganization() organization: CurrentOrganizationType,
     @Query() query: RolesListQueryDto
   ): Promise<{
     items: RoleResponseDto[];
     meta: { page: number; limit: number; total: number; totalPages: number };
   }> {
-    return this.rolesService.findAll(organization.id, query);
+    return this.rolesService.findAll(organization.id, currentUser, query);
   }
 
   @Get(':id')

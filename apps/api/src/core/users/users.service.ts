@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException
 } from '@nestjs/common';
-import { Prisma, RoleType, UserStatus } from '@prisma/client';
+import { OrganizationStatus, Prisma, RoleType, UserStatus } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { CasbinService } from '../../infrastructure/casbin/casbin.service';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
@@ -14,6 +14,8 @@ import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } from '../audit-logs/constants/audit-actions.constants';
 import { CurrentUser } from '../auth/types/current-user.type';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateMyProfileDto } from './dto/update-my-profile.dto';
+import { UpdateUserOrganizationsDto } from './dto/update-user-organizations.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { UsersListQueryDto } from './dto/users-list-query.dto';
@@ -88,16 +90,65 @@ export class UsersService {
     };
   }
 
-  async findByIdInOrganization(userId: string, organizationId: string): Promise<UserResponseDto> {
-    const user = await this.prisma.user.findFirst({
-      where: {
-        id: userId,
-        memberships: {
-          some: {
-            organizationId
-          }
-        }
+  async findMe(userId: string): Promise<UserResponseDto> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: USER_INCLUDE
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return this.toUserResponse(user);
+  }
+
+  async updateMe(
+    currentUser: CurrentUser,
+    dto: UpdateMyProfileDto,
+    requestMetadata?: RequestMetadata
+  ): Promise<UserResponseDto> {
+    const user = await this.prisma.user.update({
+      where: { id: currentUser.id },
+      data: {
+        ...(dto.name !== undefined ? { name: dto.name } : {})
       },
+      include: USER_INCLUDE
+    });
+
+    const changedFields = [dto.name !== undefined ? 'name' : null].filter(Boolean);
+    await this.auditLogsService.write({
+      action: AUDIT_ACTIONS.USER_PROFILE_UPDATE,
+      entityType: AUDIT_ENTITY_TYPES.USER,
+      entityId: currentUser.id,
+      userId: currentUser.id,
+      organizationId: null,
+      metadata: { changedFields },
+      ip: requestMetadata?.ip,
+      userAgent: requestMetadata?.userAgent
+    });
+
+    return this.toUserResponse(user);
+  }
+
+  async findByIdInOrganization(
+    userId: string,
+    currentUser: CurrentUser,
+    organizationId: string
+  ): Promise<UserResponseDto> {
+    const where: Prisma.UserWhereInput = this.isSuperAdmin(currentUser)
+      ? { id: userId }
+      : {
+          id: userId,
+          memberships: {
+            some: {
+              organizationId
+            }
+          }
+        };
+
+    const user = await this.prisma.user.findFirst({
+      where,
       include: USER_INCLUDE
     });
 
@@ -115,6 +166,11 @@ export class UsersService {
     requestMetadata?: RequestMetadata
   ): Promise<UserResponseDto> {
     const email = dto.email.trim().toLowerCase();
+    const targetOrganizationId = await this.resolveTargetOrganizationId(
+      organizationId,
+      currentUser,
+      dto.organizationId
+    );
 
     const [existingUser, role] = await Promise.all([
       this.prisma.user.findUnique({ where: { email }, select: { id: true } }),
@@ -124,7 +180,7 @@ export class UsersService {
     if (existingUser) {
       throw new ConflictException('Email is already in use');
     }
-    this.ensureOrganizationRole(role, organizationId);
+    this.ensureOrganizationRole(role, targetOrganizationId);
 
     const user = await this.prisma.$transaction(async (tx) => {
       const createdUser = await tx.user.create({
@@ -135,7 +191,7 @@ export class UsersService {
           status: UserStatus.ACTIVE,
           memberships: {
             create: {
-              organizationId,
+              organizationId: targetOrganizationId,
               roleId: dto.roleId,
               status: UserStatus.ACTIVE
             }
@@ -147,14 +203,14 @@ export class UsersService {
       return createdUser;
     });
 
-    await this.casbinService.reloadUserOrganizationRole(user.id, organizationId);
+    await this.casbinService.reloadUserOrganizationRole(user.id, targetOrganizationId);
     await this.auditLogsService.write({
       action: AUDIT_ACTIONS.USER_CREATE,
       entityType: AUDIT_ENTITY_TYPES.USER,
       entityId: user.id,
       userId: currentUser.id,
-      organizationId,
-      metadata: { email, roleId: dto.roleId },
+      organizationId: targetOrganizationId,
+      metadata: { email, roleId: dto.roleId, organizationId: targetOrganizationId },
       ip: requestMetadata?.ip,
       userAgent: requestMetadata?.userAgent
     });
@@ -168,11 +224,16 @@ export class UsersService {
     dto: UpdateUserDto,
     requestMetadata?: RequestMetadata
   ): Promise<UserResponseDto> {
+    const targetOrganizationId = await this.resolveTargetOrganizationId(
+      organizationId,
+      currentUser,
+      dto.organizationId
+    );
     const membership = await this.prisma.userOrganization.findUnique({
       where: {
         userId_organizationId: {
           userId,
-          organizationId
+          organizationId: targetOrganizationId
         }
       }
     });
@@ -183,7 +244,7 @@ export class UsersService {
 
     if (dto.roleId) {
       const role = await this.prisma.role.findUnique({ where: { id: dto.roleId } });
-      this.ensureOrganizationRole(role, organizationId);
+      this.ensureOrganizationRole(role, targetOrganizationId);
     }
 
     const user = await this.prisma.$transaction(async (tx) => {
@@ -196,7 +257,7 @@ export class UsersService {
           where: {
             userId_organizationId: {
               userId,
-              organizationId
+              organizationId: targetOrganizationId
             }
           },
           data: {
@@ -209,16 +270,20 @@ export class UsersService {
     });
 
     if (dto.roleId) {
-      await this.casbinService.reloadUserOrganizationRole(userId, organizationId);
+      await this.casbinService.reloadUserOrganizationRole(userId, targetOrganizationId);
     }
-    const changedFields = [dto.name !== undefined ? 'name' : null, dto.roleId ? 'roleId' : null].filter(Boolean);
+    const changedFields = [
+      dto.name !== undefined ? 'name' : null,
+      dto.roleId ? 'roleId' : null,
+      dto.organizationId ? 'organizationId' : null
+    ].filter(Boolean);
     await this.auditLogsService.write({
       action: AUDIT_ACTIONS.USER_UPDATE,
       entityType: AUDIT_ENTITY_TYPES.USER,
       entityId: user.id,
       userId: currentUser.id,
-      organizationId,
-      metadata: { changedFields },
+      organizationId: targetOrganizationId,
+      metadata: { changedFields, organizationId: targetOrganizationId },
       ip: requestMetadata?.ip,
       userAgent: requestMetadata?.userAgent
     });
@@ -233,17 +298,19 @@ export class UsersService {
     status: UserStatus,
     requestMetadata?: RequestMetadata
   ): Promise<UserResponseDto> {
-    const membership = await this.prisma.userOrganization.findUnique({
-      where: {
-        userId_organizationId: {
-          userId,
-          organizationId
+    if (!this.isSuperAdmin(currentUser)) {
+      const membership = await this.prisma.userOrganization.findUnique({
+        where: {
+          userId_organizationId: {
+            userId,
+            organizationId
+          }
         }
-      }
-    });
+      });
 
-    if (!membership) {
-      throw new NotFoundException('User not found');
+      if (!membership) {
+        throw new NotFoundException('User not found');
+      }
     }
 
     if (currentUser.id === userId && status !== UserStatus.ACTIVE) {
@@ -290,6 +357,176 @@ export class UsersService {
     return this.toUserResponse(updatedUser);
   }
 
+  async updateOrganizations(
+    userId: string,
+    currentUser: CurrentUser,
+    currentOrganizationId: string,
+    dto: UpdateUserOrganizationsDto,
+    requestMetadata?: RequestMetadata
+  ): Promise<UserResponseDto> {
+    const targetUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true }
+    });
+    if (!targetUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    const isSuperAdmin = this.isSuperAdmin(currentUser);
+    const requestedOrganizations = dto.organizations ?? [];
+    const requestedOrganizationIds = requestedOrganizations.map((membership) => membership.organizationId);
+    if (new Set(requestedOrganizationIds).size !== requestedOrganizationIds.length) {
+      throw new BadRequestException('Duplicate organization memberships are not allowed');
+    }
+
+    if (!isSuperAdmin) {
+      if (
+        requestedOrganizations.length !== 1 ||
+        requestedOrganizations[0]?.organizationId !== currentOrganizationId
+      ) {
+        throw new ForbiddenException('You can manage only the active organization membership');
+      }
+    }
+
+    const affectedOrganizationIds = new Set<string>();
+    const existingMemberships = await this.prisma.userOrganization.findMany({
+      where: { userId },
+      include: { organization: true }
+    });
+    const existingByOrganizationId = new Map(
+      existingMemberships.map((membership) => [membership.organizationId, membership])
+    );
+
+    for (const requested of requestedOrganizations) {
+      const organization = await this.prisma.organization.findUnique({
+        where: { id: requested.organizationId },
+        select: { id: true, status: true }
+      });
+      if (!organization) {
+        throw new BadRequestException('Organization not found');
+      }
+      if ((requested.status ?? UserStatus.ACTIVE) === UserStatus.ACTIVE && organization.status !== OrganizationStatus.ACTIVE) {
+        throw new BadRequestException('Active membership requires an active organization');
+      }
+
+      const role = await this.prisma.role.findUnique({ where: { id: requested.roleId } });
+      this.ensureOrganizationRole(role, requested.organizationId);
+    }
+
+    const nextCurrentMembership = requestedOrganizations.find(
+      (membership) => membership.organizationId === currentOrganizationId
+    );
+    if (
+      currentUser.id === userId &&
+      (!nextCurrentMembership || (nextCurrentMembership.status ?? UserStatus.ACTIVE) !== UserStatus.ACTIVE)
+    ) {
+      throw new BadRequestException('You cannot remove yourself from the active organization');
+    }
+
+    const user = await this.prisma.$transaction(async (tx) => {
+      if (isSuperAdmin) {
+        const requestedSet = new Set(requestedOrganizationIds);
+        for (const existing of existingMemberships) {
+          if (!requestedSet.has(existing.organizationId) && existing.status !== UserStatus.INACTIVE) {
+            await tx.userOrganization.update({
+              where: {
+                userId_organizationId: {
+                  userId,
+                  organizationId: existing.organizationId
+                }
+              },
+              data: { status: UserStatus.INACTIVE }
+            });
+            affectedOrganizationIds.add(existing.organizationId);
+          }
+        }
+      }
+
+      for (const requested of requestedOrganizations) {
+        const status = requested.status ?? UserStatus.ACTIVE;
+        const existing = existingByOrganizationId.get(requested.organizationId);
+        if (existing) {
+          await tx.userOrganization.update({
+            where: {
+              userId_organizationId: {
+                userId,
+                organizationId: requested.organizationId
+              }
+            },
+            data: {
+              roleId: requested.roleId,
+              status
+            }
+          });
+        } else {
+          if (!isSuperAdmin) {
+            throw new ForbiddenException('You cannot add organization memberships');
+          }
+          await tx.userOrganization.create({
+            data: {
+              userId,
+              organizationId: requested.organizationId,
+              roleId: requested.roleId,
+              status
+            }
+          });
+        }
+        affectedOrganizationIds.add(requested.organizationId);
+      }
+
+      return tx.user.findUniqueOrThrow({ where: { id: userId }, include: USER_INCLUDE });
+    });
+
+    await Promise.all(
+      [...affectedOrganizationIds].map((affectedOrganizationId) =>
+        this.casbinService.reloadUserOrganizationRole(userId, affectedOrganizationId)
+      )
+    );
+    await this.auditLogsService.write({
+      action: AUDIT_ACTIONS.USER_ORGANIZATIONS_UPDATE,
+      entityType: AUDIT_ENTITY_TYPES.USER,
+      entityId: userId,
+      userId: currentUser.id,
+      organizationId: currentOrganizationId,
+      metadata: {
+        organizations: requestedOrganizations.map((membership) => ({
+          organizationId: membership.organizationId,
+          roleId: membership.roleId,
+          status: membership.status ?? UserStatus.ACTIVE
+        }))
+      },
+      ip: requestMetadata?.ip,
+      userAgent: requestMetadata?.userAgent
+    });
+
+    return this.toUserResponse(user);
+  }
+
+  private isSuperAdmin(currentUser: CurrentUser): boolean {
+    return currentUser.systemRoles.includes('super_admin');
+  }
+
+  private async resolveTargetOrganizationId(
+    currentOrganizationId: string,
+    currentUser: CurrentUser,
+    requestedOrganizationId?: string
+  ): Promise<string> {
+    const targetOrganizationId = requestedOrganizationId ?? currentOrganizationId;
+    if (targetOrganizationId !== currentOrganizationId && !this.isSuperAdmin(currentUser)) {
+      throw new ForbiddenException('You cannot manage users in another organization');
+    }
+
+    const organization = await this.prisma.organization.findUnique({
+      where: { id: targetOrganizationId },
+      select: { id: true, status: true }
+    });
+    if (!organization || organization.status !== OrganizationStatus.ACTIVE) {
+      throw new BadRequestException('Organization is not active');
+    }
+
+    return targetOrganizationId;
+  }
+
   private ensureOrganizationRole(
     role: { id: string; type: RoleType; organizationId: string | null } | null,
     organizationId: string
@@ -301,7 +538,7 @@ export class UsersService {
       throw new BadRequestException('System roles cannot be assigned via this endpoint');
     }
     if (role.organizationId !== organizationId) {
-      throw new BadRequestException('Role does not belong to current organization');
+      throw new BadRequestException('Role does not belong to target organization');
     }
   }
 
@@ -317,9 +554,18 @@ export class UsersService {
         id: membership.organization.id,
         name: membership.organization.name,
         slug: membership.organization.slug,
-        role: membership.role.code
+        status: membership.organization.status,
+        membershipStatus: membership.status,
+        role: membership.role.code,
+        roleId: membership.role.id,
+        roleName: membership.role.name
       })),
       systemRoles: user.systemRoles.map((systemRole) => systemRole.role.code),
+      systemRoleDetails: user.systemRoles.map((systemRole) => ({
+        id: systemRole.role.id,
+        code: systemRole.role.code,
+        name: systemRole.role.name
+      })),
       createdAt: user.createdAt,
       updatedAt: user.updatedAt
     };

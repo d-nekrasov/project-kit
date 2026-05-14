@@ -1,4 +1,4 @@
-import type { RoleResponse, UserResponse, UserStatus } from '@project-kit/sdk';
+import type { OrganizationResponse, RoleResponse, UserResponse, UserStatus } from '@project-kit/sdk';
 
 export const USER_STATUS_FILTERS = ['ALL', 'ACTIVE', 'INACTIVE', 'BLOCKED'] as const;
 
@@ -9,6 +9,7 @@ export type UserFormValues = {
   name: string;
   password?: string;
   roleId: string;
+  organizationId?: string;
 };
 
 export type UsersToolbarProps = {
@@ -23,6 +24,7 @@ export type UsersTableProps = {
   isLoading?: boolean;
   onEdit: (user: UserResponse) => void;
   onChangeStatus: (user: UserResponse) => void;
+  onViewDetails: (user: UserResponse) => void;
 };
 
 export type UserFormDialogProps = {
@@ -30,6 +32,10 @@ export type UserFormDialogProps = {
   mode: 'create' | 'edit';
   user?: UserResponse | null;
   roles: RoleResponse[];
+  organizations?: OrganizationResponse[];
+  isSuperAdmin?: boolean;
+  activeOrganizationId?: string | null;
+  onOrganizationChange?: (organizationId: string) => void;
   isSubmitting: boolean;
   errorMessage?: string | null;
   onOpenChange: (open: boolean) => void;

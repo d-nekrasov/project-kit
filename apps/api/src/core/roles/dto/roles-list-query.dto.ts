@@ -20,6 +20,10 @@ export class RolesListQueryDto {
   search?: string;
 
   @IsOptional()
+  @IsString()
+  organizationId?: string;
+
+  @IsOptional()
   @Transform(({ value }) => {
     if (value === true || value === 'true') return true;
     if (value === false || value === 'false') return false;

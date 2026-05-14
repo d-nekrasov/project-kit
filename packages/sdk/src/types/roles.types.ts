@@ -26,6 +26,7 @@ export type RolesListQuery = {
   limit?: number;
   search?: string;
   includeSystem?: boolean;
+  organizationId?: string;
 };
 
 export type RolesListResponse = PaginatedResponse<RoleResponse>;

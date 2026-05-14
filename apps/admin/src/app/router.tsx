@@ -11,9 +11,11 @@ import { LoginPage } from '@/features/login/login-page';
 import { ModulesPage } from '@/features/modules/modules-page';
 import { OrganizationsPage } from '@/features/organizations/organizations-page';
 import { PermissionsPage } from '@/features/permissions/permissions-page';
+import { ProfilePage } from '@/features/profile/profile-page';
 import { RolesPage } from '@/features/roles/roles-page';
 import { SettingsPage } from '@/features/settings/settings-page';
 import { SystemLogsPage } from '@/features/system-logs/system-logs-page';
+import { UserDetailPage } from '@/features/users/user-detail-page';
 import { UsersPage } from '@/features/users/users-page';
 import { ROUTE_PERMISSIONS } from '@/lib/route-permissions';
 
@@ -41,6 +43,18 @@ export const router = createBrowserRouter([
                 <UsersPage />
               </RequirePermission>
             )
+          },
+          {
+            path: 'users/:id',
+            element: (
+              <RequirePermission permission={ROUTE_PERMISSIONS['/users']}>
+                <UserDetailPage />
+              </RequirePermission>
+            )
+          },
+          {
+            path: 'profile',
+            element: <ProfilePage />
           },
           {
             path: 'roles',

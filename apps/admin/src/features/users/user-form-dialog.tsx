@@ -23,7 +23,8 @@ const createSchema = z.object({
   email: z.string().email('Enter a valid email'),
   name: z.string().min(2, 'Name must be at least 2 characters'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
-  roleId: z.string().min(1, 'Role is required')
+  roleId: z.string().min(1, 'Role is required'),
+  organizationId: z.string().optional()
 });
 
 const editSchema = z.object({
@@ -31,13 +32,15 @@ const editSchema = z.object({
   roleId: z.string().min(1, 'Role is required')
 });
 
-function findDefaultRoleId(user: UserFormDialogProps['user'], roleCodeMap: Map<string, string>): string {
-  const roleCode = user?.organizations[0]?.role;
-  if (!roleCode) {
+function findDefaultRoleId(user: UserFormDialogProps['user'], activeOrganizationId: string | null | undefined): string {
+  if (!user) {
     return '';
   }
 
-  return roleCodeMap.get(roleCode) ?? '';
+  const membership = activeOrganizationId
+    ? user.organizations.find((organization) => organization.id === activeOrganizationId)
+    : user.organizations[0];
+  return membership?.roleId ?? '';
 }
 
 export function UserFormDialog({
@@ -45,13 +48,16 @@ export function UserFormDialog({
   mode,
   user,
   roles,
+  organizations = [],
+  isSuperAdmin = false,
+  activeOrganizationId,
+  onOrganizationChange,
   isSubmitting,
   errorMessage,
   onOpenChange,
   onSubmit
 }: UserFormDialogProps) {
-  const roleCodeMap = useMemo(() => new Map(roles.map((role) => [role.code, role.id])), [roles]);
-  const defaultRoleId = findDefaultRoleId(user, roleCodeMap);
+  const defaultRoleId = useMemo(() => findDefaultRoleId(user, activeOrganizationId), [activeOrganizationId, user]);
   const schema = mode === 'create' ? createSchema : editSchema;
 
   const form = useForm<UserFormValues>({
@@ -60,7 +66,8 @@ export function UserFormDialog({
       email: '',
       name: '',
       password: '',
-      roleId: ''
+      roleId: '',
+      organizationId: activeOrganizationId ?? ''
     }
   });
 
@@ -70,12 +77,17 @@ export function UserFormDialog({
     }
 
     if (mode === 'create') {
+      const organizationId = isSuperAdmin ? organizations[0]?.id ?? activeOrganizationId ?? '' : activeOrganizationId ?? '';
       form.reset({
         email: '',
         name: '',
         password: '',
-        roleId: roles[0]?.id ?? ''
+        roleId: roles[0]?.id ?? '',
+        organizationId
       });
+      if (organizationId) {
+        onOrganizationChange?.(organizationId);
+      }
       return;
     }
 
@@ -83,7 +95,7 @@ export function UserFormDialog({
       name: user?.name ?? '',
       roleId: defaultRoleId
     });
-  }, [defaultRoleId, form, mode, open, roles, user]);
+  }, [activeOrganizationId, defaultRoleId, form, isSuperAdmin, mode, onOrganizationChange, open, organizations, user]);
 
   const roleWarning = mode === 'edit' && !defaultRoleId;
 
@@ -120,6 +132,29 @@ export function UserFormDialog({
               <Label htmlFor="user-email">Email</Label>
               <Input id="user-email" type="email" {...form.register('email')} />
               <p className="text-xs text-red-600">{form.formState.errors.email?.message}</p>
+            </div>
+          ) : null}
+
+          {mode === 'create' && isSuperAdmin ? (
+            <div className="space-y-2">
+              <Label htmlFor="user-organization">Organization</Label>
+              <Select
+                id="user-organization"
+                {...form.register('organizationId', {
+                  onChange: (event) => {
+                    onOrganizationChange?.(event.target.value);
+                    form.setValue('roleId', '');
+                  }
+                })}
+              >
+                <option value="">Select organization</option>
+                {organizations.map((organization) => (
+                  <option key={organization.id} value={organization.id}>
+                    {organization.name}
+                  </option>
+                ))}
+              </Select>
+              <p className="text-xs text-red-600">{form.formState.errors.organizationId?.message}</p>
             </div>
           ) : null}
 
