@@ -84,12 +84,14 @@ The user menu also includes `/profile`, where any authenticated user can view th
 ### Roles page
 
 The `/roles` page allows administrators to manage organization roles.
+Roles and permissions are organization-scoped. Super admins can select an organization on `/roles` before listing, creating, or editing organization roles. The same role code, such as `user`, can have different permissions in different organizations.
 It uses:
 - `@project-kit/sdk`
 - TanStack Query
 - Roles API
 - Permissions grouped API
 - current organization context
+- optional super admin organization selector
 
 Capabilities:
 - list roles

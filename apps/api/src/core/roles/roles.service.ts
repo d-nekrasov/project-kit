@@ -123,6 +123,11 @@ export class RolesService {
     requestMetadata?: RequestMetadata
   ): Promise<RoleResponseDto> {
     const code = dto.code.trim().toLowerCase();
+    const targetOrganizationId = this.resolveTargetOrganizationId(
+      organizationId,
+      currentUser,
+      dto.organizationId
+    );
 
     if (RESERVED_SYSTEM_CODES.has(code)) {
       throw new BadRequestException('This role code is reserved');
@@ -134,7 +139,7 @@ export class RolesService {
     const existingRole = await this.prisma.role.findUnique({
       where: {
         organizationId_code: {
-          organizationId,
+          organizationId: targetOrganizationId,
           code
         }
       },
@@ -151,7 +156,7 @@ export class RolesService {
           code,
           name: dto.name,
           type: RoleType.ORGANIZATION,
-          organizationId,
+          organizationId: targetOrganizationId,
           ...(permissions.length
             ? {
                 permissions: {
@@ -174,7 +179,7 @@ export class RolesService {
       entityType: AUDIT_ENTITY_TYPES.ROLE,
       entityId: role.id,
       userId: currentUser.id,
-      organizationId,
+      organizationId: targetOrganizationId,
       metadata: { code: role.code, name: role.name, permissions: permissionCodes },
       ip: requestMetadata?.ip,
       userAgent: requestMetadata?.userAgent
@@ -197,7 +202,7 @@ export class RolesService {
     if (role.type === RoleType.SYSTEM) {
       throw new ForbiddenException('System role cannot be edited');
     }
-    if (role.organizationId !== organizationId) {
+    if (!this.canAccessRoleOrganization(role, organizationId, currentUser)) {
       throw new NotFoundException('Role not found');
     }
     if (PROTECTED_ORG_EDIT_CODES.has(role.code)) {
@@ -217,7 +222,7 @@ export class RolesService {
       entityType: AUDIT_ENTITY_TYPES.ROLE,
       entityId: updated.id,
       userId: currentUser.id,
-      organizationId,
+      organizationId: updated.organizationId,
       metadata: { changedFields },
       ip: requestMetadata?.ip,
       userAgent: requestMetadata?.userAgent
@@ -241,7 +246,7 @@ export class RolesService {
     if (role.type === RoleType.SYSTEM) {
       throw new ForbiddenException('System role permissions cannot be edited');
     }
-    if (role.organizationId !== organizationId) {
+    if (!this.canAccessRoleOrganization(role, organizationId, currentUser)) {
       throw new NotFoundException('Role not found');
     }
     if (PROTECTED_ORG_PERMISSION_CODES.has(role.code)) {
@@ -271,7 +276,7 @@ export class RolesService {
       entityType: AUDIT_ENTITY_TYPES.ROLE,
       entityId: updated.id,
       userId: currentUser.id,
-      organizationId,
+      organizationId: updated.organizationId,
       metadata: { permissions: dto.permissions },
       ip: requestMetadata?.ip,
       userAgent: requestMetadata?.userAgent
@@ -297,6 +302,30 @@ export class RolesService {
     }
 
     return permissions;
+  }
+
+  private resolveTargetOrganizationId(
+    currentOrganizationId: string,
+    currentUser: CurrentUser,
+    requestedOrganizationId?: string
+  ): string {
+    if (!requestedOrganizationId || requestedOrganizationId === currentOrganizationId) {
+      return currentOrganizationId;
+    }
+
+    if (currentUser.systemRoles.includes('super_admin')) {
+      return requestedOrganizationId;
+    }
+
+    throw new ForbiddenException('You cannot manage roles for another organization');
+  }
+
+  private canAccessRoleOrganization(
+    role: { organizationId: string | null },
+    currentOrganizationId: string,
+    currentUser: CurrentUser
+  ): boolean {
+    return role.organizationId === currentOrganizationId || currentUser.systemRoles.includes('super_admin');
   }
 
   private toRoleResponse(role: Prisma.RoleGetPayload<{ include: typeof ROLE_INCLUDE }>): RoleResponseDto {

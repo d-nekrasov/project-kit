@@ -54,7 +54,7 @@ export class OrganizationsService {
     meta: { page: number; limit: number; total: number; totalPages: number };
   }> {
     const page = query.page ?? 1;
-    const limit = Math.min(query.limit ?? 20, 100);
+    const limit = Math.min(query.limit ?? 20, 200);
     const skip = (page - 1) * limit;
     const search = query.search?.trim();
 
