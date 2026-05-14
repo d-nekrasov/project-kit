@@ -35,6 +35,7 @@ export type CreateRoleDto = {
   code: string;
   name: string;
   permissions?: string[];
+  organizationId?: string;
 };
 
 export type UpdateRoleDto = {

@@ -2,6 +2,10 @@ import { Transform } from 'class-transformer';
 import { ArrayUnique, IsArray, IsOptional, IsString, Matches, MinLength } from 'class-validator';
 
 export class CreateRoleDto {
+  @IsOptional()
+  @IsString()
+  organizationId?: string;
+
   @Transform(({ value }) => (typeof value === 'string' ? value.trim().toLowerCase() : value))
   @IsString()
   @MinLength(2)
