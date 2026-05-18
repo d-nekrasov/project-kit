@@ -1,4 +1,16 @@
-import { NotificationChannel, NotificationConnectorStatus } from '@prisma/client';
+import {
+  NotificationChannel,
+  NotificationConnectorStatus
+} from '@prisma/client';
+
+export const NOTIFICATION_EVENTS = {
+  DOCUMENT_CREATED: 'document.created',
+  DOCUMENT_STATUS_CHANGED: 'document.status_changed',
+  USER_CREATED: 'user.created',
+  USER_STATUS_CHANGED: 'user.status_changed',
+  USER_ORGANIZATIONS_CHANGED: 'user.organizations_changed',
+  USER_PROFILE_UPDATED: 'user.profile_updated'
+} as const;
 
 export const DEFAULT_NOTIFICATION_CONNECTORS = [
   {
@@ -24,7 +36,7 @@ export const DEFAULT_NOTIFICATION_CONNECTORS = [
 
 export const DEFAULT_NOTIFICATION_TEMPLATES = [
   {
-    event: 'document.created',
+    event: NOTIFICATION_EVENTS.DOCUMENT_CREATED,
     title: 'New document: {{title}}',
     message: 'Document "{{title}}" was created.',
     emailSubject: 'New document: {{title}}',
@@ -32,11 +44,44 @@ export const DEFAULT_NOTIFICATION_TEMPLATES = [
     channels: [NotificationChannel.IN_APP]
   },
   {
-    event: 'document.status_changed',
+    event: NOTIFICATION_EVENTS.DOCUMENT_STATUS_CHANGED,
     title: 'Document status changed: {{title}}',
     message: 'Document "{{title}}" status changed to {{status}}.',
     emailSubject: 'Document status changed: {{title}}',
     emailBody: 'Document "{{title}}" status changed to {{status}}.',
+    channels: [NotificationChannel.IN_APP]
+  },
+  {
+    event: NOTIFICATION_EVENTS.USER_CREATED,
+    title: 'Welcome, {{name}}',
+    message: 'Your account {{email}} was created in {{organizationName}}.',
+    emailSubject: 'Welcome to Project Kit',
+    emailBody: 'Your account {{email}} was created in {{organizationName}}.',
+    channels: [NotificationChannel.IN_APP]
+  },
+  {
+    event: NOTIFICATION_EVENTS.USER_STATUS_CHANGED,
+    title: 'Account status changed',
+    message: 'Your account status changed to {{status}}.',
+    emailSubject: 'Account status changed',
+    emailBody: 'Your account status changed to {{status}}.',
+    channels: [NotificationChannel.IN_APP]
+  },
+  {
+    event: NOTIFICATION_EVENTS.USER_ORGANIZATIONS_CHANGED,
+    title: 'Organization access changed',
+    message: 'Your access to {{organizationName}} was changed.',
+    emailSubject: 'Organization access changed',
+    emailBody:
+      'Your access to {{organizationName}} was changed. Role: {{roleName}}. Status: {{membershipStatus}}.',
+    channels: [NotificationChannel.IN_APP]
+  },
+  {
+    event: NOTIFICATION_EVENTS.USER_PROFILE_UPDATED,
+    title: 'Profile updated',
+    message: 'Your profile was updated.',
+    emailSubject: 'Profile updated',
+    emailBody: 'Your profile was updated. Changed fields: {{changedFields}}.',
     channels: [NotificationChannel.IN_APP]
   }
 ] as const;
