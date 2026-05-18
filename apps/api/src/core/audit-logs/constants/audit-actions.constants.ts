@@ -13,7 +13,11 @@ export const AUDIT_ACTIONS = {
   ORGANIZATION_UPDATE: 'organization.update',
   ORGANIZATION_STATUS_UPDATE: 'organization.status_update',
   SETTING_UPDATE: 'setting.update',
-  MODULE_STATUS_UPDATE: 'module.status_update'
+  MODULE_STATUS_UPDATE: 'module.status_update',
+  NOTIFICATION_CONNECTOR_UPDATE: 'notification.connector_update',
+  NOTIFICATION_TEMPLATE_UPDATE: 'notification.template_update',
+  NOTIFICATION_READ: 'notification.read',
+  NOTIFICATION_READ_ALL: 'notification.read_all'
 } as const;
 
 export const AUDIT_ENTITY_TYPES = {
@@ -22,5 +26,7 @@ export const AUDIT_ENTITY_TYPES = {
   ROLE: 'role',
   ORGANIZATION: 'organization',
   SETTING: 'setting',
-  MODULE: 'module'
+  MODULE: 'module',
+  NOTIFICATION_CONNECTOR: 'notification_connector',
+  NOTIFICATION_TEMPLATE: 'notification_template'
 } as const;

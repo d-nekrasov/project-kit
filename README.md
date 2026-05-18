@@ -205,6 +205,17 @@ Capabilities:
 
 If the `documents` module is disabled in Module Registry, the API returns `403 Module is disabled`, and the page shows a module disabled state.
 
+### Notifications backend
+
+`NotificationsModule` provides the backend-only MVP notification boundary.
+Business modules call `NotificationsService.notify(...)`; they do not send email directly.
+
+Supported MVP channels:
+- in-app notifications;
+- email through the global `smtp_email` connector.
+
+No admin UI, SDK resource, realtime bell, SMS, messengers, retries, digests, or user preferences are included yet.
+
 ### Audit Logs page
 
 The `/audit-logs` page shows user actions and security-relevant events.
@@ -667,6 +678,7 @@ Endpoints:
 
 Documents endpoints are protected by `ModuleEnabledGuard`.
 If module `documents` is disabled, documents API returns `403`.
+When a document status changes, the backend notifies the document creator if another user made the change.
 
 Required headers:
 - `Authorization: Bearer <accessToken>`
@@ -704,6 +716,45 @@ curl -X PATCH "http://localhost:3000/api/documents/<documentId>/status" \
     "status": "PUBLISHED"
   }'
 ```
+
+## Notifications Module
+
+Backend notifications are documented in `docs/notifications.md`.
+
+Internal usage:
+
+```ts
+await notificationsService.notify({
+  event: 'document.status_changed',
+  organizationId,
+  recipientUserIds: [userId],
+  payload: {
+    documentId,
+    title,
+    status
+  }
+});
+```
+
+Own notification endpoints require only `Authorization: Bearer <accessToken>`:
+- `GET /api/notifications/my`
+- `GET /api/notifications/my/unread-count`
+- `PATCH /api/notifications/:id/read`
+- `PATCH /api/notifications/read-all`
+
+Connector and template management requires `Authorization`, `x-organization-id`, `notifications.manage`, and `super_admin`:
+- `GET /api/notification-connectors`
+- `PATCH /api/notification-connectors/:code`
+- `GET /api/notification-templates`
+- `PUT /api/notification-templates/:event`
+
+Default connectors:
+- `in_app`: enabled by default.
+- `smtp_email`: disabled by default; password is masked in API responses.
+
+Default templates:
+- `document.created`
+- `document.status_changed`
 
 ## System Logs
 
