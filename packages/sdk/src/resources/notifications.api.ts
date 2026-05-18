@@ -4,6 +4,7 @@ import type {
   MyNotificationsQuery,
   MyNotificationsResponse,
   NotificationResponse,
+  NotificationStreamTokenResponse,
   UnreadNotificationsCountResponse
 } from '../types/notifications.types';
 
@@ -16,6 +17,10 @@ export class NotificationsApi {
 
   unreadCount(): Promise<UnreadNotificationsCountResponse> {
     return this.client.get<UnreadNotificationsCountResponse>('/notifications/my/unread-count');
+  }
+
+  streamToken(): Promise<NotificationStreamTokenResponse> {
+    return this.client.post<NotificationStreamTokenResponse>('/notifications/stream-token');
   }
 
   markRead(id: string): Promise<NotificationResponse> {

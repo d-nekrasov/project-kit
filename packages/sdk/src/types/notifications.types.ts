@@ -51,6 +51,34 @@ export type MarkAllNotificationsReadResponse = {
   updated: number;
 };
 
+export type NotificationStreamTokenResponse = {
+  token: string;
+  expiresAt: string;
+  expiresIn: number;
+};
+
+export type NotificationRealtimeCreatedEvent = {
+  notification: {
+    id: string;
+    organizationId: string | null;
+    event: string;
+    title: string;
+    message: string;
+    status: NotificationStatus;
+    createdAt: string;
+  };
+  unreadCount: number;
+};
+
+export type NotificationRealtimeReadEvent = {
+  notificationId: string;
+  unreadCount: number;
+};
+
+export type NotificationsRealtimeReadAllEvent = {
+  unreadCount: number;
+};
+
 export type NotificationConnectorResponse = {
   id: string;
   code: string;

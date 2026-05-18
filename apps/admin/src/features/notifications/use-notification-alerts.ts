@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { getNotificationSoundEnabled } from '@/features/notifications/notification-sound-preferences';
 import { playNotificationSound, unlockNotificationSound } from '@/features/notifications/notification-sound';
@@ -6,10 +6,11 @@ import { playNotificationSound, unlockNotificationSound } from '@/features/notif
 type UseNotificationAlertsParams = {
   count: number | null;
   userId: string | null | undefined;
+  fallbackDetectionEnabled?: boolean;
   onNewNotifications?: () => void;
 };
 
-export function useNotificationAlerts({ count, userId, onNewNotifications }: UseNotificationAlertsParams) {
+export function useNotificationAlerts({ count, userId, fallbackDetectionEnabled = true, onNewNotifications }: UseNotificationAlertsParams) {
   const previousCountRef = useRef<number | null>(null);
   const initializedRef = useRef(false);
   const highlightTimeoutRef = useRef<number | null>(null);
@@ -42,6 +43,24 @@ export function useNotificationAlerts({ count, userId, onNewNotifications }: Use
     }
   }, [userId]);
 
+  const triggerAlert = useCallback(() => {
+    onNewNotifications?.();
+    setHighlight(true);
+
+    if (highlightTimeoutRef.current !== null) {
+      window.clearTimeout(highlightTimeoutRef.current);
+    }
+
+    highlightTimeoutRef.current = window.setTimeout(() => {
+      setHighlight(false);
+      highlightTimeoutRef.current = null;
+    }, 2_000);
+
+    if (getNotificationSoundEnabled()) {
+      playNotificationSound();
+    }
+  }, [onNewNotifications]);
+
   useEffect(() => {
     if (count === null) {
       return;
@@ -55,26 +74,12 @@ export function useNotificationAlerts({ count, userId, onNewNotifications }: Use
 
     const previous = previousCountRef.current ?? 0;
 
-    if (count > previous) {
-      onNewNotifications?.();
-      setHighlight(true);
-
-      if (highlightTimeoutRef.current !== null) {
-        window.clearTimeout(highlightTimeoutRef.current);
-      }
-
-      highlightTimeoutRef.current = window.setTimeout(() => {
-        setHighlight(false);
-        highlightTimeoutRef.current = null;
-      }, 2_000);
-
-      if (getNotificationSoundEnabled()) {
-        playNotificationSound();
-      }
+    if (fallbackDetectionEnabled && count > previous) {
+      triggerAlert();
     }
 
     previousCountRef.current = count;
-  }, [count, onNewNotifications]);
+  }, [count, fallbackDetectionEnabled, onNewNotifications, triggerAlert]);
 
   useEffect(
     () => () => {
@@ -85,5 +90,5 @@ export function useNotificationAlerts({ count, userId, onNewNotifications }: Use
     []
   );
 
-  return { highlight };
+  return { highlight, triggerAlert };
 }
