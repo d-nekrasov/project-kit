@@ -8,6 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
 import { useAuth } from '@/features/auth/use-auth';
 import { NotificationDetailDialog } from '@/features/notifications/notification-detail-dialog';
+import { unlockNotificationSound } from '@/features/notifications/notification-sound';
+import {
+  getNotificationSoundEnabled,
+  setNotificationSoundEnabled
+} from '@/features/notifications/notification-sound-preferences';
 import { notificationsQueryKeys } from '@/features/notifications/notifications-query-keys';
 import { NotificationsTable } from '@/features/notifications/notifications-table';
 import { NotificationsToolbar, type NotificationStatusFilter } from '@/features/notifications/notifications-toolbar';
@@ -23,6 +28,7 @@ export function NotificationsPage() {
   const [event, setEvent] = useState('');
   const [selectedNotification, setSelectedNotification] = useState<NotificationResponse | null>(null);
   const [markReadId, setMarkReadId] = useState<string | null>(null);
+  const [soundEnabled, setSoundEnabledState] = useState(getNotificationSoundEnabled);
 
   const queryParams = useMemo(
     () => ({
@@ -42,7 +48,8 @@ export function NotificationsPage() {
         limit,
         status: status === 'ALL' ? undefined : status,
         event: event || undefined
-      })
+      }),
+    enabled: auth.isAuthenticated
   });
 
   const markReadMutation = useMutation({
@@ -63,6 +70,15 @@ export function NotificationsPage() {
       await queryClient.invalidateQueries({ queryKey: notificationsQueryKeys.all });
     }
   });
+
+  const setSoundEnabled = (enabled: boolean) => {
+    setNotificationSoundEnabled(enabled);
+    setSoundEnabledState(enabled);
+
+    if (enabled) {
+      unlockNotificationSound();
+    }
+  };
 
   const meta = notificationsQuery.isError ? undefined : notificationsQuery.data?.meta;
   const notifications = notificationsQuery.isError ? [] : notificationsQuery.data?.items ?? [];
@@ -85,14 +101,28 @@ export function NotificationsPage() {
           <h2 className="text-2xl font-semibold text-slate-900">Notifications</h2>
           <p className="text-sm text-slate-600">Personal notification inbox for your account.</p>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => markAllReadMutation.mutate()}
-          disabled={markAllReadMutation.isPending || !notifications.length}
-        >
-          {markAllReadMutation.isPending ? 'Saving...' : 'Mark all read'}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
+            <span>Notification sound</span>
+            <Button
+              type="button"
+              variant={soundEnabled ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSoundEnabled(!soundEnabled)}
+              aria-pressed={soundEnabled}
+            >
+              {soundEnabled ? 'On' : 'Off'}
+            </Button>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => markAllReadMutation.mutate()}
+            disabled={markAllReadMutation.isPending || !notifications.length}
+          >
+            {markAllReadMutation.isPending ? 'Saving...' : 'Mark all read'}
+          </Button>
+        </div>
       </div>
 
       <NotificationsToolbar
