@@ -1,11 +1,13 @@
-import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import {
   NotificationChannel,
   NotificationConnectorStatus,
   NotificationDeliveryStatus,
   NotificationStatus,
   Prisma,
-  SystemLogLevel
+  SystemLogLevel,
+  UserStatus
 } from '@prisma/client';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { CurrentUser } from '../auth/types/current-user.type';
@@ -20,8 +22,11 @@ import {
   NOTIFICATION_CONNECTOR_CODES
 } from './constants/notification-events.constants';
 import { MyNotificationsQueryDto } from './dto/my-notifications-query.dto';
+import { NotificationStreamTokenResponseDto } from './dto/notification-stream-token-response.dto';
 import { NotificationResponseDto } from './dto/notification-response.dto';
+import { NotificationsRealtimeService } from './notifications-realtime.service';
 import { NotifyDto } from './types/notification.types';
+import { NotificationStreamTokenPayload } from './types/notification-realtime.types';
 import { renderNotificationTemplate } from './utils/render-notification-template';
 
 const NOTIFICATION_INCLUDE = {
@@ -35,13 +40,27 @@ type RenderedNotificationContent = {
   emailBody: string;
 };
 
+type CreatedNotification = {
+  id: string;
+  organizationId: string | null;
+  event: string;
+  title: string;
+  message: string;
+  status: NotificationStatus;
+  createdAt: Date;
+};
+
+const NOTIFICATION_STREAM_TOKEN_TTL_SECONDS = 60;
+
 @Injectable()
 export class NotificationsService implements OnModuleInit {
   constructor(
     private readonly prisma: PrismaService,
     private readonly systemLogsService: SystemLogsService,
     private readonly inAppConnector: InAppNotificationConnector,
-    private readonly emailConnector: EmailSmtpNotificationConnector
+    private readonly emailConnector: EmailSmtpNotificationConnector,
+    private readonly jwtService: JwtService,
+    private readonly notificationsRealtimeService: NotificationsRealtimeService
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -130,7 +149,54 @@ export class NotificationsService implements OnModuleInit {
           connectorByCode.get(NOTIFICATION_CONNECTOR_CODES.SMTP_EMAIL) ?? null
         );
       }
+
+      await this.pushNotificationCreated(recipientUserId, notification);
     }
+  }
+
+  async createStreamToken(currentUser: CurrentUser): Promise<NotificationStreamTokenResponseDto> {
+    const expiresAt = new Date(Date.now() + NOTIFICATION_STREAM_TOKEN_TTL_SECONDS * 1000);
+    const payload: NotificationStreamTokenPayload = {
+      sub: currentUser.id,
+      purpose: 'notification_stream'
+    };
+    const token = await this.jwtService.signAsync(payload, {
+      expiresIn: NOTIFICATION_STREAM_TOKEN_TTL_SECONDS
+    });
+
+    return {
+      token,
+      expiresAt: expiresAt.toISOString(),
+      expiresIn: NOTIFICATION_STREAM_TOKEN_TTL_SECONDS
+    };
+  }
+
+  async validateStreamToken(token: string | undefined): Promise<{ userId: string }> {
+    if (!token) {
+      throw new UnauthorizedException('Notification stream token is required');
+    }
+
+    let payload: NotificationStreamTokenPayload;
+    try {
+      payload = await this.jwtService.verifyAsync<NotificationStreamTokenPayload>(token);
+    } catch {
+      throw new UnauthorizedException('Notification stream token is invalid');
+    }
+
+    if (payload.purpose !== 'notification_stream' || !payload.sub) {
+      throw new UnauthorizedException('Notification stream token is invalid');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.sub },
+      select: { id: true, status: true }
+    });
+
+    if (!user || user.status !== UserStatus.ACTIVE) {
+      throw new UnauthorizedException('Notification stream token is invalid');
+    }
+
+    return { userId: user.id };
   }
 
   async findMy(
@@ -188,6 +254,7 @@ export class NotificationsService implements OnModuleInit {
       data: { status: NotificationStatus.READ, readAt: new Date() },
       include: NOTIFICATION_INCLUDE
     });
+    await this.pushNotificationRead(currentUser.id, updated.id);
     return this.toResponse(updated);
   }
 
@@ -196,6 +263,7 @@ export class NotificationsService implements OnModuleInit {
       where: { recipientUserId: currentUser.id, status: NotificationStatus.UNREAD },
       data: { status: NotificationStatus.READ, readAt: new Date() }
     });
+    this.notificationsRealtimeService.sendToUser(currentUser.id, 'notifications.read_all', { unreadCount: 0 });
     return { updated: result.count };
   }
 
@@ -281,7 +349,7 @@ export class NotificationsService implements OnModuleInit {
     recipientUserId: string,
     payload: Record<string, unknown>,
     rendered: RenderedNotificationContent
-  ): Promise<{ id: string }> {
+  ): Promise<CreatedNotification> {
     try {
       return await this.prisma.notification.create({
         data: {
@@ -292,7 +360,15 @@ export class NotificationsService implements OnModuleInit {
           message: rendered.message,
           payload: payload as Prisma.InputJsonValue
         },
-        select: { id: true }
+        select: {
+          id: true,
+          organizationId: true,
+          event: true,
+          title: true,
+          message: true,
+          status: true,
+          createdAt: true
+        }
       });
     } catch (error) {
       await this.writeNotificationLog({
@@ -306,6 +382,28 @@ export class NotificationsService implements OnModuleInit {
       });
       throw error;
     }
+  }
+
+  private async pushNotificationCreated(recipientUserId: string, notification: CreatedNotification): Promise<void> {
+    const unreadCount = await this.getUnreadCountForUser(recipientUserId);
+    this.notificationsRealtimeService.sendToUser(recipientUserId, 'notification.created', {
+      notification,
+      unreadCount
+    });
+  }
+
+  private async pushNotificationRead(recipientUserId: string, notificationId: string): Promise<void> {
+    const unreadCount = await this.getUnreadCountForUser(recipientUserId);
+    this.notificationsRealtimeService.sendToUser(recipientUserId, 'notification.read', {
+      notificationId,
+      unreadCount
+    });
+  }
+
+  private async getUnreadCountForUser(recipientUserId: string): Promise<number> {
+    return this.prisma.notification.count({
+      where: { recipientUserId, status: NotificationStatus.UNREAD }
+    });
   }
 
   private async deliverInApp(

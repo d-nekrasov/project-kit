@@ -223,7 +223,7 @@ Supported MVP channels:
 - in-app notifications;
 - email through the global `smtp_email` connector.
 
-Realtime websocket updates, SMS, messengers, retries, digests, and user preferences are not included yet.
+Realtime notification updates use SSE in the admin app. WebSockets, SMS, messengers, retries, digests, and user preferences are not included yet.
 
 ### Audit Logs page
 
@@ -746,12 +746,14 @@ await notificationsService.notify({
 ```
 
 Own notification endpoints require only `Authorization: Bearer <accessToken>`:
+- `POST /api/notifications/stream-token`
+- `GET /api/notifications/stream?token=<streamToken>`
 - `GET /api/notifications/my`
 - `GET /api/notifications/my/unread-count`
 - `PATCH /api/notifications/:id/read`
 - `PATCH /api/notifications/read-all`
 
-The admin notification bell polls unread count every 15 seconds and also refetches on window focus/reconnect. This MVP deliberately uses polling instead of WebSocket/SSE. Sound alerts are controlled by a local browser preference on `/notifications`; the browser may require prior user interaction before allowing playback.
+The admin notification bell uses SSE for realtime updates. Polling is only a fallback while SSE is disconnected, at most once per minute, plus normal focus/reconnect sync. The SSE registry is in memory for the single API instance MVP; multi-instance production should add Redis pub/sub or another broker. Sound alerts are controlled by a local browser preference on `/notifications`; the browser may require prior user interaction before allowing playback.
 
 Connector and template management requires `Authorization`, `x-organization-id`, `notifications.manage`, and `super_admin`:
 - `GET /api/notification-connectors`
