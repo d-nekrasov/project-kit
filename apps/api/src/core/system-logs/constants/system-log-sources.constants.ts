@@ -9,5 +9,6 @@ export const SYSTEM_LOG_SOURCES = {
   SETTINGS: 'settings',
   USERS: 'users',
   ROLES: 'roles',
-  ORGANIZATIONS: 'organizations'
+  ORGANIZATIONS: 'organizations',
+  NOTIFICATIONS: 'notifications'
 } as const;

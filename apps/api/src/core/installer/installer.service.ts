@@ -30,7 +30,9 @@ const CORE_PERMISSIONS = [
   'systemLogs.read',
   'modules.read',
   'modules.update',
-  'installer.read'
+  'installer.read',
+  'notifications.read',
+  'notifications.manage'
 ] as const;
 
 const ORG_ADMIN_PERMISSIONS = [
