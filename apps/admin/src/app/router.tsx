@@ -9,6 +9,8 @@ import { DocumentsPage } from '@/features/documents/documents-page';
 import { InstallPage } from '@/features/installer/install-page';
 import { LoginPage } from '@/features/login/login-page';
 import { ModulesPage } from '@/features/modules/modules-page';
+import { NotificationSettingsPage } from '@/features/notification-settings/notification-settings-page';
+import { NotificationsPage } from '@/features/notifications/notifications-page';
 import { OrganizationsPage } from '@/features/organizations/organizations-page';
 import { PermissionsPage } from '@/features/permissions/permissions-page';
 import { ProfilePage } from '@/features/profile/profile-page';
@@ -55,6 +57,10 @@ export const router = createBrowserRouter([
           {
             path: 'profile',
             element: <ProfilePage />
+          },
+          {
+            path: 'notifications',
+            element: <NotificationsPage />
           },
           {
             path: 'roles',
@@ -117,6 +123,14 @@ export const router = createBrowserRouter([
             element: (
               <RequirePermission permission={ROUTE_PERMISSIONS['/documents']}>
                 <DocumentsPage />
+              </RequirePermission>
+            )
+          },
+          {
+            path: 'notification-settings',
+            element: (
+              <RequirePermission permission={ROUTE_PERMISSIONS['/notification-settings']}>
+                <NotificationSettingsPage />
               </RequirePermission>
             )
           }

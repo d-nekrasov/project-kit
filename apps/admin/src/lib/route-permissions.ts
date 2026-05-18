@@ -7,6 +7,7 @@ export const ROUTE_PERMISSIONS = {
   '/modules': 'modules.read',
   '/settings': 'settings.read',
   '/documents': 'documents.read',
+  '/notification-settings': 'notifications.manage',
   '/audit-logs': 'auditLogs.read',
   '/system-logs': 'systemLogs.read'
 } as const satisfies Record<string, string | null>;

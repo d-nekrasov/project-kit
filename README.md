@@ -48,6 +48,8 @@ Routes:
 - `/audit-logs`
 - `/system-logs`
 - `/documents`
+- `/notifications`
+- `/notification-settings`
 
 The admin app uses `@project-kit/sdk` for all API calls.
 The SDK receives the access token and active organization id from admin auth storage.
@@ -205,16 +207,23 @@ Capabilities:
 
 If the `documents` module is disabled in Module Registry, the API returns `403 Module is disabled`, and the page shows a module disabled state.
 
+### Notifications UI
+
+The admin app includes:
+- notification bell with unread count;
+- `/notifications` personal notification inbox;
+- `/notification-settings` connector/template management for users with `notifications.manage`.
+
 ### Notifications backend
 
-`NotificationsModule` provides the backend-only MVP notification boundary.
+`NotificationsModule` provides the backend notification boundary.
 Business modules call `NotificationsService.notify(...)`; they do not send email directly.
 
 Supported MVP channels:
 - in-app notifications;
 - email through the global `smtp_email` connector.
 
-No admin UI, SDK resource, realtime bell, SMS, messengers, retries, digests, or user preferences are included yet.
+Realtime websocket updates, SMS, messengers, retries, digests, and user preferences are not included yet.
 
 ### Audit Logs page
 

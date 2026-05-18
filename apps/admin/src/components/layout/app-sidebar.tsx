@@ -19,7 +19,8 @@ const coreMenu = [
   { label: 'Modules', path: '/modules', permission: ROUTE_PERMISSIONS['/modules'] },
   { label: 'Audit Logs', path: '/audit-logs', permission: ROUTE_PERMISSIONS['/audit-logs'] },
   { label: 'System Logs', path: '/system-logs', permission: ROUTE_PERMISSIONS['/system-logs'] },
-  { label: 'Documents', path: '/documents', permission: ROUTE_PERMISSIONS['/documents'] }
+  { label: 'Documents', path: '/documents', permission: ROUTE_PERMISSIONS['/documents'] },
+  { label: 'Notification Settings', path: '/notification-settings', permission: ROUTE_PERMISSIONS['/notification-settings'] }
 ];
 
 export function AppSidebar() {
