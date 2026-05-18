@@ -751,6 +751,8 @@ Own notification endpoints require only `Authorization: Bearer <accessToken>`:
 - `PATCH /api/notifications/:id/read`
 - `PATCH /api/notifications/read-all`
 
+The admin notification bell polls unread count every 15 seconds and also refetches on window focus/reconnect. This MVP deliberately uses polling instead of WebSocket/SSE. Sound alerts are controlled by a local browser preference on `/notifications`; the browser may require prior user interaction before allowing playback.
+
 Connector and template management requires `Authorization`, `x-organization-id`, `notifications.manage`, and `super_admin`:
 - `GET /api/notification-connectors`
 - `PATCH /api/notification-connectors/:code`
