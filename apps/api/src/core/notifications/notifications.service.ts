@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import {
   NotificationChannel,
+  NotificationConnectorStatus,
   NotificationDeliveryStatus,
   NotificationStatus,
   Prisma,
@@ -27,6 +28,13 @@ const NOTIFICATION_INCLUDE = {
   deliveries: { orderBy: { createdAt: 'asc' } }
 } satisfies Prisma.NotificationInclude;
 
+type RenderedNotificationContent = {
+  title: string;
+  message: string;
+  emailSubject: string;
+  emailBody: string;
+};
+
 @Injectable()
 export class NotificationsService implements OnModuleInit {
   constructor(
@@ -43,6 +51,13 @@ export class NotificationsService implements OnModuleInit {
   async notify(dto: NotifyDto): Promise<void> {
     const recipientUserIds = [...new Set(dto.recipientUserIds.filter(Boolean))];
     if (recipientUserIds.length === 0) {
+      await this.writeNotificationLog({
+        level: SystemLogLevel.WARN,
+        message: 'Notification skipped because no recipients were provided',
+        event: SYSTEM_LOG_EVENTS.NOTIFICATION_NO_RECIPIENTS,
+        notificationEvent: dto.event,
+        organizationId: dto.organizationId ?? null
+      });
       return;
     }
 
@@ -50,52 +65,70 @@ export class NotificationsService implements OnModuleInit {
     const template = await this.prisma.notificationTemplate.findUnique({
       where: { event: dto.event }
     });
+    if (!template) {
+      await this.writeNotificationLog({
+        level: SystemLogLevel.WARN,
+        message: 'Notification template not found; using request fallback content',
+        event: SYSTEM_LOG_EVENTS.NOTIFICATION_TEMPLATE_NOT_FOUND,
+        notificationEvent: dto.event,
+        organizationId: dto.organizationId ?? null
+      });
+    }
     const channels = this.resolveChannels(dto.channels, template?.channels);
-    const rendered = this.renderContent(dto, template, payload);
+    const rendered = await this.renderContent(dto, template, payload);
 
-    const [users, emailConnector] = await this.prisma.$transaction([
+    const [users, connectors] = await this.prisma.$transaction([
       this.prisma.user.findMany({
         where: { id: { in: recipientUserIds } },
         select: { id: true, email: true }
       }),
-      this.prisma.notificationConnector.findUnique({
-        where: { code: NOTIFICATION_CONNECTOR_CODES.SMTP_EMAIL }
+      this.prisma.notificationConnector.findMany({
+        where: { code: { in: [NOTIFICATION_CONNECTOR_CODES.IN_APP, NOTIFICATION_CONNECTOR_CODES.SMTP_EMAIL] } }
       })
     ]);
+    if (users.length === 0) {
+      await this.writeNotificationLog({
+        level: SystemLogLevel.WARN,
+        message: 'Notification skipped because no recipient users were found',
+        event: SYSTEM_LOG_EVENTS.NOTIFICATION_NO_RECIPIENTS,
+        notificationEvent: dto.event,
+        organizationId: dto.organizationId ?? null,
+        context: { recipientUserIds }
+      });
+      return;
+    }
+
     const userById = new Map(users.map((user) => [user.id, user]));
+    const connectorByCode = new Map(connectors.map((connector) => [connector.code, connector]));
 
     for (const recipientUserId of recipientUserIds) {
       const user = userById.get(recipientUserId);
       if (!user) {
+        await this.writeNotificationLog({
+          level: SystemLogLevel.WARN,
+          message: 'Notification recipient user was not found',
+          event: SYSTEM_LOG_EVENTS.NOTIFICATION_NO_RECIPIENTS,
+          notificationEvent: dto.event,
+          organizationId: dto.organizationId ?? null,
+          context: { recipientUserId }
+        });
         continue;
       }
 
-      const notification = await this.prisma.notification.create({
-        data: {
-          organizationId: dto.organizationId ?? null,
-          recipientUserId,
-          event: dto.event,
-          title: rendered.title,
-          message: rendered.message,
-          payload: payload as Prisma.InputJsonValue
-        }
-      });
+      const notification = await this.createNotification(dto, recipientUserId, payload, rendered);
 
       if (channels.includes(NotificationChannel.IN_APP)) {
-        await this.inAppConnector.send({ channel: NotificationChannel.IN_APP });
-        await this.prisma.notificationDelivery.create({
-          data: {
-            notificationId: notification.id,
-            channel: NotificationChannel.IN_APP,
-            status: NotificationDeliveryStatus.SENT,
-            connectorCode: NOTIFICATION_CONNECTOR_CODES.IN_APP,
-            sentAt: new Date()
-          }
-        });
+        await this.deliverInApp(notification.id, connectorByCode.get(NOTIFICATION_CONNECTOR_CODES.IN_APP) ?? null);
       }
 
       if (channels.includes(NotificationChannel.EMAIL)) {
-        await this.deliverEmail(notification.id, user.email, rendered.emailSubject, rendered.emailBody, emailConnector);
+        await this.deliverEmail(
+          notification.id,
+          user.email,
+          rendered.emailSubject,
+          rendered.emailBody,
+          connectorByCode.get(NOTIFICATION_CONNECTOR_CODES.SMTP_EMAIL) ?? null
+        );
       }
     }
   }
@@ -209,7 +242,11 @@ export class NotificationsService implements OnModuleInit {
     return [NotificationChannel.IN_APP];
   }
 
-  private renderContent(dto: NotifyDto, template: { title: string; message: string; emailSubject: string | null; emailBody: string | null } | null, payload: Record<string, unknown>) {
+  private async renderContent(
+    dto: NotifyDto,
+    template: { title: string; message: string; emailSubject: string | null; emailBody: string | null } | null,
+    payload: Record<string, unknown>
+  ): Promise<RenderedNotificationContent> {
     try {
       const titleTemplate = template?.title ?? dto.title ?? dto.event;
       const messageTemplate = template?.message ?? dto.message ?? dto.event;
@@ -222,11 +259,11 @@ export class NotificationsService implements OnModuleInit {
         emailBody: renderNotificationTemplate(emailBodyTemplate, payload)
       };
     } catch (error) {
-      void this.systemLogsService.write({
+      await this.writeNotificationLog({
         level: SystemLogLevel.ERROR,
-        source: SYSTEM_LOG_SOURCES.NOTIFICATIONS,
         message: 'Failed to render notification template',
-        context: { event: SYSTEM_LOG_EVENTS.NOTIFICATION_TEMPLATE_RENDER_FAILED, notificationEvent: dto.event },
+        event: SYSTEM_LOG_EVENTS.NOTIFICATION_TEMPLATE_RENDER_FAILED,
+        notificationEvent: dto.event,
         errorStack: error instanceof Error ? error.stack ?? error.message : String(error),
         organizationId: dto.organizationId ?? null
       });
@@ -239,33 +276,123 @@ export class NotificationsService implements OnModuleInit {
     }
   }
 
+  private async createNotification(
+    dto: NotifyDto,
+    recipientUserId: string,
+    payload: Record<string, unknown>,
+    rendered: RenderedNotificationContent
+  ): Promise<{ id: string }> {
+    try {
+      return await this.prisma.notification.create({
+        data: {
+          organizationId: dto.organizationId ?? null,
+          recipientUserId,
+          event: dto.event,
+          title: rendered.title,
+          message: rendered.message,
+          payload: payload as Prisma.InputJsonValue
+        },
+        select: { id: true }
+      });
+    } catch (error) {
+      await this.writeNotificationLog({
+        level: SystemLogLevel.ERROR,
+        message: 'Failed to create notification row',
+        event: SYSTEM_LOG_EVENTS.NOTIFICATION_SEND_FAILED,
+        notificationEvent: dto.event,
+        organizationId: dto.organizationId ?? null,
+        context: { recipientUserId },
+        errorStack: error instanceof Error ? error.stack ?? error.message : String(error)
+      });
+      throw error;
+    }
+  }
+
+  private async deliverInApp(
+    notificationId: string,
+    connector: { code: string; status: NotificationConnectorStatus } | null
+  ): Promise<void> {
+    const delivery = await this.createDelivery(notificationId, NotificationChannel.IN_APP, NOTIFICATION_CONNECTOR_CODES.IN_APP);
+
+    if (!connector || connector.status !== NotificationConnectorStatus.ENABLED) {
+      const error = 'In-app connector is disabled';
+      await this.prisma.notificationDelivery.update({
+        where: { id: delivery.id },
+        data: { status: NotificationDeliveryStatus.SKIPPED, error }
+      });
+      await this.writeNotificationLog({
+        level: SystemLogLevel.WARN,
+        message: error,
+        event: SYSTEM_LOG_EVENTS.NOTIFICATION_CONNECTOR_FAILED,
+        notificationEvent: null,
+        context: {
+          notificationId,
+          channel: NotificationChannel.IN_APP,
+          connectorCode: NOTIFICATION_CONNECTOR_CODES.IN_APP
+        }
+      });
+      return;
+    }
+
+    try {
+      const result = await this.inAppConnector.send({ channel: NotificationChannel.IN_APP });
+      if (!result.ok) {
+        await this.markInAppFailed(delivery.id, result.error ?? 'In-app delivery failed', notificationId);
+        return;
+      }
+      await this.prisma.notificationDelivery.update({
+        where: { id: delivery.id },
+        data: { status: NotificationDeliveryStatus.SENT, sentAt: new Date(), error: null }
+      });
+    } catch (error) {
+      await this.markInAppFailed(delivery.id, error instanceof Error ? error.message : String(error), notificationId, error);
+    }
+  }
+
   private async deliverEmail(
     notificationId: string,
     email: string | null,
     subject: string,
     body: string,
-    connector: { code: string; status: string; config: Prisma.JsonValue } | null
+    connector: { code: string; status: NotificationConnectorStatus; config: Prisma.JsonValue } | null
   ): Promise<void> {
-    const delivery = await this.prisma.notificationDelivery.create({
-      data: {
-        notificationId,
-        channel: NotificationChannel.EMAIL,
-        status: NotificationDeliveryStatus.PENDING,
-        connectorCode: NOTIFICATION_CONNECTOR_CODES.SMTP_EMAIL
-      }
-    });
+    const delivery = await this.createDelivery(notificationId, NotificationChannel.EMAIL, NOTIFICATION_CONNECTOR_CODES.SMTP_EMAIL);
 
-    if (!connector || connector.status !== 'ENABLED') {
+    if (!connector || connector.status !== NotificationConnectorStatus.ENABLED) {
+      const error = 'SMTP connector is disabled';
       await this.prisma.notificationDelivery.update({
         where: { id: delivery.id },
-        data: { status: NotificationDeliveryStatus.SKIPPED, error: 'SMTP connector is disabled' }
+        data: { status: NotificationDeliveryStatus.SKIPPED, error }
+      });
+      await this.writeNotificationLog({
+        level: SystemLogLevel.WARN,
+        message: error,
+        event: SYSTEM_LOG_EVENTS.NOTIFICATION_CONNECTOR_FAILED,
+        notificationEvent: null,
+        context: {
+          notificationId,
+          channel: NotificationChannel.EMAIL,
+          connectorCode: NOTIFICATION_CONNECTOR_CODES.SMTP_EMAIL
+        }
       });
       return;
     }
     if (!email) {
+      const error = 'Recipient email is missing';
       await this.prisma.notificationDelivery.update({
         where: { id: delivery.id },
-        data: { status: NotificationDeliveryStatus.SKIPPED, error: 'Recipient email is missing' }
+        data: { status: NotificationDeliveryStatus.SKIPPED, error }
+      });
+      await this.writeNotificationLog({
+        level: SystemLogLevel.WARN,
+        message: error,
+        event: SYSTEM_LOG_EVENTS.NOTIFICATION_NO_RECIPIENTS,
+        notificationEvent: null,
+        context: {
+          notificationId,
+          channel: NotificationChannel.EMAIL,
+          connectorCode: NOTIFICATION_CONNECTOR_CODES.SMTP_EMAIL
+        }
       });
       return;
     }
@@ -291,6 +418,54 @@ export class NotificationsService implements OnModuleInit {
     }
   }
 
+  private async createDelivery(
+    notificationId: string,
+    channel: NotificationChannel,
+    connectorCode: string
+  ): Promise<{ id: string }> {
+    try {
+      return await this.prisma.notificationDelivery.create({
+        data: {
+          notificationId,
+          channel,
+          status: NotificationDeliveryStatus.PENDING,
+          connectorCode
+        },
+        select: { id: true }
+      });
+    } catch (error) {
+      await this.writeNotificationLog({
+        level: SystemLogLevel.ERROR,
+        message: 'Failed to create notification delivery row',
+        event: SYSTEM_LOG_EVENTS.NOTIFICATION_DELIVERY_FAILED,
+        notificationEvent: null,
+        context: { notificationId, channel, connectorCode },
+        errorStack: error instanceof Error ? error.stack ?? error.message : String(error)
+      });
+      throw error;
+    }
+  }
+
+  private async markInAppFailed(deliveryId: string, errorMessage: string, notificationId: string, rawError?: unknown): Promise<void> {
+    await this.prisma.notificationDelivery.update({
+      where: { id: deliveryId },
+      data: { status: NotificationDeliveryStatus.FAILED, error: errorMessage }
+    });
+    await this.writeNotificationLog({
+      level: SystemLogLevel.ERROR,
+      message: 'Notification in-app delivery failed',
+      event: SYSTEM_LOG_EVENTS.NOTIFICATION_DELIVERY_FAILED,
+      notificationEvent: null,
+      context: {
+        notificationId,
+        channel: NotificationChannel.IN_APP,
+        connectorCode: NOTIFICATION_CONNECTOR_CODES.IN_APP,
+        error: errorMessage
+      },
+      errorStack: rawError instanceof Error ? rawError.stack ?? rawError.message : undefined
+    });
+  }
+
   private async markEmailFailed(deliveryId: string, errorMessage: string, notificationId: string, rawError?: unknown): Promise<void> {
     await this.prisma.notificationDelivery.update({
       where: { id: deliveryId },
@@ -308,6 +483,29 @@ export class NotificationsService implements OnModuleInit {
         error: errorMessage
       },
       errorStack: rawError instanceof Error ? rawError.stack ?? rawError.message : undefined
+    });
+  }
+
+  private async writeNotificationLog(input: {
+    level: SystemLogLevel;
+    message: string;
+    event: string;
+    notificationEvent: string | null;
+    organizationId?: string | null;
+    context?: Record<string, unknown>;
+    errorStack?: string;
+  }): Promise<void> {
+    await this.systemLogsService.write({
+      level: input.level,
+      source: SYSTEM_LOG_SOURCES.NOTIFICATIONS,
+      message: input.message,
+      context: {
+        event: input.event,
+        notificationEvent: input.notificationEvent,
+        ...(input.context ?? {})
+      },
+      errorStack: input.errorStack,
+      organizationId: input.organizationId ?? null
     });
   }
 

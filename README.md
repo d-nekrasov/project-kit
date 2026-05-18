@@ -765,6 +765,12 @@ Default templates:
 - `document.created`
 - `document.status_changed`
 
+DocumentsModule emits:
+- `document.created` after document creation, to `document.createdById`.
+- `document.status_changed` after an actual status change, to `document.createdById`.
+
+Notification delivery is best-effort from the documents flow: notification failures are written to system logs with source `notifications` and do not roll back document creation or status updates.
+
 ## System Logs
 
 All system logs endpoints require:
