@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/features/auth/use-auth';
+import { NotificationBell } from '@/features/notifications/notification-bell';
 
 export function AppHeader() {
   const auth = useAuth();
@@ -25,6 +26,7 @@ export function AppHeader() {
 
       <div className="flex items-center gap-3">
         <OrganizationSwitcher />
+        <NotificationBell />
         <DropdownMenu>
           <DropdownMenuTrigger>
             <Button variant="ghost" size="sm" onClick={() => setMenuOpen((value) => !value)}>

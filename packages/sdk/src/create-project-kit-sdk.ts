@@ -4,6 +4,9 @@ import { AuditLogsApi } from './resources/audit-logs.api';
 import { AuthApi } from './resources/auth.api';
 import { DocumentsApi } from './resources/documents.api';
 import { InstallerApi } from './resources/installer.api';
+import { NotificationConnectorsApi } from './resources/notification-connectors.api';
+import { NotificationTemplatesApi } from './resources/notification-templates.api';
+import { NotificationsApi } from './resources/notifications.api';
 import { ModulesApi } from './resources/modules.api';
 import { OrganizationsApi } from './resources/organizations.api';
 import { PermissionsApi } from './resources/permissions.api';
@@ -27,6 +30,9 @@ export function createProjectKitSdk(options: ApiClientOptions) {
     modules: new ModulesApi(client),
     auditLogs: new AuditLogsApi(client),
     systemLogs: new SystemLogsApi(client),
-    documents: new DocumentsApi(client)
+    documents: new DocumentsApi(client),
+    notifications: new NotificationsApi(client),
+    notificationConnectors: new NotificationConnectorsApi(client),
+    notificationTemplates: new NotificationTemplatesApi(client)
   };
 }
