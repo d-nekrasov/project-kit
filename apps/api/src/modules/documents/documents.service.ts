@@ -106,6 +106,8 @@ export class DocumentsService {
       userAgent: requestMetadata?.userAgent
     });
 
+    await this.notifyDocumentCreated(document, currentUser, currentOrganization);
+
     return this.toDocumentResponse(document);
   }
 
@@ -173,33 +175,8 @@ export class DocumentsService {
       userAgent: requestMetadata?.userAgent
     });
 
-    if (existing.status !== dto.status && existing.createdById !== currentUser.id) {
-      try {
-        await this.notificationsService.notify({
-          event: 'document.status_changed',
-          organizationId: currentOrganization.id,
-          recipientUserIds: [existing.createdById],
-          payload: {
-            documentId: document.id,
-            title: document.title,
-            status: document.status
-          }
-        });
-      } catch (error) {
-        await this.systemLogsService.write({
-          level: SystemLogLevel.ERROR,
-          source: SYSTEM_LOG_SOURCES.NOTIFICATIONS,
-          message: 'Failed to create document status notification',
-          context: {
-            event: SYSTEM_LOG_EVENTS.NOTIFICATION_DELIVERY_FAILED,
-            documentId: document.id,
-            notificationEvent: 'document.status_changed'
-          },
-          errorStack: error instanceof Error ? error.stack ?? error.message : String(error),
-          userId: currentUser.id,
-          organizationId: currentOrganization.id
-        });
-      }
+    if (existing.status !== dto.status) {
+      await this.notifyDocumentStatusChanged(document, existing.status, currentUser, currentOrganization);
     }
 
     return this.toDocumentResponse(document);
@@ -211,6 +188,96 @@ export class DocumentsService {
       select: { id: true }
     });
     if (!exists) throw new NotFoundException('Document not found');
+  }
+
+  private async notifyDocumentCreated(
+    document: Prisma.DocumentGetPayload<{ include: typeof DOCUMENT_INCLUDE }>,
+    currentUser: CurrentUser,
+    currentOrganization: CurrentOrganization
+  ): Promise<void> {
+    await this.notifyDocumentEvent(
+      'document.created',
+      document,
+      currentUser,
+      currentOrganization,
+      {
+        documentId: document.id,
+        title: document.title,
+        status: document.status,
+        actorId: currentUser.id
+      },
+      'Failed to create document.created notification'
+    );
+  }
+
+  private async notifyDocumentStatusChanged(
+    document: Prisma.DocumentGetPayload<{ include: typeof DOCUMENT_INCLUDE }>,
+    previousStatus: Prisma.DocumentGetPayload<{ include: typeof DOCUMENT_INCLUDE }>['status'],
+    currentUser: CurrentUser,
+    currentOrganization: CurrentOrganization
+  ): Promise<void> {
+    await this.notifyDocumentEvent(
+      'document.status_changed',
+      document,
+      currentUser,
+      currentOrganization,
+      {
+        documentId: document.id,
+        title: document.title,
+        previousStatus,
+        status: document.status,
+        actorId: currentUser.id
+      },
+      'Failed to create document.status_changed notification'
+    );
+  }
+
+  private async notifyDocumentEvent(
+    event: 'document.created' | 'document.status_changed',
+    document: Prisma.DocumentGetPayload<{ include: typeof DOCUMENT_INCLUDE }>,
+    currentUser: CurrentUser,
+    currentOrganization: CurrentOrganization,
+    payload: Record<string, unknown>,
+    failureMessage: string
+  ): Promise<void> {
+    if (!document.createdBy.id) {
+      await this.systemLogsService.write({
+        level: SystemLogLevel.WARN,
+        source: SYSTEM_LOG_SOURCES.NOTIFICATIONS,
+        message: 'Document notification skipped because document creator is missing',
+        context: {
+          event: SYSTEM_LOG_EVENTS.NOTIFICATION_NO_RECIPIENTS,
+          documentId: document.id,
+          notificationEvent: event
+        },
+        userId: currentUser.id,
+        organizationId: currentOrganization.id
+      });
+      return;
+    }
+
+    try {
+      await this.notificationsService.notify({
+        event,
+        organizationId: currentOrganization.id,
+        recipientUserIds: [document.createdBy.id],
+        payload
+      });
+    } catch (error) {
+      await this.systemLogsService.write({
+        level: SystemLogLevel.ERROR,
+        source: SYSTEM_LOG_SOURCES.NOTIFICATIONS,
+        message: failureMessage,
+        context: {
+          event: SYSTEM_LOG_EVENTS.NOTIFICATION_SEND_FAILED,
+          documentId: document.id,
+          notificationEvent: event
+        },
+        errorStack: error instanceof Error ? error.stack ?? error.message : String(error),
+        userId: currentUser.id,
+        organizationId: currentOrganization.id
+      });
+    }
   }
 
   private toDocumentResponse(
