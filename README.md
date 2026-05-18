@@ -764,12 +764,24 @@ Default connectors:
 Default templates:
 - `document.created`
 - `document.status_changed`
+- `user.created`
+- `user.status_changed`
+- `user.organizations_changed`
+- `user.profile_updated`
 
 DocumentsModule emits:
 - `document.created` after document creation, to `document.createdById`.
 - `document.status_changed` after an actual status change, to `document.createdById`.
 
-Notification delivery is best-effort from the documents flow: notification failures are written to system logs with source `notifications` and do not roll back document creation or status updates.
+UsersModule emits:
+- `user.created` after user creation, to the created user.
+- `user.status_changed` after an actual user status change, to the target user.
+- `user.organizations_changed` after membership role/status changes or membership removal, to the target user.
+- `user.profile_updated` after a profile name change, including self profile updates, to the target user.
+
+User notification payloads never include passwords, password hashes, or temporary credentials. User notifications are visible in the target user's inbox, not the actor/admin inbox.
+
+Notification delivery is best-effort from business flows: notification failures are written to system logs with source `notifications` and do not roll back document or user changes.
 
 ## System Logs
 
