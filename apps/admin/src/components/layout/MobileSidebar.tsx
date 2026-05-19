@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 
 export function MobileSidebar() {
   const [open, setOpen] = useState(false);
-  const navItems = useAdminNavigation();
+  const navigationGroups = useAdminNavigation();
   const appName = import.meta.env.VITE_APP_NAME || 'Project Kit';
 
   return (
@@ -35,27 +35,40 @@ export function MobileSidebar() {
         </div>
         <Separator />
         <nav className="flex-1 overflow-y-auto p-3">
-          <div className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-slate-500">Navigation</div>
-          <div className="space-y-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
+          <div className="space-y-5">
+            {navigationGroups.map((group) => (
+              <div key={group.label}>
+                <div className="mb-2 flex items-center justify-between gap-2 px-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  <span>{group.label}</span>
+                  {group.badge ? (
+                    <Badge className="bg-slate-100 px-1.5 text-[10px] font-medium text-slate-500">{group.badge}</Badge>
+                  ) : null}
+                </div>
+                <div className="space-y-1">
+                  {group.items.map((item) => {
+                    const Icon = item.icon;
 
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => setOpen(false)}
-                  className={cn(
-                    'flex min-h-10 items-center gap-3 rounded-md px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-100 hover:text-slate-900',
-                    item.isActive && 'bg-slate-100 font-medium text-slate-900'
-                  )}
-                >
-                  <Icon className="size-4 shrink-0" aria-hidden="true" />
-                  <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                  {item.badge ? <Badge className="bg-slate-200 text-slate-700">{item.badge}</Badge> : null}
-                </Link>
-              );
-            })}
+                    return (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        onClick={() => setOpen(false)}
+                        className={cn(
+                          'flex min-h-10 items-center gap-3 rounded-md px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-100 hover:text-slate-900',
+                          item.isActive && 'bg-slate-100 font-medium text-slate-900'
+                        )}
+                      >
+                        <Icon className="size-4 shrink-0" aria-hidden="true" />
+                        <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                        {item.badge ? (
+                          <Badge className="max-w-24 truncate bg-slate-100 text-slate-600">{item.badge}</Badge>
+                        ) : null}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         </nav>
       </SheetContent>

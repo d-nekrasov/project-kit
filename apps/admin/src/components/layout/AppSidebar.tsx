@@ -21,7 +21,7 @@ import { useAdminNavigation } from '@/components/layout/use-admin-navigation';
 
 export function AppSidebar() {
   const { state } = useSidebar();
-  const navItems = useAdminNavigation();
+  const navigationGroups = useAdminNavigation();
   const appName = import.meta.env.VITE_APP_NAME || 'Project Kit';
 
   return (
@@ -38,38 +38,45 @@ export function AppSidebar() {
           </div>
         )}
       </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navItems.map((item) => {
-                const Icon = item.icon;
+      <SidebarContent className="space-y-3">
+        {navigationGroups.map((group) => (
+          <SidebarGroup key={group.label}>
+            <SidebarGroupLabel className="flex items-center justify-between gap-2">
+              <span>{group.label}</span>
+              {group.badge ? (
+                <Badge className="bg-slate-100 px-1.5 text-[10px] font-medium text-slate-500">{group.badge}</Badge>
+              ) : null}
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {group.items.map((item) => {
+                  const Icon = item.icon;
 
-                return (
-                  <SidebarMenuItem key={item.path}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={item.isActive}
-                      tooltip={item.label}
-                      className={item.badge ? 'pr-20' : undefined}
-                    >
-                      <Link to={item.path}>
-                        <Icon className="size-4 shrink-0" aria-hidden="true" />
-                        <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                    {item.badge ? (
-                      <SidebarMenuBadge>
-                        <Badge className="bg-slate-200 text-slate-700">{item.badge}</Badge>
-                      </SidebarMenuBadge>
-                    ) : null}
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                  return (
+                    <SidebarMenuItem key={item.path}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={item.isActive}
+                        tooltip={item.label}
+                        className={item.badge ? 'pr-24' : undefined}
+                      >
+                        <Link to={item.path}>
+                          <Icon className="size-4 shrink-0" aria-hidden="true" />
+                          <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                      {item.badge ? (
+                        <SidebarMenuBadge>
+                          <Badge className="max-w-20 truncate bg-slate-100 text-slate-600">{item.badge}</Badge>
+                        </SidebarMenuBadge>
+                      ) : null}
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
       <SidebarFooter>
         {state === 'expanded' ? (
