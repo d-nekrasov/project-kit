@@ -2,15 +2,16 @@ import type { UserStatus } from '@project-kit/sdk';
 import { useEffect, useState } from 'react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import type { UserStatusDialogProps } from '@/features/users/users-page.types';
@@ -32,14 +33,14 @@ export function UserStatusDialog({
   }, [user]);
 
   return (
-    <Dialog open={open}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Change user status</DialogTitle>
-          <DialogDescription>
+    <AlertDialog open={open}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Change user status</AlertDialogTitle>
+          <AlertDialogDescription>
             Update login access for <span className="font-medium">{user?.name ?? user?.email}</span>.
-          </DialogDescription>
-        </DialogHeader>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
 
         <form
           className="space-y-4"
@@ -69,16 +70,16 @@ export function UserStatusDialog({
             </Select>
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => onOpenChange(false)} disabled={isSubmitting}>
               Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            </AlertDialogCancel>
+            <AlertDialogAction type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Updating...' : 'Update status'}
-            </Button>
-          </DialogFooter>
+            </AlertDialogAction>
+          </AlertDialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

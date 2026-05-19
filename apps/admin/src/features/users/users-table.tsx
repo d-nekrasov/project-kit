@@ -1,7 +1,12 @@
 import type { UserResponse } from '@project-kit/sdk';
+import { Eye, MoreHorizontal, Pencil, ShieldAlert } from 'lucide-react';
 
+import { CrudTableCard } from '@/components/common/crud-layout';
 import { EmptyState } from '@/components/common/empty-state';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { CardContent } from '@/components/ui/card';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { UserStatusBadge } from '@/features/users/user-status-badge';
@@ -29,13 +34,13 @@ function renderOrganizationRoles(user: UserResponse) {
 
 function UsersTableSkeleton() {
   return (
-    <div className="rounded-lg border bg-white p-2">
-      <div className="space-y-2">
+    <CrudTableCard>
+      <CardContent className="p-2">
         {Array.from({ length: 8 }).map((_, index) => (
           <Skeleton key={index} className="h-10 w-full" />
         ))}
-      </div>
-    </div>
+      </CardContent>
+    </CrudTableCard>
   );
 }
 
@@ -49,7 +54,7 @@ export function UsersTable({ users, isLoading, onEdit, onChangeStatus, onViewDet
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border bg-white">
+    <CrudTableCard>
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
@@ -66,32 +71,54 @@ export function UsersTable({ users, isLoading, onEdit, onChangeStatus, onViewDet
           <TableBody>
             {users.map((user) => (
               <TableRow key={user.id}>
-                <TableCell>{user.name}</TableCell>
+                <TableCell className="font-medium">{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>
                   <UserStatusBadge status={user.status} />
                 </TableCell>
                 <TableCell>{renderOrganizationRoles(user)}</TableCell>
-                <TableCell>{user.systemRoles.length ? user.systemRoles.join(', ') : 'None'}</TableCell>
+                <TableCell>
+                  {user.systemRoles.length ? (
+                    <div className="flex flex-wrap gap-1">
+                      {user.systemRoles.map((role) => (
+                        <Badge key={role} className="bg-slate-100 text-slate-700">
+                          {role}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-slate-500">None</span>
+                  )}
+                </TableCell>
                 <TableCell>{formatDate(user.createdAt)}</TableCell>
                 <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button type="button" variant="outline" size="sm" onClick={() => onEdit(user)}>
-                      Edit
-                    </Button>
-                    <Button type="button" variant="outline" size="sm" onClick={() => onViewDetails(user)}>
-                      View details
-                    </Button>
-                    <Button type="button" variant="secondary" size="sm" onClick={() => onChangeStatus(user)}>
-                      Change status
-                    </Button>
-                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger>
+                      <Button type="button" variant="ghost" size="sm" aria-label={`Open actions for ${user.name}`}>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => onViewDetails(user)}>
+                        <Eye className="mr-2 inline h-4 w-4" />
+                        View details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onEdit(user)}>
+                        <Pencil className="mr-2 inline h-4 w-4" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onChangeStatus(user)}>
+                        <ShieldAlert className="mr-2 inline h-4 w-4" />
+                        Change status
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
-    </div>
+    </CrudTableCard>
   );
 }
