@@ -72,18 +72,26 @@ export function DropdownMenuContent({ children, className }: PropsWithChildren<{
 export function DropdownMenuItem({
   children,
   className,
-  onClick
-}: PropsWithChildren<{ className?: string; onClick?: () => void }>) {
+  onClick,
+  disabled
+}: PropsWithChildren<{ className?: string; onClick?: () => void; disabled?: boolean }>) {
   const { setOpen } = useDropdownMenu();
 
   return (
     <button
       type="button"
+      disabled={disabled}
       onClick={() => {
+        if (disabled) {
+          return;
+        }
         onClick?.();
         setOpen(false);
       }}
-      className={cn('block w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-slate-100', className)}
+      className={cn(
+        'block w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50',
+        className
+      )}
       role="menuitem"
     >
       {children}

@@ -19,7 +19,7 @@ export function PermissionsPage() {
   const [limit, setLimit] = useState(50);
   const [search, setSearch] = useState('');
   const [module, setModule] = useState('ALL');
-  const [viewMode, setViewMode] = useState<PermissionsViewMode>('table');
+  const [viewMode, setViewMode] = useState<PermissionsViewMode>('grouped');
 
   useEffect(() => {
     setPage(1);

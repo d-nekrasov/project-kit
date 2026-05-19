@@ -1,7 +1,10 @@
 import type { RoleResponse } from '@project-kit/sdk';
+import { MoreHorizontal, Pencil, ShieldAlert } from 'lucide-react';
 
 import { EmptyState } from '@/components/common/empty-state';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { RolesTableProps } from '@/features/roles/roles-page.types';
@@ -26,9 +29,15 @@ function previewPermissions(role: RoleResponse) {
   return (
     <div className="space-y-1">
       <div className="text-sm text-slate-800">{role.permissions.length}</div>
-      <div className="text-xs text-slate-600">
-        {visible.join(', ')}
-        {hiddenCount > 0 ? ` +${hiddenCount}` : ''}
+      <div className="flex flex-wrap gap-1">
+        {visible.map((code) => (
+          <Badge key={code} className="font-mono">
+            {code}
+          </Badge>
+        ))}
+        {hiddenCount > 0 ? (
+          <Badge className="bg-slate-200 text-slate-700">+{hiddenCount}</Badge>
+        ) : null}
       </div>
     </div>
   );
@@ -88,26 +97,23 @@ export function RolesTable({ roles, isLoading, onEdit, onEditPermissions }: Role
                   <TableCell>{role.usersCount}</TableCell>
                   <TableCell>{formatDate(role.createdAt)}</TableCell>
                   <TableCell className="text-right">
-                    <div className="flex flex-col items-end gap-1">
-                      <div className="flex justify-end gap-2">
-                        <Button type="button" variant="outline" size="sm" onClick={() => onEdit(role)} disabled={!canEdit}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger>
+                        <Button type="button" variant="ghost" size="sm" aria-label={`Open actions for ${role.name}`}>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem onClick={() => onEdit(role)} disabled={!canEdit}>
+                          <Pencil className="mr-2 inline h-4 w-4" />
                           Edit
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => onEditPermissions(role)}
-                          disabled={!canEditPermissions}
-                        >
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onEditPermissions(role)} disabled={!canEditPermissions}>
+                          <ShieldAlert className="mr-2 inline h-4 w-4" />
                           Permissions
-                        </Button>
-                      </div>
-                      {isSystem ? <span className="text-xs text-slate-500">System role is read-only</span> : null}
-                      {isProtected ? (
-                        <span className="text-xs text-amber-700">Permissions of organization_admin are protected</span>
-                      ) : null}
-                    </div>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               );

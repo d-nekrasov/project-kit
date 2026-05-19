@@ -2,7 +2,10 @@ import { AlertCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -110,11 +113,17 @@ export function RolePermissionsDialog({
           <div className="max-h-[420px] space-y-4 overflow-auto pr-1">
             {isLoading ? (
               <div className="text-sm text-slate-600">Loading permissions...</div>
-            ) : !permissionGroups.length ? (
-              <div className="text-sm text-slate-600">No permissions available.</div>
             ) : (
               permissionGroups.map((group) => {
                 const moduleCodes = group.permissions.map((permission) => permission.code);
+                const byResource = group.permissions.reduce<Record<string, typeof group.permissions>>((acc, permission) => {
+                  const key = permission.resource || 'Other';
+                  if (!acc[key]) {
+                    acc[key] = [];
+                  }
+                  acc[key].push(permission);
+                  return acc;
+                }, {});
 
                 return (
                   <div key={group.module} className="rounded-md border p-3">
@@ -145,21 +154,27 @@ export function RolePermissionsDialog({
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      {group.permissions.map((permission) => (
-                        <label key={permission.code} className="flex items-start gap-2 rounded px-1 py-1 text-sm">
-                          <input
-                            type="checkbox"
-                            className="mt-1 h-4 w-4"
-                            checked={selectedSet.has(permission.code)}
-                            disabled={isReadonly}
-                            onChange={(event) => togglePermission(permission.code, event.target.checked)}
-                          />
-                          <span>
-                            <span className="font-mono text-xs text-slate-800">{permission.code}</span>
-                            <span className="block text-xs text-slate-500">{permission.description || 'No description'}</span>
-                          </span>
-                        </label>
+                    <div className="space-y-3">
+                      {Object.entries(byResource).map(([resource, permissions]) => (
+                        <div key={`${group.module}-${resource}`} className="rounded border border-slate-200 p-2">
+                          <div className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">{resource}</div>
+                          <div className="space-y-2">
+                            {permissions.map((permission) => (
+                              <label key={permission.code} className="flex items-start gap-2 rounded px-1 py-1 text-sm">
+                                <Checkbox
+                                  className="mt-0.5"
+                                  checked={selectedSet.has(permission.code)}
+                                  disabled={isReadonly}
+                                  onChange={(event) => togglePermission(permission.code, event.target.checked)}
+                                />
+                                <span className="space-y-1">
+                                  <Badge className="font-mono">{permission.code}</Badge>
+                                  <span className="block text-xs text-slate-500">{permission.description || 'No description'}</span>
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -167,6 +182,11 @@ export function RolePermissionsDialog({
               })
             )}
           </div>
+          {!isLoading && !permissionGroups.length ? (
+            <Card>
+              <CardContent className="py-6 text-sm text-muted-foreground">No permissions available for this organization.</CardContent>
+            </Card>
+          ) : null}
         </div>
 
         <DialogFooter>

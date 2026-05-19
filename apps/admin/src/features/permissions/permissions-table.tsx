@@ -1,4 +1,5 @@
 import { EmptyState } from '@/components/common/empty-state';
+import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PermissionModuleBadge } from '@/features/permissions/permission-module-badge';
@@ -46,7 +47,9 @@ export function PermissionsTable({ permissions, isLoading }: PermissionsTablePro
           <TableBody>
             {permissions.map((permission) => (
               <TableRow key={permission.id}>
-                <TableCell className="font-mono text-xs">{permission.code}</TableCell>
+                <TableCell>
+                  <Badge className="font-mono">{permission.code}</Badge>
+                </TableCell>
                 <TableCell>
                   <PermissionModuleBadge module={permission.module} />
                 </TableCell>
