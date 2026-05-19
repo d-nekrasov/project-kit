@@ -42,10 +42,10 @@ export function SheetContent({ className, children }: PropsWithChildren<{ classN
       <button
         type="button"
         aria-label="Close navigation"
-        className="fixed inset-0 z-40 bg-slate-950/40 md:hidden"
+        className="fixed inset-0 z-40 bg-slate-950/40"
         onClick={() => onOpenChange(false)}
       />
-      <div className={cn('animate-in slide-in-from-left duration-200', className)}>
+      <div className={cn('animate-in slide-in-from-right duration-200', className)}>
         <Button
           type="button"
           variant="ghost"

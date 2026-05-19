@@ -2,6 +2,9 @@ import {
   cloneElement,
   createContext,
   isValidElement,
+  useEffect,
+  useId,
+  useRef,
   useContext,
   useState,
   type PropsWithChildren,
@@ -11,8 +14,10 @@ import {
 import { cn } from '@/lib/utils';
 
 type DropdownMenuContextValue = {
+  id: string;
   open: boolean;
   setOpen: (open: boolean) => void;
+  rootRef: React.RefObject<HTMLDivElement | null>;
 };
 
 const DropdownMenuContext = createContext<DropdownMenuContextValue | null>(null);
@@ -27,17 +32,52 @@ function useDropdownMenu() {
 }
 
 export function DropdownMenu({ children }: PropsWithChildren) {
+  const id = useId();
   const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onOutsideClick(event: MouseEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+
+    function onAnyOpen(event: Event) {
+      const customEvent = event as CustomEvent<{ id: string }>;
+      if (customEvent.detail.id !== id) {
+        setOpen(false);
+      }
+    }
+
+    function onEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', onOutsideClick);
+    document.addEventListener('dropdown-menu:open', onAnyOpen as EventListener);
+    document.addEventListener('keydown', onEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', onOutsideClick);
+      document.removeEventListener('dropdown-menu:open', onAnyOpen as EventListener);
+      document.removeEventListener('keydown', onEscape);
+    };
+  }, [id]);
 
   return (
-    <DropdownMenuContext.Provider value={{ open, setOpen }}>
-      <div className="relative inline-block text-left">{children}</div>
+    <DropdownMenuContext.Provider value={{ id, open, setOpen, rootRef }}>
+      <div ref={rootRef} className="relative inline-block text-left">
+        {children}
+      </div>
     </DropdownMenuContext.Provider>
   );
 }
 
 export function DropdownMenuTrigger({ children }: { children: ReactElement }) {
-  const { open, setOpen } = useDropdownMenu();
+  const { id, open, setOpen } = useDropdownMenu();
 
   if (!isValidElement(children)) {
     return null;
@@ -50,6 +90,9 @@ export function DropdownMenuTrigger({ children }: { children: ReactElement }) {
     'aria-haspopup': 'menu',
     onClick: () => {
       childProps.onClick?.();
+      if (!open) {
+        document.dispatchEvent(new CustomEvent('dropdown-menu:open', { detail: { id } }));
+      }
       setOpen(!open);
     }
   } as Partial<typeof children.props>);
@@ -89,7 +132,7 @@ export function DropdownMenuItem({
         setOpen(false);
       }}
       className={cn(
-        'block w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50',
+        'inline-flex w-full items-center gap-2 whitespace-nowrap rounded-sm px-2 py-1.5 text-left text-sm hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50',
         className
       )}
       role="menuitem"

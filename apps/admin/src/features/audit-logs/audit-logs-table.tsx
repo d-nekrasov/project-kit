@@ -1,5 +1,8 @@
+import { Ellipsis, Eye, IdCard } from 'lucide-react';
+
 import { EmptyState } from '@/components/common/empty-state';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AuditActionBadge } from '@/features/audit-logs/audit-action-badge';
@@ -87,9 +90,23 @@ export function AuditLogsTable({ logs, isLoading, onViewDetails }: AuditLogsTabl
                 </TableCell>
                 <TableCell>{log.ip ?? '—'}</TableCell>
                 <TableCell className="text-right">
-                  <Button type="button" variant="outline" size="sm" onClick={() => onViewDetails(log)}>
-                    View details
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger>
+                      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="Open actions">
+                        <Ellipsis className="size-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => onViewDetails(log)}>
+                        <Eye className="mr-2 size-4" />
+                        View details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigator.clipboard.writeText(log.id)}>
+                        <IdCard className="mr-2 size-4" />
+                        Copy log ID
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}
@@ -99,4 +116,3 @@ export function AuditLogsTable({ logs, isLoading, onViewDetails }: AuditLogsTabl
     </div>
   );
 }
-

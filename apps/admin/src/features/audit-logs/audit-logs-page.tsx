@@ -2,8 +2,8 @@ import type { AuditLogResponse } from '@project-kit/sdk';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 
-import { ErrorState } from '@/components/common/error-state';
 import { LoadingScreen } from '@/components/common/loading-screen';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
 import { useAuth } from '@/features/auth/use-auth';
@@ -155,7 +155,12 @@ export function AuditLogsPage() {
         }}
       />
 
-      {pageError ? <ErrorState message={pageError} /> : null}
+      {pageError ? (
+        <Alert className="border-red-200 bg-red-50">
+          <AlertTitle className="text-red-700">Failed to load audit logs</AlertTitle>
+          <AlertDescription className="text-red-700">{pageError}</AlertDescription>
+        </Alert>
+      ) : null}
 
       <AuditLogsTable
         logs={logs}
