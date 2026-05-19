@@ -44,7 +44,7 @@ export function UserMenu() {
         <DropdownMenuContent className="w-56">
           <div className="px-2 py-1.5">
             <div className="truncate text-sm font-medium">{displayName}</div>
-            <div className="truncate text-xs text-slate-500">{auth.user?.email}</div>
+            <div className="truncate text-xs text-muted-foreground">{auth.user?.email}</div>
           </div>
           <Separator className="my-1" />
           <DropdownMenuItem

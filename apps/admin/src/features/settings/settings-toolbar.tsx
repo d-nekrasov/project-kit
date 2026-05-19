@@ -16,7 +16,7 @@ export function SettingsToolbar({
   onOpenSchema
 }: SettingsToolbarProps) {
   return (
-    <div className="grid gap-3 rounded-lg border bg-white p-4 lg:grid-cols-12 lg:items-end">
+    <div className="grid gap-3 rounded-lg border bg-card p-4 lg:grid-cols-12 lg:items-end">
       <div className="space-y-2 lg:col-span-5">
         <Label htmlFor="settings-search">Search</Label>
         <Input

@@ -61,8 +61,8 @@ export function DocumentsTable({ documents, isLoading, onEdit, onChangeStatus }:
             <TableRow key={document.id}>
               <TableCell>
                 <div className="space-y-1">
-                  <div className="font-medium text-slate-900">{document.title}</div>
-                  {preview(document.content) ? <div className="text-xs text-slate-500">{preview(document.content)}</div> : null}
+                  <div className="font-medium text-foreground">{document.title}</div>
+                  {preview(document.content) ? <div className="text-xs text-muted-foreground">{preview(document.content)}</div> : null}
                 </div>
               </TableCell>
               <TableCell>

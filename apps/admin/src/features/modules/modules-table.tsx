@@ -11,7 +11,7 @@ import type { ModulesTableProps } from '@/features/modules/modules-page.types';
 
 function ModulesTableSkeleton() {
   return (
-    <div className="rounded-lg border bg-white p-2">
+    <div className="rounded-lg border bg-card p-2">
       <div className="space-y-2">
         {Array.from({ length: 8 }).map((_, index) => (
           <Skeleton key={index} className="h-10 w-full" />
@@ -30,13 +30,13 @@ function renderStatusBadge(status: ModuleRegistryResponse['status']) {
     return <Badge className="bg-emerald-100 text-emerald-800">Enabled</Badge>;
   }
 
-  return <Badge className="bg-slate-200 text-slate-700">Disabled</Badge>;
+  return <Badge className="bg-slate-200 text-foreground/80">Disabled</Badge>;
 }
 
 function previewPermissions(module: ModuleRegistryResponse) {
   const permissions = module.manifest?.permissions ?? [];
   if (!permissions.length) {
-    return <span className="text-slate-500">—</span>;
+    return <span className="text-muted-foreground">—</span>;
   }
 
   const visible = permissions.slice(0, 2);
@@ -49,7 +49,7 @@ function previewPermissions(module: ModuleRegistryResponse) {
           {code}
         </Badge>
       ))}
-      {hiddenCount > 0 ? <Badge className="bg-slate-200 text-slate-700">+{hiddenCount}</Badge> : null}
+      {hiddenCount > 0 ? <Badge className="bg-slate-200 text-foreground/80">+{hiddenCount}</Badge> : null}
     </div>
   );
 }
@@ -57,7 +57,7 @@ function previewPermissions(module: ModuleRegistryResponse) {
 function previewSettings(module: ModuleRegistryResponse) {
   const schema = module.manifest?.settingsSchema;
   if (!schema || typeof schema !== 'object') {
-    return <span className="text-slate-500">—</span>;
+    return <span className="text-muted-foreground">—</span>;
   }
 
   const fieldsCount = Object.keys(schema).length;
@@ -74,7 +74,7 @@ export function ModulesTable({ modules, isLoading, isSuperAdmin, onViewManifest,
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border bg-white">
+    <div className="overflow-hidden rounded-lg border bg-card">
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
@@ -106,7 +106,7 @@ export function ModulesTable({ modules, isLoading, isSuperAdmin, onViewManifest,
                   <TableCell>{module.version}</TableCell>
                   <TableCell>{renderStatusBadge(module.status)}</TableCell>
                   <TableCell>
-                    <p className="max-w-[380px] truncate text-sm text-slate-700" title={description}>
+                    <p className="max-w-[380px] truncate text-sm text-foreground/80" title={description}>
                       {description}
                     </p>
                   </TableCell>

@@ -190,9 +190,9 @@ export function NotificationTemplateDialog({
               render={() => (
                 <FormItem>
                   <FormLabel>Channels</FormLabel>
-                  <div className="flex flex-wrap gap-4 rounded-md border bg-slate-50 p-3">
+                  <div className="flex flex-wrap gap-4 rounded-md border bg-muted/40 p-3">
                     {editableChannels.map((channel) => (
-                      <label key={channel} className="flex items-center gap-2 text-sm text-slate-700">
+                      <label key={channel} className="flex items-center gap-2 text-sm text-foreground/80">
                         <Checkbox
                           checked={channels.includes(channel)}
                           onChange={(event) => toggleChannel(channel, event.target.checked)}

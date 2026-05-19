@@ -32,7 +32,7 @@ function toShortValue(value: SettingResponse['value']) {
 
 function SettingsTableSkeleton() {
   return (
-    <div className="rounded-lg border bg-white p-2">
+    <div className="rounded-lg border bg-card p-2">
       <div className="space-y-2">
         {Array.from({ length: 8 }).map((_, index) => (
           <Skeleton key={index} className="h-10 w-full" />
@@ -52,7 +52,7 @@ export function SettingsTable({ settings, isLoading, onEdit }: SettingsTableProp
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border bg-white">
+    <div className="overflow-hidden rounded-lg border bg-card">
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
@@ -71,7 +71,7 @@ export function SettingsTable({ settings, isLoading, onEdit }: SettingsTableProp
               <TableRow key={setting.id}>
                 <TableCell className="font-mono text-xs">{setting.key}</TableCell>
                 <TableCell className="max-w-[420px]">
-                  <span className="line-clamp-2 break-all font-mono text-xs text-slate-700">{toShortValue(setting.value)}</span>
+                  <span className="line-clamp-2 break-all font-mono text-xs text-foreground/80">{toShortValue(setting.value)}</span>
                 </TableCell>
                 <TableCell>
                   <SettingScopeBadge scope={setting.scope} />

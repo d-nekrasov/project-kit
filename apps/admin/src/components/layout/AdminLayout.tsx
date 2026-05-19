@@ -6,7 +6,7 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 
 export function AdminLayout() {
   return (
-    <SidebarProvider className="bg-slate-100/70">
+    <SidebarProvider className="bg-muted/40">
       <AppSidebar />
       <SidebarInset>
         <AppHeader />

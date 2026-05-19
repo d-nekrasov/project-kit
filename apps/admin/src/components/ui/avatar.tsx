@@ -7,5 +7,5 @@ export function Avatar({ children, className }: PropsWithChildren<{ className?: 
 }
 
 export function AvatarFallback({ children }: PropsWithChildren) {
-  return <span className="text-xs font-semibold text-slate-700">{children}</span>;
+  return <span className="text-xs font-semibold text-foreground/80">{children}</span>;
 }

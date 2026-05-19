@@ -51,7 +51,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
         onChange(event);
       }}
       className={cn(
-        'peer h-4 w-4 shrink-0 rounded-[4px] border border-slate-300 bg-white shadow-xs transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-slate-900 data-[state=checked]:bg-slate-900',
+        'peer h-4 w-4 shrink-0 rounded-[4px] border border-input bg-card shadow-xs transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-slate-900 data-[state=checked]:bg-slate-900',
         className
       )}
       ref={ref as unknown as React.Ref<HTMLButtonElement>}

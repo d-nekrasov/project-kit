@@ -180,7 +180,7 @@ export function UserOrganizationsDialog({
                 <div key={row.organizationId} className="grid gap-3 rounded-md border p-3 md:grid-cols-[1fr_1fr_150px_auto]">
                   <div>
                     <Label>Organization</Label>
-                    <div className="mt-2 text-sm font-medium text-slate-900">
+                    <div className="mt-2 text-sm font-medium text-foreground">
                       {organization?.name ?? listedOrganization?.name ?? row.organizationId}
                     </div>
                   </div>
@@ -247,7 +247,7 @@ export function UserOrganizationsDialog({
           </div>
 
           {isSuperAdmin ? (
-            <div className="flex flex-wrap items-end gap-3 rounded-md border bg-slate-50 p-3">
+            <div className="flex flex-wrap items-end gap-3 rounded-md border bg-muted/40 p-3">
               <div className="min-w-64 flex-1">
                 <Label htmlFor="add-organization">Add organization</Label>
                 <Select

@@ -5,7 +5,7 @@ import type { ModulesToolbarProps } from '@/features/modules/modules-page.types'
 
 export function ModulesToolbar({ search, onSearchChange, status, onStatusChange }: ModulesToolbarProps) {
   return (
-    <div className="flex items-end gap-4 rounded-lg border bg-white p-4">
+    <div className="flex items-end gap-4 rounded-lg border bg-card p-4">
       <div className="flex-1 space-y-2">
         <Label htmlFor="modules-search">Search</Label>
         <Input

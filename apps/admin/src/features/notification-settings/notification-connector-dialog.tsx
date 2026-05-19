@@ -259,7 +259,7 @@ export function NotificationConnectorDialog({
                 />
               </div>
             ) : (
-              <p className="rounded-md border bg-slate-50 p-3 text-sm text-slate-600">
+              <p className="rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">
                 This connector does not expose editable configuration.
               </p>
             )}

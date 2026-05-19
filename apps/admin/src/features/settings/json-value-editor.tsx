@@ -28,8 +28,8 @@ export function JsonValueEditor({ value, onChange, error }: JsonValueEditorProps
         onChange={(event) => onChange(event.target.value)}
       />
       {error ? <p className="text-xs font-medium text-red-600">{error}</p> : null}
-      <p className="text-xs text-slate-500">Value must be valid JSON. Strings must be wrapped in quotes.</p>
-      <p className="text-xs text-slate-500">Examples: "Project Kit", true, 10485760, ["pdf", "docx"], {'{"enabled": true}'}</p>
+      <p className="text-xs text-muted-foreground">Value must be valid JSON. Strings must be wrapped in quotes.</p>
+      <p className="text-xs text-muted-foreground">Examples: "Project Kit", true, 10485760, ["pdf", "docx"], {'{"enabled": true}'}</p>
     </div>
   );
 }

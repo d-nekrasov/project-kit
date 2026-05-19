@@ -15,7 +15,7 @@ export function PermissionsToolbar({
   isModulesLoading
 }: PermissionsToolbarProps) {
   return (
-    <div className="grid gap-4 rounded-lg border bg-white p-4 lg:grid-cols-3">
+    <div className="grid gap-4 rounded-lg border bg-card p-4 lg:grid-cols-3">
       <div className="grid gap-2">
         <Label htmlFor="permissions-search" className="h-5">
           Search

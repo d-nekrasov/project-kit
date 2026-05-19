@@ -69,9 +69,9 @@ export function NotificationsTable({
                 <NotificationStatusBadge status={notification.status} />
               </TableCell>
               <TableCell className="font-mono text-xs">{notification.event}</TableCell>
-              <TableCell className="font-medium text-slate-900">{notification.title}</TableCell>
-              <TableCell className="max-w-md text-sm text-slate-600">{preview(notification.message)}</TableCell>
-              <TableCell className="text-xs text-slate-600">{formatDeliveries(notification)}</TableCell>
+              <TableCell className="font-medium text-foreground">{notification.title}</TableCell>
+              <TableCell className="max-w-md text-sm text-muted-foreground">{preview(notification.message)}</TableCell>
+              <TableCell className="text-xs text-muted-foreground">{formatDeliveries(notification)}</TableCell>
               <TableCell className="text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger>

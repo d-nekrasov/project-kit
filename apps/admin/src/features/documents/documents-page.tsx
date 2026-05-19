@@ -131,8 +131,8 @@ export function DocumentsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-slate-900">Documents</h2>
-          <p className="text-sm text-slate-600">Manage organization documents and their publication lifecycle.</p>
+          <h2 className="text-2xl font-semibold text-foreground">Documents</h2>
+          <p className="text-sm text-muted-foreground">Manage organization documents and their publication lifecycle.</p>
         </div>
         <Button type="button" onClick={() => setCreateDialogOpen(true)} disabled={moduleDisabled}>
           Create document
@@ -179,8 +179,8 @@ export function DocumentsPage() {
       ) : null}
 
       {!moduleDisabled ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-white p-4 text-sm">
-          <div className="text-slate-600">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4 text-sm">
+          <div className="text-muted-foreground">
             Page {documentsMeta?.page ?? page} of {documentsMeta?.totalPages ?? 1} • Total: {documentsMeta?.total ?? 0}
           </div>
 
@@ -200,7 +200,7 @@ export function DocumentsPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-slate-600">Rows per page</span>
+            <span className="text-muted-foreground">Rows per page</span>
             <Select
               value={String(limit)}
               onChange={(event) => {

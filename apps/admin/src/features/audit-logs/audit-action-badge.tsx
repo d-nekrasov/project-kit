@@ -10,7 +10,7 @@ function getActionVariant(action: string) {
   if (action.startsWith('auth.')) {
     return 'bg-blue-100 text-blue-800';
   }
-  return 'bg-slate-100 text-slate-800';
+  return 'bg-slate-100 text-foreground';
 }
 
 export function AuditActionBadge({ action }: { action: string }) {

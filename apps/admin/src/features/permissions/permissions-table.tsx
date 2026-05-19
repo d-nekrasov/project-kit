@@ -11,7 +11,7 @@ function formatDate(value: string) {
 
 function PermissionsTableSkeleton() {
   return (
-    <div className="rounded-lg border bg-white p-2">
+    <div className="rounded-lg border bg-card p-2">
       <div className="space-y-2">
         {Array.from({ length: 10 }).map((_, index) => (
           <Skeleton key={index} className="h-10 w-full" />
@@ -31,7 +31,7 @@ export function PermissionsTable({ permissions, isLoading }: PermissionsTablePro
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border bg-white">
+    <div className="overflow-hidden rounded-lg border bg-card">
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>

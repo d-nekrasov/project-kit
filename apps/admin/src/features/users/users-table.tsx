@@ -18,13 +18,13 @@ function formatDate(value: string) {
 
 function renderOrganizationRoles(user: UserResponse) {
   if (!user.organizations.length) {
-    return <span className="text-slate-500">No organizations</span>;
+    return <span className="text-muted-foreground">No organizations</span>;
   }
 
   return (
     <div className="space-y-1">
       {user.organizations.map((org) => (
-        <div key={org.id} className="text-xs text-slate-700">
+        <div key={org.id} className="text-xs text-foreground/80">
           <span className="font-medium">{org.name}:</span> {org.role}
         </div>
       ))}
@@ -81,13 +81,13 @@ export function UsersTable({ users, isLoading, onEdit, onChangeStatus, onViewDet
                   {user.systemRoles.length ? (
                     <div className="flex flex-wrap gap-1">
                       {user.systemRoles.map((role) => (
-                        <Badge key={role} className="bg-slate-100 text-slate-700">
+                        <Badge key={role} className="bg-slate-100 text-foreground/80">
                           {role}
                         </Badge>
                       ))}
                     </div>
                   ) : (
-                    <span className="text-slate-500">None</span>
+                    <span className="text-muted-foreground">None</span>
                   )}
                 </TableCell>
                 <TableCell>{formatDate(user.createdAt)}</TableCell>

@@ -20,7 +20,7 @@ function isPermissionsProtected(role: RoleResponse) {
 
 function previewPermissions(role: RoleResponse) {
   if (!role.permissions.length) {
-    return <span className="text-slate-500">0</span>;
+    return <span className="text-muted-foreground">0</span>;
   }
 
   const visible = role.permissions.slice(0, 3).map((permission) => permission.code);
@@ -28,7 +28,7 @@ function previewPermissions(role: RoleResponse) {
 
   return (
     <div className="space-y-1">
-      <div className="text-sm text-slate-800">{role.permissions.length}</div>
+      <div className="text-sm text-foreground">{role.permissions.length}</div>
       <div className="flex flex-wrap gap-1">
         {visible.map((code) => (
           <Badge key={code} className="font-mono">
@@ -36,7 +36,7 @@ function previewPermissions(role: RoleResponse) {
           </Badge>
         ))}
         {hiddenCount > 0 ? (
-          <Badge className="bg-slate-200 text-slate-700">+{hiddenCount}</Badge>
+          <Badge className="bg-slate-200 text-foreground/80">+{hiddenCount}</Badge>
         ) : null}
       </div>
     </div>
@@ -45,7 +45,7 @@ function previewPermissions(role: RoleResponse) {
 
 function RolesTableSkeleton() {
   return (
-    <div className="rounded-lg border bg-white p-2">
+    <div className="rounded-lg border bg-card p-2">
       <div className="space-y-2">
         {Array.from({ length: 8 }).map((_, index) => (
           <Skeleton key={index} className="h-10 w-full" />
@@ -65,7 +65,7 @@ export function RolesTable({ roles, isLoading, onEdit, onEditPermissions }: Role
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border bg-white">
+    <div className="overflow-hidden rounded-lg border bg-card">
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>

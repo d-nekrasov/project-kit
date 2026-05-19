@@ -61,7 +61,7 @@ export function NotificationConnectorsTable({ connectors, isLoading, onEdit }: N
               <TableCell>
                 <NotificationConnectorStatusBadge status={connector.status} />
               </TableCell>
-              <TableCell className="max-w-md text-xs text-slate-600">{summarizeConfig(connector.config)}</TableCell>
+              <TableCell className="max-w-md text-xs text-muted-foreground">{summarizeConfig(connector.config)}</TableCell>
               <TableCell>{formatDate(connector.updatedAt)}</TableCell>
               <TableCell className="text-right">
                 <DropdownMenu>

@@ -70,7 +70,7 @@ export function Calendar({ className, ...props }: CalendarProps) {
       <button
         type="button"
         className={cn(
-          'h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-left text-sm outline-none hover:bg-slate-50',
+          'h-9 w-full rounded-md border border-input bg-card px-3 text-left text-sm outline-none hover:bg-muted/40',
           className
         )}
         onClick={() => setOpen((value) => !value)}
@@ -78,11 +78,11 @@ export function Calendar({ className, ...props }: CalendarProps) {
         {props.value || 'Select date'}
       </button>
       {open ? (
-        <div className="absolute left-0 top-10 z-30 w-72 rounded-md border bg-white p-3 shadow-lg">
+        <div className="absolute left-0 top-10 z-30 w-72 rounded-md border bg-card p-3 shadow-lg">
           <div className="mb-2 flex items-center justify-between">
             <button
               type="button"
-              className="rounded p-1 hover:bg-slate-100"
+              className="rounded p-1 hover:bg-muted"
               onClick={() => setViewDate(new Date(year, month - 1, 1))}
               aria-label="Previous month"
             >
@@ -91,7 +91,7 @@ export function Calendar({ className, ...props }: CalendarProps) {
             <div className="text-sm font-medium capitalize">{toMonthLabel(viewDate)}</div>
             <button
               type="button"
-              className="rounded p-1 hover:bg-slate-100"
+              className="rounded p-1 hover:bg-muted"
               onClick={() => setViewDate(new Date(year, month + 1, 1))}
               aria-label="Next month"
             >
@@ -99,7 +99,7 @@ export function Calendar({ className, ...props }: CalendarProps) {
             </button>
           </div>
 
-          <div className="mb-1 grid grid-cols-7 gap-1 text-center text-xs text-slate-500">
+          <div className="mb-1 grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground">
             {['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map((dayLabel) => (
               <div key={dayLabel}>{dayLabel}</div>
             ))}
@@ -119,8 +119,8 @@ export function Calendar({ className, ...props }: CalendarProps) {
                   key={day}
                   type="button"
                   className={cn(
-                    'h-8 rounded text-sm hover:bg-slate-100',
-                    isSelected ? 'bg-slate-900 text-white hover:bg-slate-900' : 'text-slate-700'
+                    'h-8 rounded text-sm hover:bg-muted',
+                    isSelected ? 'bg-slate-900 text-white hover:bg-slate-900' : 'text-foreground/80'
                   )}
                   onClick={() => onSelectDay(day)}
                 >

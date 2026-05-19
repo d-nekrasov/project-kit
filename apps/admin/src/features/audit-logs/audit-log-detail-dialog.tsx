@@ -9,8 +9,8 @@ import { JsonMetadataView } from '@/features/audit-logs/json-metadata-view';
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="grid gap-1 text-sm md:grid-cols-[180px_1fr]">
-      <span className="text-slate-500">{label}</span>
-      <span className="break-all font-mono text-xs text-slate-800">{value || '—'}</span>
+      <span className="text-muted-foreground">{label}</span>
+      <span className="break-all font-mono text-xs text-foreground">{value || '—'}</span>
     </div>
   );
 }
@@ -18,11 +18,11 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 export function AuditLogDetailDialog({ open, log, isLoading, error, onOpenChange }: AuditLogDetailDialogProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="fixed inset-y-0 right-0 z-50 w-full max-w-3xl overflow-y-auto border-l bg-white p-6 shadow-xl">
+      <SheetContent className="fixed inset-y-0 right-0 z-50 w-full max-w-3xl overflow-y-auto border-l bg-card p-6 shadow-xl">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div className="space-y-1">
             <h3 className="text-lg font-semibold">Audit log details</h3>
-            <p className="text-sm text-slate-600">Detailed view for selected audit event.</p>
+            <p className="text-sm text-muted-foreground">Detailed view for selected audit event.</p>
           </div>
         </div>
 
@@ -47,7 +47,7 @@ export function AuditLogDetailDialog({ open, log, isLoading, error, onOpenChange
               <h3 className="text-sm font-semibold">Overview</h3>
               <DetailRow label="ID" value={log.id} />
               <div className="grid gap-1 text-sm md:grid-cols-[180px_1fr]">
-                <span className="text-slate-500">Action</span>
+                <span className="text-muted-foreground">Action</span>
                 <span>
                   <AuditActionBadge action={log.action} />
                 </span>

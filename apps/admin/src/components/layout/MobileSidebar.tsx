@@ -26,11 +26,11 @@ export function MobileSidebar() {
       >
         <Menu className="size-5" aria-hidden="true" />
       </Button>
-      <SheetContent className="fixed inset-y-0 left-0 z-[var(--z-sheet)] flex w-80 max-w-[85vw] flex-col border-r bg-white p-0 shadow-xl md:hidden">
+      <SheetContent className="fixed inset-y-0 left-0 z-[var(--z-sheet)] flex w-80 max-w-[85vw] flex-col border-r bg-card p-0 shadow-xl md:hidden">
         <div className="flex min-h-16 items-center px-5">
           <div>
             <div className="text-sm font-semibold">{appName}</div>
-            <div className="text-xs text-slate-500">Admin Console</div>
+            <div className="text-xs text-muted-foreground">Admin Console</div>
           </div>
         </div>
         <Separator />
@@ -38,10 +38,10 @@ export function MobileSidebar() {
           <div className="space-y-5">
             {navigationGroups.map((group) => (
               <div key={group.label}>
-                <div className="mb-2 flex items-center justify-between gap-2 px-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <div className="mb-2 flex items-center justify-between gap-2 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   <span>{group.label}</span>
                   {group.badge ? (
-                    <Badge className="bg-slate-100 px-1.5 text-[10px] font-medium text-slate-500">{group.badge}</Badge>
+                    <Badge className="bg-slate-100 px-1.5 text-[10px] font-medium text-muted-foreground">{group.badge}</Badge>
                   ) : null}
                 </div>
                 <div className="space-y-1">
@@ -54,14 +54,14 @@ export function MobileSidebar() {
                         to={item.path}
                         onClick={() => setOpen(false)}
                         className={cn(
-                          'flex min-h-10 items-center gap-3 rounded-md px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-100 hover:text-slate-900',
-                          item.isActive && 'bg-slate-100 font-medium text-slate-900'
+                          'flex min-h-10 items-center gap-3 rounded-md px-3 py-2 text-sm text-foreground/80 transition hover:bg-muted hover:text-foreground',
+                          item.isActive && 'bg-slate-100 font-medium text-foreground'
                         )}
                       >
                         <Icon className="size-4 shrink-0" aria-hidden="true" />
                         <span className="min-w-0 flex-1 truncate">{item.label}</span>
                         {item.badge ? (
-                          <Badge className="max-w-24 truncate bg-slate-100 text-slate-600">{item.badge}</Badge>
+                          <Badge className="max-w-24 truncate bg-slate-100 text-muted-foreground">{item.badge}</Badge>
                         ) : null}
                       </Link>
                     );

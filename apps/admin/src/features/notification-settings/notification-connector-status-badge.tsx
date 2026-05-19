@@ -10,7 +10,7 @@ export function NotificationConnectorStatusBadge({ status }: NotificationConnect
   const className =
     status === 'ENABLED'
       ? 'bg-emerald-100 text-emerald-800'
-      : 'bg-slate-100 text-slate-700';
+      : 'bg-slate-100 text-foreground/80';
 
   return <Badge className={className}>{status}</Badge>;
 }

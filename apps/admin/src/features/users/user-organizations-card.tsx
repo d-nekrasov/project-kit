@@ -39,15 +39,15 @@ export function UserOrganizationsCard({ user, canManage, onManage }: UserOrganiz
               <TableBody>
                 {user.organizations.map((organization) => (
                   <TableRow key={organization.id}>
-                    <TableCell className="font-medium text-slate-900">{organization.name}</TableCell>
-                    <TableCell className="text-slate-600">{organization.slug}</TableCell>
+                    <TableCell className="font-medium text-foreground">{organization.name}</TableCell>
+                    <TableCell className="text-muted-foreground">{organization.slug}</TableCell>
                     <TableCell>
                       <Badge>{organization.status}</Badge>
                     </TableCell>
                     <TableCell>
                       <Badge>{organization.membershipStatus}</Badge>
                     </TableCell>
-                    <TableCell className="text-slate-700">
+                    <TableCell className="text-foreground/80">
                       {organization.roleName} ({organization.role})
                     </TableCell>
                   </TableRow>

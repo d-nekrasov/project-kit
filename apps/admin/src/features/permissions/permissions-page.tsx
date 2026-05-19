@@ -91,9 +91,9 @@ export function PermissionsPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h2 className="text-2xl font-semibold text-slate-900">Permissions</h2>
-        <p className="text-sm text-slate-600">Read-only registry of permissions registered by core and modules.</p>
-        <p className="text-xs text-slate-500">Permissions are managed by platform core and module manifests. Admin UI cannot create or edit them.</p>
+        <h2 className="text-2xl font-semibold text-foreground">Permissions</h2>
+        <p className="text-sm text-muted-foreground">Read-only registry of permissions registered by core and modules.</p>
+        <p className="text-xs text-muted-foreground">Permissions are managed by platform core and module manifests. Admin UI cannot create or edit them.</p>
       </div>
 
       <PermissionsToolbar
@@ -122,8 +122,8 @@ export function PermissionsPage() {
       )}
 
       {viewMode === 'table' ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-white p-4 text-sm">
-          <div className="text-slate-600">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4 text-sm">
+          <div className="text-muted-foreground">
             Page {permissionsMeta?.page ?? page} of {permissionsMeta?.totalPages ?? 1} • Total: {permissionsMeta?.total ?? 0}
           </div>
 
@@ -143,7 +143,7 @@ export function PermissionsPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-slate-600">Rows per page</span>
+            <span className="text-muted-foreground">Rows per page</span>
             <Select
               value={String(limit)}
               onChange={(event) => {

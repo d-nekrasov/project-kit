@@ -95,7 +95,7 @@ function getLevelClass(level: string) {
     return 'bg-amber-50 text-amber-700';
   }
 
-  return 'bg-slate-100 text-slate-700';
+  return 'bg-slate-100 text-foreground/80';
 }
 
 function DashboardAlert({ message }: { message: string }) {
@@ -127,10 +127,10 @@ function StatCard({
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
         <div className="space-y-1">
-          <CardTitle className="text-sm font-medium text-slate-600">{title}</CardTitle>
+          <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
           <CardDescription>{description}</CardDescription>
         </div>
-        <div className="rounded-md bg-slate-100 p-2 text-slate-600">
+        <div className="rounded-md bg-slate-100 p-2 text-muted-foreground">
           <Icon className="h-4 w-4" />
         </div>
       </CardHeader>
@@ -279,12 +279,12 @@ export function DashboardPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-1">
-          <h2 className="text-2xl font-semibold text-slate-900">{import.meta.env.VITE_APP_NAME || 'Project Kit'}</h2>
-          <p className="text-sm text-slate-600">
+          <h2 className="text-2xl font-semibold text-foreground">{import.meta.env.VITE_APP_NAME || 'Project Kit'}</h2>
+          <p className="text-sm text-muted-foreground">
             {activeOrg ? `${activeOrg.name} admin overview` : 'Admin overview without an active organization'}
           </p>
         </div>
-        <div className="flex items-center gap-2 rounded-md border bg-white px-3 py-2 text-sm text-slate-600">
+        <div className="flex items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm text-muted-foreground">
           <Building2 className="h-4 w-4" />
           <span>{auth.user?.name ?? auth.user?.email ?? 'Current user'}</span>
         </div>
@@ -316,27 +316,27 @@ export function DashboardPage() {
             {systemLogsQuery.isLoading ? <SectionSkeleton /> : null}
 
             {!systemLogsQuery.isLoading && !canReadSystemLogs ? (
-              <div className="rounded-md border border-dashed p-6 text-sm text-slate-500">System logs are not available for your role.</div>
+              <div className="rounded-md border border-dashed p-6 text-sm text-muted-foreground">System logs are not available for your role.</div>
             ) : null}
 
             {!systemLogsQuery.isLoading && canReadSystemLogs && !recentLogs.length && !systemLogsQuery.isError ? (
-              <div className="rounded-md border border-dashed p-6 text-sm text-slate-500">No system events yet.</div>
+              <div className="rounded-md border border-dashed p-6 text-sm text-muted-foreground">No system events yet.</div>
             ) : null}
 
             {!systemLogsQuery.isLoading && recentLogs.length ? (
               <div className="space-y-4">
                 {recentLogs.map((log) => (
                   <div key={log.id} className="flex gap-3 border-b pb-4 last:border-0 last:pb-0">
-                    <div className="mt-0.5 rounded-md bg-slate-100 p-2 text-slate-600">
+                    <div className="mt-0.5 rounded-md bg-slate-100 p-2 text-muted-foreground">
                       <Activity className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1 space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge className={getLevelClass(log.level)}>{log.level}</Badge>
-                        <span className="text-xs text-slate-500">{formatDateTime(log.createdAt)}</span>
+                        <span className="text-xs text-muted-foreground">{formatDateTime(log.createdAt)}</span>
                       </div>
-                      <p className="truncate text-sm font-medium text-slate-900">{log.message}</p>
-                      <p className="text-xs text-slate-500">{log.source}</p>
+                      <p className="truncate text-sm font-medium text-foreground">{log.message}</p>
+                      <p className="text-xs text-muted-foreground">{log.source}</p>
                     </div>
                   </div>
                 ))}
@@ -367,10 +367,10 @@ export function DashboardPage() {
                         {hasCriticalLogs ? <AlertCircle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
                       </div>
                       <div>
-                        <div className="font-medium text-slate-900">
+                        <div className="font-medium text-foreground">
                           {!canReadSystemLogs ? 'Limited visibility' : hasCriticalLogs ? 'Needs attention' : 'Operational'}
                         </div>
-                        <div className="text-sm text-slate-500">
+                        <div className="text-sm text-muted-foreground">
                           {!canReadSystemLogs
                             ? 'System log status is hidden.'
                             : `${formatNumber(criticalLogsCount)} recent error-level events`}
@@ -380,16 +380,16 @@ export function DashboardPage() {
                   </div>
 
                   <div className="grid gap-3 text-sm">
-                    <div className="flex items-center justify-between rounded-md bg-slate-50 px-3 py-2">
-                      <span className="text-slate-600">Enabled modules</span>
+                    <div className="flex items-center justify-between rounded-md bg-muted/40 px-3 py-2">
+                      <span className="text-muted-foreground">Enabled modules</span>
                       <span className="font-medium">{canReadModules ? formatNumber(enabledModules) : '—'}</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-md bg-slate-50 px-3 py-2">
-                      <span className="text-slate-600">Unread notifications</span>
+                    <div className="flex items-center justify-between rounded-md bg-muted/40 px-3 py-2">
+                      <span className="text-muted-foreground">Unread notifications</span>
                       <span className="font-medium">{formatNumber(unreadNotificationsQuery.data?.count)}</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-md bg-slate-50 px-3 py-2">
-                      <span className="text-slate-600">Active organization</span>
+                    <div className="flex items-center justify-between rounded-md bg-muted/40 px-3 py-2">
+                      <span className="text-muted-foreground">Active organization</span>
                       <span className="max-w-44 truncate font-medium">{activeOrg?.name ?? 'None'}</span>
                     </div>
                   </div>
@@ -412,31 +412,31 @@ export function DashboardPage() {
                     <Link
                       key={action.href}
                       to={action.href}
-                      className="flex items-center gap-3 rounded-md border bg-white p-3 text-sm transition hover:bg-slate-50"
+                      className="flex items-center gap-3 rounded-md border bg-card p-3 text-sm transition hover:bg-muted/40"
                     >
-                      <div className="rounded-md bg-slate-100 p-2 text-slate-600">
+                      <div className="rounded-md bg-slate-100 p-2 text-muted-foreground">
                         <Icon className="h-4 w-4" />
                       </div>
                       <div className="min-w-0">
-                        <div className="font-medium text-slate-900">{action.title}</div>
-                        <div className="truncate text-xs text-slate-500">{action.description}</div>
+                        <div className="font-medium text-foreground">{action.title}</div>
+                        <div className="truncate text-xs text-muted-foreground">{action.description}</div>
                       </div>
                     </Link>
                   );
                 })
               ) : (
-                <div className="rounded-md border border-dashed p-6 text-sm text-slate-500">No quick actions are available for your role.</div>
+                <div className="rounded-md border border-dashed p-6 text-sm text-muted-foreground">No quick actions are available for your role.</div>
               )}
               <Link
                 to="/notifications"
-                className="flex items-center gap-3 rounded-md border bg-white p-3 text-sm transition hover:bg-slate-50"
+                className="flex items-center gap-3 rounded-md border bg-card p-3 text-sm transition hover:bg-muted/40"
               >
-                <div className="rounded-md bg-slate-100 p-2 text-slate-600">
+                <div className="rounded-md bg-slate-100 p-2 text-muted-foreground">
                   <Bell className="h-4 w-4" />
                 </div>
                 <div className="min-w-0">
-                  <div className="font-medium text-slate-900">Notifications</div>
-                  <div className="truncate text-xs text-slate-500">Review inbox updates.</div>
+                  <div className="font-medium text-foreground">Notifications</div>
+                  <div className="truncate text-xs text-muted-foreground">Review inbox updates.</div>
                 </div>
               </Link>
             </CardContent>

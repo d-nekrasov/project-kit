@@ -3,7 +3,7 @@ import type { PropsWithChildren } from 'react';
 import { cn } from '@/lib/utils';
 
 export function Alert({ className, children }: PropsWithChildren<{ className?: string }>) {
-  return <div className={cn('rounded-md border border-slate-300 bg-white p-4', className)}>{children}</div>;
+  return <div className={cn('rounded-md border border-input bg-card p-4', className)}>{children}</div>;
 }
 
 export function AlertTitle({ className, children }: PropsWithChildren<{ className?: string }>) {
@@ -11,5 +11,5 @@ export function AlertTitle({ className, children }: PropsWithChildren<{ classNam
 }
 
 export function AlertDescription({ className, children }: PropsWithChildren<{ className?: string }>) {
-  return <div className={cn('text-sm text-slate-600', className)}>{children}</div>;
+  return <div className={cn('text-sm text-muted-foreground', className)}>{children}</div>;
 }

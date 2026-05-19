@@ -5,7 +5,7 @@ type JsonViewerProps = {
 
 export function JsonViewer({ value, emptyText = 'No data.' }: JsonViewerProps) {
   if (value === null || value === undefined) {
-    return <p className="text-sm text-slate-500">{emptyText}</p>;
+    return <p className="text-sm text-muted-foreground">{emptyText}</p>;
   }
 
   return (

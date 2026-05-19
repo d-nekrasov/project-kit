@@ -54,7 +54,7 @@ export function NotificationTemplatesTable({ templates, isLoading, onEdit }: Not
                   ))}
                 </div>
               </TableCell>
-              <TableCell className="font-medium text-slate-900">{template.title}</TableCell>
+              <TableCell className="font-medium text-foreground">{template.title}</TableCell>
               <TableCell>{template.emailSubject ?? '-'}</TableCell>
               <TableCell>{formatDate(template.updatedAt)}</TableCell>
               <TableCell className="text-right">

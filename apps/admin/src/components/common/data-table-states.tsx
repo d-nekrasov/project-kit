@@ -23,7 +23,7 @@ type DataTableErrorProps = {
 
 export function DataTableShell({ children }: DataTableShellProps) {
   return (
-    <div className="overflow-hidden rounded-lg border bg-white">
+    <div className="overflow-hidden rounded-lg border bg-card">
       <div className="overflow-x-auto">{children}</div>
     </div>
   );
@@ -31,7 +31,7 @@ export function DataTableShell({ children }: DataTableShellProps) {
 
 export function DataTableSkeleton({ rows = 8 }: DataTableSkeletonProps) {
   return (
-    <div className="rounded-lg border bg-white p-2">
+    <div className="rounded-lg border bg-card p-2">
       <div className="space-y-2">
         {Array.from({ length: rows }).map((_, index) => (
           <Skeleton key={index} className="h-10 w-full" />

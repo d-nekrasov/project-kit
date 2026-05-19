@@ -21,7 +21,7 @@ function renderJsonBlock(value: unknown) {
 }
 
 function renderEmpty(text: string) {
-  return <p className="text-sm text-slate-500">{text}</p>;
+  return <p className="text-sm text-muted-foreground">{text}</p>;
 }
 
 function renderAdminMenu(items: ModuleAdminMenuItem[] | undefined) {
@@ -71,7 +71,7 @@ export function ModuleManifestDialog({ open, module, onOpenChange }: ModuleManif
           <div className="max-h-[70vh] space-y-4 overflow-auto pr-1">
             <section className="space-y-2 rounded-md border p-3">
               <h3 className="text-sm font-semibold">Overview</h3>
-              <div className="grid gap-1 text-sm text-slate-700 md:grid-cols-2">
+              <div className="grid gap-1 text-sm text-foreground/80 md:grid-cols-2">
                 <div>
                   <span className="font-medium">name:</span> <span className="font-mono text-xs">{module.name}</span>
                 </div>
@@ -95,7 +95,7 @@ export function ModuleManifestDialog({ open, module, onOpenChange }: ModuleManif
               {manifest?.permissions?.length ? (
                 <ul className="space-y-1 text-sm">
                   {manifest.permissions.map((code) => (
-                    <li key={code} className="font-mono text-xs text-slate-700">
+                    <li key={code} className="font-mono text-xs text-foreground/80">
                       {code}
                     </li>
                   ))}
@@ -121,7 +121,7 @@ export function ModuleManifestDialog({ open, module, onOpenChange }: ModuleManif
             </section>
           </div>
         ) : (
-          <p className="text-sm text-slate-500">Module is not selected.</p>
+          <p className="text-sm text-muted-foreground">Module is not selected.</p>
         )}
 
         <DialogFooter>

@@ -10,8 +10,8 @@ import type { SystemLogDetailDialogProps } from '@/features/system-logs/system-l
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="grid gap-1 text-sm md:grid-cols-[180px_1fr]">
-      <span className="text-slate-500">{label}</span>
-      <span className="break-all font-mono text-xs text-slate-800">{value || '—'}</span>
+      <span className="text-muted-foreground">{label}</span>
+      <span className="break-all font-mono text-xs text-foreground">{value || '—'}</span>
     </div>
   );
 }
@@ -19,11 +19,11 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 export function SystemLogDetailDialog({ open, log, isLoading, error, onOpenChange }: SystemLogDetailDialogProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="fixed inset-y-0 right-0 z-50 w-full max-w-4xl overflow-y-auto border-l bg-white p-6 shadow-xl">
+      <SheetContent className="fixed inset-y-0 right-0 z-50 w-full max-w-4xl overflow-y-auto border-l bg-card p-6 shadow-xl">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div className="space-y-1">
             <h3 className="text-lg font-semibold">System log details</h3>
-            <p className="text-sm text-slate-600">Detailed view for selected technical runtime event.</p>
+            <p className="text-sm text-muted-foreground">Detailed view for selected technical runtime event.</p>
           </div>
         </div>
 
@@ -49,20 +49,20 @@ export function SystemLogDetailDialog({ open, log, isLoading, error, onOpenChang
               <DetailRow label="ID" value={log.id} />
               <DetailRow label="Created at" value={new Date(log.createdAt).toLocaleString()} />
               <div className="grid gap-1 text-sm md:grid-cols-[180px_1fr]">
-                <span className="text-slate-500">Level</span>
+                <span className="text-muted-foreground">Level</span>
                 <span>
                   <SystemLogLevelBadge level={log.level} />
                 </span>
               </div>
               <div className="grid gap-1 text-sm md:grid-cols-[180px_1fr]">
-                <span className="text-slate-500">Source</span>
+                <span className="text-muted-foreground">Source</span>
                 <span>
                   <SystemLogSourceBadge source={log.source} />
                 </span>
               </div>
               <div className="grid gap-1 text-sm md:grid-cols-[180px_1fr]">
-                <span className="text-slate-500">Message</span>
-                <p className="whitespace-pre-wrap break-words font-mono text-xs text-slate-800">{log.message || '—'}</p>
+                <span className="text-muted-foreground">Message</span>
+                <p className="whitespace-pre-wrap break-words font-mono text-xs text-foreground">{log.message || '—'}</p>
               </div>
             </section>
 
@@ -92,7 +92,7 @@ export function SystemLogDetailDialog({ open, log, isLoading, error, onOpenChang
                   {log.errorStack}
                 </pre>
               ) : (
-                <p className="text-sm text-slate-500">No error stack.</p>
+                <p className="text-sm text-muted-foreground">No error stack.</p>
               )}
             </section>
           </div>

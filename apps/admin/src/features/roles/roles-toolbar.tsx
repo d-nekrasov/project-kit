@@ -18,7 +18,7 @@ export function RolesToolbar({
   organizationsErrorMessage
 }: RolesToolbarProps) {
   return (
-    <div className="grid gap-4 rounded-lg border bg-white p-4 lg:grid-cols-3">
+    <div className="grid gap-4 rounded-lg border bg-card p-4 lg:grid-cols-3">
       {isSuperAdmin ? (
         <div className="grid gap-2">
           <Label htmlFor="roles-organization" className="h-5">
@@ -39,13 +39,13 @@ export function RolesToolbar({
               ))}
             </Select>
           </div>
-          <p className="text-xs text-slate-500">Roles are scoped to the selected organization.</p>
+          <p className="text-xs text-muted-foreground">Roles are scoped to the selected organization.</p>
           {organizationsErrorMessage ? <p className="text-xs text-red-600">{organizationsErrorMessage}</p> : null}
         </div>
       ) : (
         <div className="grid gap-2">
           <Label className="h-5">Organization</Label>
-          <div className="min-h-10 rounded-md border bg-slate-50 px-3 py-2 text-sm text-slate-700">
+          <div className="min-h-10 rounded-md border bg-muted/40 px-3 py-2 text-sm text-foreground/80">
             <span>Current organization: {currentOrganizationName ?? 'Active organization'}</span>
           </div>
           <div className="h-4" />
@@ -72,7 +72,7 @@ export function RolesToolbar({
           Filters
         </Label>
         <div className="flex min-h-10 items-center">
-          <label htmlFor="roles-include-system" className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+          <label htmlFor="roles-include-system" className="flex cursor-pointer items-center gap-2 text-sm text-foreground/80">
             <Checkbox
               id="roles-include-system"
               checked={includeSystem}

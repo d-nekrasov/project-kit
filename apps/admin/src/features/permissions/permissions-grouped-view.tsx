@@ -41,7 +41,7 @@ export function PermissionsGroupedView({ groups, isLoading }: PermissionsGrouped
             <CardTitle className="text-base">
               <PermissionModuleBadge module={group.module} />
             </CardTitle>
-            <div className="text-sm text-slate-600">{group.permissions.length} permissions</div>
+            <div className="text-sm text-muted-foreground">{group.permissions.length} permissions</div>
           </CardHeader>
           <CardContent className="space-y-3">
             {Object.entries(
@@ -54,14 +54,14 @@ export function PermissionsGroupedView({ groups, isLoading }: PermissionsGrouped
                 return acc;
               }, {})
             ).map(([resource, permissions]) => (
-              <div key={`${group.module}-${resource}`} className="rounded-md border border-slate-200 p-3">
-                <div className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">{resource}</div>
+              <div key={`${group.module}-${resource}`} className="rounded-md border border-border p-3">
+                <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">{resource}</div>
                 <div className="space-y-2">
                   {permissions.map((permission) => (
                     <div key={permission.id} className="space-y-1">
                       <Badge className="font-mono">{permission.code}</Badge>
-                      <div className="text-sm text-slate-700">{permission.description}</div>
-                      <div className="text-xs text-slate-500">{permission.action ?? '—'}</div>
+                      <div className="text-sm text-foreground/80">{permission.description}</div>
+                      <div className="text-xs text-muted-foreground">{permission.action ?? '—'}</div>
                     </div>
                   ))}
                 </div>

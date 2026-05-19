@@ -21,33 +21,33 @@ export function UserDetailCard({ user }: UserDetailCardProps) {
       <CardContent>
         <dl className="grid gap-4 sm:grid-cols-2">
           <div>
-            <dt className="text-xs font-medium uppercase text-slate-500">ID</dt>
-            <dd className="mt-1 break-all text-sm text-slate-900">{user.id}</dd>
+            <dt className="text-xs font-medium uppercase text-muted-foreground">ID</dt>
+            <dd className="mt-1 break-all text-sm text-foreground">{user.id}</dd>
           </div>
           <div>
-            <dt className="text-xs font-medium uppercase text-slate-500">Status</dt>
+            <dt className="text-xs font-medium uppercase text-muted-foreground">Status</dt>
             <dd className="mt-1">
               <UserStatusBadge status={user.status} />
             </dd>
           </div>
           <div>
-            <dt className="text-xs font-medium uppercase text-slate-500">Name</dt>
-            <dd className="mt-1 text-sm text-slate-900">{user.name || 'Not set'}</dd>
+            <dt className="text-xs font-medium uppercase text-muted-foreground">Name</dt>
+            <dd className="mt-1 text-sm text-foreground">{user.name || 'Not set'}</dd>
           </div>
           <div>
-            <dt className="text-xs font-medium uppercase text-slate-500">Email</dt>
-            <dd className="mt-1 text-sm text-slate-900">{user.email}</dd>
+            <dt className="text-xs font-medium uppercase text-muted-foreground">Email</dt>
+            <dd className="mt-1 text-sm text-foreground">{user.email}</dd>
           </div>
           <div>
-            <dt className="text-xs font-medium uppercase text-slate-500">Created</dt>
-            <dd className="mt-1 text-sm text-slate-900">{formatDate(user.createdAt)}</dd>
+            <dt className="text-xs font-medium uppercase text-muted-foreground">Created</dt>
+            <dd className="mt-1 text-sm text-foreground">{formatDate(user.createdAt)}</dd>
           </div>
           <div>
-            <dt className="text-xs font-medium uppercase text-slate-500">Updated</dt>
-            <dd className="mt-1 text-sm text-slate-900">{formatDate(user.updatedAt)}</dd>
+            <dt className="text-xs font-medium uppercase text-muted-foreground">Updated</dt>
+            <dd className="mt-1 text-sm text-foreground">{formatDate(user.updatedAt)}</dd>
           </div>
           <div className="sm:col-span-2">
-            <dt className="text-xs font-medium uppercase text-slate-500">System roles</dt>
+            <dt className="text-xs font-medium uppercase text-muted-foreground">System roles</dt>
             <dd className="mt-2 flex flex-wrap gap-2">
               {user.systemRoleDetails.length ? (
                 user.systemRoleDetails.map((role) => (
@@ -56,7 +56,7 @@ export function UserDetailCard({ user }: UserDetailCardProps) {
                   </Badge>
                 ))
               ) : (
-                <span className="text-sm text-slate-500">None</span>
+                <span className="text-sm text-muted-foreground">None</span>
               )}
             </dd>
           </div>

@@ -90,7 +90,7 @@ function FormControl({ children }: { children: React.ReactElement<Record<string,
 function FormDescription({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
   const { formDescriptionId } = useFormField();
 
-  return <p className={cn('text-xs text-slate-500', className)} id={formDescriptionId} {...props} />;
+  return <p className={cn('text-xs text-muted-foreground', className)} id={formDescriptionId} {...props} />;
 }
 
 function FormMessage({ className, children, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {

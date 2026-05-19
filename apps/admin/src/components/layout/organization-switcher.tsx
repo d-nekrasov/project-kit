@@ -7,7 +7,7 @@ export function OrganizationSwitcher() {
   const organizations = auth.user?.organizations ?? [];
 
   if (organizations.length <= 1) {
-    return <div className="text-sm text-slate-600">{organizations[0]?.name ?? 'No organization'}</div>;
+    return <div className="text-sm text-muted-foreground">{organizations[0]?.name ?? 'No organization'}</div>;
   }
 
   return (

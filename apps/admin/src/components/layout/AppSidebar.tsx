@@ -26,11 +26,11 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" className="hidden md:flex">
-      <SidebarHeader className="border-b border-slate-200">
+      <SidebarHeader className="border-b border-border">
         {state === 'expanded' ? (
           <div className="min-w-0">
             <div className="truncate text-sm font-semibold">{appName}</div>
-            <div className="text-xs text-slate-500">Admin Console</div>
+            <div className="text-xs text-muted-foreground">Admin Console</div>
           </div>
         ) : (
           <div className="flex size-9 items-center justify-center rounded-lg bg-slate-900 text-sm font-semibold text-white">
@@ -44,7 +44,7 @@ export function AppSidebar() {
             <SidebarGroupLabel className="flex items-center justify-between gap-2">
               <span>{group.label}</span>
               {group.badge ? (
-                <Badge className="bg-slate-100 px-1.5 text-[10px] font-medium text-slate-500">{group.badge}</Badge>
+                <Badge className="bg-slate-100 px-1.5 text-[10px] font-medium text-muted-foreground">{group.badge}</Badge>
               ) : null}
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -67,7 +67,7 @@ export function AppSidebar() {
                       </SidebarMenuButton>
                       {item.badge ? (
                         <SidebarMenuBadge>
-                          <Badge className="max-w-20 truncate bg-slate-100 text-slate-600">{item.badge}</Badge>
+                          <Badge className="max-w-20 truncate bg-slate-100 text-muted-foreground">{item.badge}</Badge>
                         </SidebarMenuBadge>
                       ) : null}
                     </SidebarMenuItem>
@@ -82,8 +82,8 @@ export function AppSidebar() {
         {state === 'expanded' ? (
           <>
             <Separator className="mb-3" />
-            <div className="rounded-lg border bg-slate-50 p-3 text-xs text-slate-600">
-              <div className="font-medium text-slate-900">System status</div>
+            <div className="rounded-lg border bg-muted/40 p-3 text-xs text-muted-foreground">
+              <div className="font-medium text-foreground">System status</div>
               <div className="mt-1">Secure admin workspace</div>
             </div>
           </>

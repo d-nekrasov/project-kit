@@ -15,7 +15,7 @@ export function AlertDialogContent({ className, children }: PropsWithChildren<{ 
   return (
     <div className="fixed inset-0 z-[var(--z-dialog)] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-900/40" />
-      <div className={cn('relative z-10 w-full max-w-md rounded-lg border bg-white p-6 shadow-xl', className)}>
+      <div className={cn('relative z-10 w-full max-w-md rounded-lg border bg-card p-6 shadow-xl', className)}>
         {children}
       </div>
     </div>
@@ -27,11 +27,11 @@ export function AlertDialogHeader({ className, children }: PropsWithChildren<{ c
 }
 
 export function AlertDialogTitle({ className, children }: PropsWithChildren<{ className?: string }>) {
-  return <h2 className={cn('text-lg font-semibold text-slate-900', className)}>{children}</h2>;
+  return <h2 className={cn('text-lg font-semibold text-foreground', className)}>{children}</h2>;
 }
 
 export function AlertDialogDescription({ className, children }: PropsWithChildren<{ className?: string }>) {
-  return <div className={cn('text-sm text-slate-600', className)}>{children}</div>;
+  return <div className={cn('text-sm text-muted-foreground', className)}>{children}</div>;
 }
 
 export function AlertDialogFooter({ className, children }: PropsWithChildren<{ className?: string }>) {

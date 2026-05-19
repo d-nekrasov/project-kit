@@ -93,7 +93,7 @@ export function RolePermissionsDialog({
           ) : null}
 
           {isSystem ? (
-            <Alert className="border-slate-300 bg-slate-50 text-slate-700">
+            <Alert className="border-input bg-muted/40 text-foreground/80">
               <AlertTitle>Read-only role</AlertTitle>
               <AlertDescription>System roles are read-only.</AlertDescription>
             </Alert>
@@ -106,13 +106,13 @@ export function RolePermissionsDialog({
             </Alert>
           ) : null}
 
-          <div className="rounded-md border bg-slate-50 px-3 py-2 text-sm text-slate-700">
+          <div className="rounded-md border bg-muted/40 px-3 py-2 text-sm text-foreground/80">
             {selectedPermissions.length} permissions selected
           </div>
 
           <div className="max-h-[420px] space-y-4 overflow-auto pr-1">
             {isLoading ? (
-              <div className="text-sm text-slate-600">Loading permissions...</div>
+              <div className="text-sm text-muted-foreground">Loading permissions...</div>
             ) : (
               permissionGroups.map((group) => {
                 const moduleCodes = group.permissions.map((permission) => permission.code);
@@ -129,8 +129,8 @@ export function RolePermissionsDialog({
                   <div key={group.module} className="rounded-md border p-3">
                     <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                       <div>
-                        <h4 className="text-sm font-semibold text-slate-900">{group.module}</h4>
-                        <p className="text-xs text-slate-500">{group.permissions.length} permissions</p>
+                        <h4 className="text-sm font-semibold text-foreground">{group.module}</h4>
+                        <p className="text-xs text-muted-foreground">{group.permissions.length} permissions</p>
                       </div>
                       <div className="flex gap-2">
                         <Button
@@ -156,8 +156,8 @@ export function RolePermissionsDialog({
 
                     <div className="space-y-3">
                       {Object.entries(byResource).map(([resource, permissions]) => (
-                        <div key={`${group.module}-${resource}`} className="rounded border border-slate-200 p-2">
-                          <div className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">{resource}</div>
+                        <div key={`${group.module}-${resource}`} className="rounded border border-border p-2">
+                          <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">{resource}</div>
                           <div className="space-y-2">
                             {permissions.map((permission) => (
                               <label key={permission.code} className="flex items-start gap-2 rounded px-1 py-1 text-sm">
@@ -169,7 +169,7 @@ export function RolePermissionsDialog({
                                 />
                                 <span className="space-y-1">
                                   <Badge className="font-mono">{permission.code}</Badge>
-                                  <span className="block text-xs text-slate-500">{permission.description || 'No description'}</span>
+                                  <span className="block text-xs text-muted-foreground">{permission.description || 'No description'}</span>
                                 </span>
                               </label>
                             ))}

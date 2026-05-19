@@ -10,7 +10,7 @@ import type { AuditLogsTableProps } from '@/features/audit-logs/audit-logs-page.
 
 function AuditLogsTableSkeleton() {
   return (
-    <div className="rounded-lg border bg-white p-2">
+    <div className="rounded-lg border bg-card p-2">
       <div className="space-y-2">
         {Array.from({ length: 8 }).map((_, index) => (
           <Skeleton key={index} className="h-10 w-full" />
@@ -37,7 +37,7 @@ export function AuditLogsTable({ logs, isLoading, onViewDetails }: AuditLogsTabl
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border bg-white">
+    <div className="overflow-hidden rounded-lg border bg-card">
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
@@ -61,17 +61,17 @@ export function AuditLogsTable({ logs, isLoading, onViewDetails }: AuditLogsTabl
                 <TableCell>
                   <div className="space-y-0.5">
                     <div className="font-medium">{log.entityType || '—'}</div>
-                    <div className="font-mono text-xs text-slate-500">{truncate(log.entityId)}</div>
+                    <div className="font-mono text-xs text-muted-foreground">{truncate(log.entityId)}</div>
                   </div>
                 </TableCell>
                 <TableCell>
                   {log.user ? (
                     <div className="space-y-0.5">
                       <div className="font-medium">{log.user.name}</div>
-                      <div className="text-xs text-slate-500">{log.user.email}</div>
+                      <div className="text-xs text-muted-foreground">{log.user.email}</div>
                     </div>
                   ) : log.userId ? (
-                    <span className="font-mono text-xs text-slate-600">{truncate(log.userId, 32)}</span>
+                    <span className="font-mono text-xs text-muted-foreground">{truncate(log.userId, 32)}</span>
                   ) : (
                     '—'
                   )}
@@ -80,10 +80,10 @@ export function AuditLogsTable({ logs, isLoading, onViewDetails }: AuditLogsTabl
                   {log.organization ? (
                     <div className="space-y-0.5">
                       <div className="font-medium">{log.organization.name}</div>
-                      <div className="text-xs text-slate-500">{log.organization.slug}</div>
+                      <div className="text-xs text-muted-foreground">{log.organization.slug}</div>
                     </div>
                   ) : log.organizationId ? (
-                    <span className="font-mono text-xs text-slate-600">{truncate(log.organizationId, 32)}</span>
+                    <span className="font-mono text-xs text-muted-foreground">{truncate(log.organizationId, 32)}</span>
                   ) : (
                     '—'
                   )}

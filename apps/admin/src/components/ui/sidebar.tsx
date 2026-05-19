@@ -68,7 +68,7 @@ export function SidebarProvider({
   return (
     <SidebarContext.Provider value={value}>
       <div
-        className={cn('group/sidebar-wrapper flex min-h-screen w-full', className)}
+        className={cn('group/sidebar-wrapper flex min-h-screen w-full items-start', className)}
         data-state={value.state}
         style={
           {
@@ -100,7 +100,7 @@ export const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
       <aside
         ref={ref}
         className={cn(
-          'group/sidebar relative flex min-h-screen shrink-0 flex-col border-slate-200 bg-white text-slate-900 transition-[width] duration-200 ease-linear',
+          'group/sidebar sticky top-0 flex h-screen min-h-screen shrink-0 self-start flex-col border-border bg-card text-foreground transition-[width] duration-200 ease-linear',
           side === 'left' ? 'border-r' : 'order-2 border-l',
           variant === 'floating' && 'm-2 min-h-[calc(100vh-1rem)] rounded-lg border shadow-sm',
           variant === 'inset' && 'm-2 min-h-[calc(100vh-1rem)] rounded-lg border',
@@ -154,7 +154,7 @@ export function SidebarGroupLabel({ className, ...props }: React.HTMLAttributes<
     return null;
   }
 
-  return <div className={cn('text-xs font-semibold uppercase tracking-wider text-slate-500', className)} {...props} />;
+  return <div className={cn('text-xs font-semibold uppercase tracking-wider text-muted-foreground', className)} {...props} />;
 }
 
 export function SidebarGroupContent({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
@@ -180,9 +180,9 @@ export const SidebarMenuButton = React.forwardRef<HTMLButtonElement, SidebarMenu
     const { state } = useSidebar();
     const collapsed = state === 'collapsed';
     const buttonClassName = cn(
-      'flex min-h-9 w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-100 hover:text-slate-900',
+      'flex min-h-9 w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-foreground/80 transition-colors hover:bg-accent hover:text-accent-foreground',
       collapsed ? 'justify-center px-2 [&>span]:hidden' : 'justify-start',
-      isActive && 'bg-slate-100 font-medium text-slate-900 hover:bg-slate-100 hover:text-slate-900',
+      isActive && 'bg-accent font-medium text-accent-foreground hover:bg-accent hover:text-accent-foreground',
       className
     );
 
@@ -228,7 +228,7 @@ export function SidebarMenuBadge({ className, ...props }: React.HTMLAttributes<H
 }
 
 export function SidebarInset({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('flex min-w-0 flex-1 flex-col', className)} {...props} />;
+  return <div className={cn('flex min-h-screen min-w-0 flex-1 flex-col', className)} {...props} />;
 }
 
 export function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<typeof Button>) {

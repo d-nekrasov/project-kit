@@ -94,7 +94,7 @@ export function Select({
         aria-describedby={ariaDescribedBy}
         className={cn(
           className,
-          'flex h-10 w-full items-center justify-between rounded-md border border-slate-300 bg-white px-3 py-2 text-left text-sm shadow-xs outline-none placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-slate-300 disabled:cursor-not-allowed disabled:opacity-50',
+          'flex h-10 w-full items-center justify-between rounded-md border border-input bg-card px-3 py-2 text-left text-sm shadow-xs outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50',
           !selectedOption && 'text-slate-400',
         )}
         onBlur={(event) => onBlur?.(event as unknown as React.FocusEvent<HTMLSelectElement>)}
@@ -110,7 +110,7 @@ export function Select({
         <SelectPrimitive.Content
           position="popper"
           sideOffset={4}
-          className="z-50 min-w-[8rem] overflow-hidden rounded-md border border-slate-200 bg-white shadow-md"
+          className="z-50 min-w-[8rem] overflow-hidden rounded-md border border-border bg-card shadow-md"
         >
           <SelectPrimitive.Viewport className="p-1">
             {options.map((option) => (

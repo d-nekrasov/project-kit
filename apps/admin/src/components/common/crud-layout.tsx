@@ -15,8 +15,8 @@ export function CrudPageHeader({ title, description, action }: CrudPageHeaderPro
   return (
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div className="space-y-1">
-        <h2 className="text-2xl font-semibold text-slate-900">{title}</h2>
-        <p className="text-sm text-slate-600">{description}</p>
+        <h2 className="text-2xl font-semibold text-foreground">{title}</h2>
+        <p className="text-sm text-muted-foreground">{description}</p>
       </div>
       {action}
     </div>
@@ -48,7 +48,7 @@ export function CrudPagination({ page, totalPages, total, limit, onPageChange, o
   return (
     <Card>
       <CardHeader className="flex flex-col gap-3 p-4 text-sm md:flex-row md:items-center md:justify-between">
-        <div className="text-slate-600">
+        <div className="text-muted-foreground">
           Page {page} of {totalPages} • Total: {total}
         </div>
 
@@ -62,7 +62,7 @@ export function CrudPagination({ page, totalPages, total, limit, onPageChange, o
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-slate-600">Rows per page</span>
+          <span className="text-muted-foreground">Rows per page</span>
           <Select
             value={String(limit)}
             onChange={(event) => {

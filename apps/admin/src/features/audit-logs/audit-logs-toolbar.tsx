@@ -25,7 +25,7 @@ export function AuditLogsToolbar({
   onReset
 }: AuditLogsToolbarProps) {
   return (
-    <div className="grid gap-3 rounded-lg border bg-white p-4 md:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-3 rounded-lg border bg-card p-4 md:grid-cols-2 xl:grid-cols-4">
       <div className="space-y-1 md:col-span-2 xl:col-span-4">
         <Label htmlFor="audit-logs-search">Search</Label>
         <Input
