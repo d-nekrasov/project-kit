@@ -1,0 +1,64 @@
+import { Menu } from 'lucide-react';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+
+import { useAdminNavigation } from '@/components/layout/use-admin-navigation';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { cn } from '@/lib/utils';
+
+export function MobileSidebar() {
+  const [open, setOpen] = useState(false);
+  const navItems = useAdminNavigation();
+  const appName = import.meta.env.VITE_APP_NAME || 'Project Kit';
+
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="size-9 px-0 md:hidden"
+        aria-label="Open navigation"
+        onClick={() => setOpen(true)}
+      >
+        <Menu className="size-5" aria-hidden="true" />
+      </Button>
+      <SheetContent className="fixed inset-y-0 left-0 z-50 flex w-80 max-w-[85vw] flex-col border-r bg-white p-0 shadow-xl md:hidden">
+        <div className="flex min-h-16 items-center px-5">
+          <div>
+            <div className="text-sm font-semibold">{appName}</div>
+            <div className="text-xs text-slate-500">Admin Console</div>
+          </div>
+        </div>
+        <Separator />
+        <nav className="flex-1 overflow-y-auto p-3">
+          <div className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-slate-500">Navigation</div>
+          <div className="space-y-1">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setOpen(false)}
+                  className={cn(
+                    'flex min-h-10 items-center gap-3 rounded-md px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-100 hover:text-slate-900',
+                    item.isActive && 'bg-slate-100 font-medium text-slate-900'
+                  )}
+                >
+                  <Icon className="size-4 shrink-0" aria-hidden="true" />
+                  <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                  {item.badge ? <Badge className="bg-slate-200 text-slate-700">{item.badge}</Badge> : null}
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+      </SheetContent>
+    </Sheet>
+  );
+}
