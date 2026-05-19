@@ -34,10 +34,10 @@ export function ModuleSettingsSchemaDialog({ open, module, onOpenChange }: Modul
               {JSON.stringify(schema, null, 2)}
             </pre>
           ) : (
-            <div className="rounded-md border p-4 text-sm text-slate-600">This module manifest has no settings schema.</div>
+            <div className="rounded-md border p-4 text-sm text-muted-foreground">This module manifest has no settings schema.</div>
           )
         ) : (
-          <div className="rounded-md border p-4 text-sm text-slate-600">Module is not selected.</div>
+          <div className="rounded-md border p-4 text-sm text-muted-foreground">Module is not selected.</div>
         )}
 
         <DialogFooter>

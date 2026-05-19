@@ -1,5 +1,6 @@
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { AUDIT_ACTION_OPTIONS, AUDIT_ENTITY_TYPE_OPTIONS, type AuditLogsToolbarProps } from '@/features/audit-logs/audit-logs-page.types';
@@ -24,8 +25,8 @@ export function AuditLogsToolbar({
   onReset
 }: AuditLogsToolbarProps) {
   return (
-    <div className="grid gap-3 rounded-lg border bg-white p-4 md:grid-cols-2 lg:grid-cols-3">
-      <div className="space-y-2 lg:col-span-3">
+    <div className="grid gap-3 rounded-lg border bg-card p-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="space-y-1 md:col-span-2 xl:col-span-4">
         <Label htmlFor="audit-logs-search">Search</Label>
         <Input
           id="audit-logs-search"
@@ -35,7 +36,7 @@ export function AuditLogsToolbar({
         />
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label htmlFor="audit-logs-action">Action</Label>
         <Select id="audit-logs-action" value={action} onChange={(event) => onActionChange(event.target.value)}>
           <option value="">All</option>
@@ -47,7 +48,7 @@ export function AuditLogsToolbar({
         </Select>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label htmlFor="audit-logs-entity-type">Entity type</Label>
         <Select id="audit-logs-entity-type" value={entityType} onChange={(event) => onEntityTypeChange(event.target.value)}>
           <option value="">All</option>
@@ -59,17 +60,17 @@ export function AuditLogsToolbar({
         </Select>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label htmlFor="audit-logs-entity-id">Entity ID</Label>
         <Input id="audit-logs-entity-id" value={entityId} onChange={(event) => onEntityIdChange(event.target.value)} />
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label htmlFor="audit-logs-user-id">User ID</Label>
         <Input id="audit-logs-user-id" value={userId} onChange={(event) => onUserIdChange(event.target.value)} />
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label htmlFor="audit-logs-organization-id">Organization ID</Label>
         <Input
           id="audit-logs-organization-id"
@@ -78,20 +79,25 @@ export function AuditLogsToolbar({
         />
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label htmlFor="audit-logs-date-from">Date from</Label>
-        <Input id="audit-logs-date-from" type="date" value={dateFrom} onChange={(event) => onDateFromChange(event.target.value)} />
+        <Calendar id="audit-logs-date-from" value={dateFrom} onChange={(event) => onDateFromChange(event.target.value)} />
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label htmlFor="audit-logs-date-to">Date to</Label>
-        <Input id="audit-logs-date-to" type="date" value={dateTo} onChange={(event) => onDateToChange(event.target.value)} />
+        <Calendar id="audit-logs-date-to" value={dateTo} onChange={(event) => onDateToChange(event.target.value)} />
       </div>
 
-      <div className="flex items-end">
-        <Button type="button" variant="outline" size="sm" onClick={onReset}>
-          Reset filters
-        </Button>
+      <div className="space-y-1 xl:col-span-2">
+        <Label className="opacity-0" aria-hidden="true">
+          Actions
+        </Label>
+        <div className="flex justify-end">
+          <Button type="button" variant="outline" size="sm" className="w-full md:w-auto" onClick={onReset}>
+            Reset filters
+          </Button>
+        </div>
       </div>
     </div>
   );

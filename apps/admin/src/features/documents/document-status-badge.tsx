@@ -7,7 +7,7 @@ type DocumentStatusBadgeProps = {
 };
 
 const statusClasses: Record<DocumentStatus, string> = {
-  DRAFT: 'bg-slate-100 text-slate-700',
+  DRAFT: 'bg-slate-100 text-foreground/80',
   PUBLISHED: 'bg-emerald-100 text-emerald-700',
   ARCHIVED: 'bg-amber-100 text-amber-700'
 };

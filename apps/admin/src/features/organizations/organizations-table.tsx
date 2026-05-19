@@ -1,5 +1,10 @@
+import { MoreHorizontal, Pencil, ShieldAlert } from 'lucide-react';
+
+import { CrudTableCard } from '@/components/common/crud-layout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { CardContent } from '@/components/ui/card';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { OrganizationStatusBadge } from '@/features/organizations/organization-status-badge';
@@ -11,13 +16,13 @@ function formatDate(value: string) {
 
 function OrganizationsTableSkeleton() {
   return (
-    <div className="rounded-lg border bg-white p-2">
-      <div className="space-y-2">
+    <CrudTableCard>
+      <CardContent className="p-2">
         {Array.from({ length: 8 }).map((_, index) => (
           <Skeleton key={index} className="h-10 w-full" />
         ))}
-      </div>
-    </div>
+      </CardContent>
+    </CrudTableCard>
   );
 }
 
@@ -34,7 +39,7 @@ export function OrganizationsTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border bg-white">
+    <CrudTableCard>
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
@@ -53,7 +58,7 @@ export function OrganizationsTable({
               <TableRow key={organization.id}>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <span>{organization.name}</span>
+                    <span className="font-medium">{organization.name}</span>
                     {organization.id === activeOrganizationId ? (
                       <Badge className="bg-blue-100 text-blue-800">Current</Badge>
                     ) : null}
@@ -67,22 +72,31 @@ export function OrganizationsTable({
                 <TableCell>{organization.rolesCount}</TableCell>
                 <TableCell>{formatDate(organization.createdAt)}</TableCell>
                 <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button type="button" variant="outline" size="sm" onClick={() => onEdit(organization)}>
-                      Edit
-                    </Button>
-                    {isSuperAdmin ? (
-                      <Button type="button" variant="secondary" size="sm" onClick={() => onChangeStatus(organization)}>
-                        Change status
+                  <DropdownMenu>
+                    <DropdownMenuTrigger>
+                      <Button type="button" variant="ghost" size="sm" aria-label={`Open actions for ${organization.name}`}>
+                        <MoreHorizontal className="h-4 w-4" />
                       </Button>
-                    ) : null}
-                  </div>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => onEdit(organization)}>
+                        <Pencil className="mr-2 inline h-4 w-4" />
+                        Edit
+                      </DropdownMenuItem>
+                      {isSuperAdmin ? (
+                        <DropdownMenuItem onClick={() => onChangeStatus(organization)}>
+                          <ShieldAlert className="mr-2 inline h-4 w-4" />
+                          Change status
+                        </DropdownMenuItem>
+                      ) : null}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
-    </div>
+    </CrudTableCard>
   );
 }

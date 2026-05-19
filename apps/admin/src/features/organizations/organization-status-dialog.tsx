@@ -2,15 +2,16 @@ import type { OrganizationStatus } from '@project-kit/sdk';
 import { useEffect, useState } from 'react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import type { OrganizationStatusDialogProps } from '@/features/organizations/organizations-page.types';
@@ -32,14 +33,14 @@ export function OrganizationStatusDialog({
   }, [organization]);
 
   return (
-    <Dialog open={open}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Change organization status</DialogTitle>
-          <DialogDescription>
+    <AlertDialog open={open}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Change organization status</AlertDialogTitle>
+          <AlertDialogDescription>
             Update status for <span className="font-medium">{organization?.name ?? '-'}</span> ({organization?.slug ?? '-'})
-          </DialogDescription>
-        </DialogHeader>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
 
         <form
           className="space-y-4"
@@ -74,16 +75,16 @@ export function OrganizationStatusDialog({
             </Select>
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => onOpenChange(false)} disabled={isSubmitting}>
               Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            </AlertDialogCancel>
+            <AlertDialogAction type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Updating...' : 'Update status'}
-            </Button>
-          </DialogFooter>
+            </AlertDialogAction>
+          </AlertDialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

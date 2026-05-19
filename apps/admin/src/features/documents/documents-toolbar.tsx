@@ -5,7 +5,7 @@ import type { DocumentsToolbarProps } from '@/features/documents/documents-page.
 
 export function DocumentsToolbar({ search, onSearchChange, status, onStatusChange }: DocumentsToolbarProps) {
   return (
-    <div className="grid gap-3 rounded-lg border bg-white p-4 md:grid-cols-2">
+    <div className="grid gap-3 rounded-lg border bg-card p-4 md:grid-cols-2">
       <div className="space-y-2">
         <Label htmlFor="documents-search">Search</Label>
         <Input

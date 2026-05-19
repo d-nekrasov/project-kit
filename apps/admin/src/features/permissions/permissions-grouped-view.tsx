@@ -1,4 +1,5 @@
 import { EmptyState } from '@/components/common/empty-state';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PermissionModuleBadge } from '@/features/permissions/permission-module-badge';
@@ -40,15 +41,29 @@ export function PermissionsGroupedView({ groups, isLoading }: PermissionsGrouped
             <CardTitle className="text-base">
               <PermissionModuleBadge module={group.module} />
             </CardTitle>
-            <div className="text-sm text-slate-600">{group.permissions.length} permissions</div>
+            <div className="text-sm text-muted-foreground">{group.permissions.length} permissions</div>
           </CardHeader>
           <CardContent className="space-y-3">
-            {group.permissions.map((permission) => (
-              <div key={permission.id} className="rounded-md border border-slate-200 p-3">
-                <div className="font-mono text-xs text-slate-900">{permission.code}</div>
-                <div className="mt-1 text-sm text-slate-700">{permission.description}</div>
-                <div className="mt-1 text-xs text-slate-500">
-                  {permission.resource ?? '—'} / {permission.action ?? '—'}
+            {Object.entries(
+              group.permissions.reduce<Record<string, typeof group.permissions>>((acc, permission) => {
+                const key = permission.resource || 'Other';
+                if (!acc[key]) {
+                  acc[key] = [];
+                }
+                acc[key].push(permission);
+                return acc;
+              }, {})
+            ).map(([resource, permissions]) => (
+              <div key={`${group.module}-${resource}`} className="rounded-md border border-border p-3">
+                <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">{resource}</div>
+                <div className="space-y-2">
+                  {permissions.map((permission) => (
+                    <div key={permission.id} className="space-y-1">
+                      <Badge className="font-mono">{permission.code}</Badge>
+                      <div className="text-sm text-foreground/80">{permission.description}</div>
+                      <div className="text-xs text-muted-foreground">{permission.action ?? '—'}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}

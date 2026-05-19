@@ -1,0 +1,12 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - heading "Login" [level=3] [ref=e6]
+    - paragraph [ref=e7]: Sign in to access admin dashboard.
+  - generic [ref=e9]:
+    - generic [ref=e10]:
+      - text: Email
+      - textbox "Email" [ref=e11]
+    - generic [ref=e12]:
+      - text: Password
+      - textbox "Password" [ref=e13]
+    - button "Sign in" [ref=e14]

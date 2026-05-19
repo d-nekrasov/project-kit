@@ -55,8 +55,8 @@ export function ProfilePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold text-slate-900">Profile</h2>
-        <p className="text-sm text-slate-600">View your account details and update your display name.</p>
+        <h2 className="text-2xl font-semibold text-foreground">Profile</h2>
+        <p className="text-sm text-muted-foreground">View your account details and update your display name.</p>
       </div>
 
       <Card>

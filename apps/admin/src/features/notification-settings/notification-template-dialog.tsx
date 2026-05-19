@@ -7,6 +7,7 @@ import { z } from 'zod';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -15,8 +16,8 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
 const editableChannels = ['IN_APP', 'EMAIL'] as const;
@@ -110,7 +111,8 @@ export function NotificationTemplateDialog({
           <DialogDescription>{template?.event ?? 'Template'}</DialogDescription>
         </DialogHeader>
 
-        <form className="space-y-4" onSubmit={form.handleSubmit(submitHandler)}>
+        <Form {...form}>
+          <form className="space-y-4" onSubmit={form.handleSubmit(submitHandler)}>
           {error ? (
             <Alert className="border-red-200 bg-red-50 text-red-700">
               <AlertCircle className="mb-1 h-4 w-4" />
@@ -119,69 +121,108 @@ export function NotificationTemplateDialog({
             </Alert>
           ) : null}
 
-          <div className="space-y-2">
-            <Label htmlFor="template-event">Event</Label>
-            <Input id="template-event" value={template?.event ?? ''} disabled />
-          </div>
+            <FormItem>
+              <FormLabel>Event</FormLabel>
+              <Input value={template?.event ?? ''} disabled />
+            </FormItem>
 
-          <div className="space-y-2">
-            <Label htmlFor="template-title">Title</Label>
-            <Input id="template-title" {...form.register('title')} />
-            <p className="text-xs text-red-600">{form.formState.errors.title?.message}</p>
-          </div>
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Title</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <div className="space-y-2">
-            <Label htmlFor="template-message">Message</Label>
-            <Textarea id="template-message" rows={3} {...form.register('message')} />
-            <p className="text-xs text-red-600">{form.formState.errors.message?.message}</p>
-          </div>
+            <FormField
+              control={form.control}
+              name="message"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Message</FormLabel>
+                  <FormControl>
+                    <Textarea rows={3} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="template-email-subject">Email subject</Label>
-              <Input id="template-email-subject" {...form.register('emailSubject')} />
-              <p className="text-xs text-red-600">{form.formState.errors.emailSubject?.message}</p>
+            <div className="grid gap-4 md:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="emailSubject"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email subject</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="emailBody"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2">
+                    <FormLabel>Email body</FormLabel>
+                    <FormControl>
+                      <Textarea rows={6} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="template-email-body">Email body</Label>
-              <Textarea id="template-email-body" rows={6} {...form.register('emailBody')} />
-            </div>
-          </div>
+            <FormField
+              control={form.control}
+              name="channels"
+              render={() => (
+                <FormItem>
+                  <FormLabel>Channels</FormLabel>
+                  <div className="flex flex-wrap gap-4 rounded-md border bg-muted/40 p-3">
+                    {editableChannels.map((channel) => (
+                      <label key={channel} className="flex items-center gap-2 text-sm text-foreground/80">
+                        <Checkbox
+                          checked={channels.includes(channel)}
+                          onChange={(event) => toggleChannel(channel, event.target.checked)}
+                        />
+                        {channel}
+                      </label>
+                    ))}
+                    {futureChannels.map((channel) => (
+                      <label key={channel} className="flex items-center gap-2 text-sm text-slate-400">
+                        <Checkbox disabled />
+                        {channel} future
+                      </label>
+                    ))}
+                  </div>
+                  <FormMessage />
+                  <FormDescription>Placeholders use {'{{key}}'} syntax and are rendered from notification payload.</FormDescription>
+                </FormItem>
+              )}
+            />
 
-          <div className="space-y-2">
-            <Label>Channels</Label>
-            <div className="flex flex-wrap gap-4 rounded-md border bg-slate-50 p-3">
-              {editableChannels.map((channel) => (
-                <label key={channel} className="flex items-center gap-2 text-sm text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={channels.includes(channel)}
-                    onChange={(event) => toggleChannel(channel, event.target.checked)}
-                  />
-                  {channel}
-                </label>
-              ))}
-              {futureChannels.map((channel) => (
-                <label key={channel} className="flex items-center gap-2 text-sm text-slate-400">
-                  <input type="checkbox" disabled />
-                  {channel} future
-                </label>
-              ))}
-            </div>
-            <p className="text-xs text-red-600">{form.formState.errors.channels?.message}</p>
-            <p className="text-xs text-slate-500">Placeholders use {'{{key}}'} syntax and are rendered from notification payload.</p>
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : 'Save changes'}
-            </Button>
-          </DialogFooter>
-        </form>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : 'Save changes'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

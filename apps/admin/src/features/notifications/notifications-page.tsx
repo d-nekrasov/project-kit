@@ -111,11 +111,11 @@ export function NotificationsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-slate-900">Notifications</h2>
-          <p className="text-sm text-slate-600">Personal notification inbox for your account.</p>
+          <h2 className="text-2xl font-semibold text-foreground">Notifications</h2>
+          <p className="text-sm text-muted-foreground">Personal notification inbox for your account.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
+          <div className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground/80">
             <span>Notification sound</span>
             <Button
               type="button"
@@ -163,8 +163,8 @@ export function NotificationsPage() {
         onMarkRead={(notification) => markReadMutation.mutate(notification)}
       />
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-white p-4 text-sm">
-        <div className="text-slate-600">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4 text-sm">
+        <div className="text-muted-foreground">
           Page {meta?.page ?? page} of {meta?.totalPages ?? 1} • Total: {meta?.total ?? 0}
         </div>
 
@@ -184,7 +184,7 @@ export function NotificationsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-slate-600">Rows per page</span>
+          <span className="text-muted-foreground">Rows per page</span>
           <Select
             value={String(limit)}
             onChange={(inputEvent) => {

@@ -1,8 +1,9 @@
 import type { DocumentResponse } from '@project-kit/sdk';
+import { MoreHorizontal, Pencil, ShieldAlert } from 'lucide-react';
 
-import { EmptyState } from '@/components/common/empty-state';
+import { DataTableEmpty, DataTableShell, DataTableSkeleton } from '@/components/common/data-table-states';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DocumentStatusBadge } from '@/features/documents/document-status-badge';
 import type { DocumentsTableProps } from '@/features/documents/documents-page.types';
@@ -32,73 +33,68 @@ function formatUser(user: DocumentResponse['createdBy'] | DocumentResponse['upda
   return `${user.name} (${user.email})`;
 }
 
-function DocumentsTableSkeleton() {
-  return (
-    <div className="rounded-lg border bg-white p-2">
-      <div className="space-y-2">
-        {Array.from({ length: 8 }).map((_, index) => (
-          <Skeleton key={index} className="h-10 w-full" />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export function DocumentsTable({ documents, isLoading, onEdit, onChangeStatus }: DocumentsTableProps) {
   if (isLoading) {
-    return <DocumentsTableSkeleton />;
+    return <DataTableSkeleton />;
   }
 
   if (!documents.length) {
-    return <EmptyState title="No documents found" description="Try changing search or status filters." />;
+    return <DataTableEmpty title="No documents found" description="Try changing search or status filters." />;
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border bg-white">
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Created by</TableHead>
-              <TableHead>Updated by</TableHead>
-              <TableHead>Created at</TableHead>
-              <TableHead>Updated at</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {documents.map((document) => (
-              <TableRow key={document.id}>
-                <TableCell>
-                  <div className="space-y-1">
-                    <div className="font-medium text-slate-900">{document.title}</div>
-                    {preview(document.content) ? <div className="text-xs text-slate-500">{preview(document.content)}</div> : null}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <DocumentStatusBadge status={document.status} />
-                </TableCell>
-                <TableCell>{formatUser(document.createdBy)}</TableCell>
-                <TableCell>{formatUser(document.updatedBy)}</TableCell>
-                <TableCell>{formatDate(document.createdAt)}</TableCell>
-                <TableCell>{formatDate(document.updatedAt)}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button type="button" variant="outline" size="sm" onClick={() => onEdit(document)}>
+    <DataTableShell>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Title</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Created by</TableHead>
+            <TableHead>Updated by</TableHead>
+            <TableHead>Created at</TableHead>
+            <TableHead>Updated at</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {documents.map((document) => (
+            <TableRow key={document.id}>
+              <TableCell>
+                <div className="space-y-1">
+                  <div className="font-medium text-foreground">{document.title}</div>
+                  {preview(document.content) ? <div className="text-xs text-muted-foreground">{preview(document.content)}</div> : null}
+                </div>
+              </TableCell>
+              <TableCell>
+                <DocumentStatusBadge status={document.status} />
+              </TableCell>
+              <TableCell>{formatUser(document.createdBy)}</TableCell>
+              <TableCell>{formatUser(document.updatedBy)}</TableCell>
+              <TableCell>{formatDate(document.createdAt)}</TableCell>
+              <TableCell>{formatDate(document.updatedAt)}</TableCell>
+              <TableCell className="text-right">
+                <DropdownMenu>
+                  <DropdownMenuTrigger>
+                    <Button type="button" variant="ghost" size="sm" aria-label={`Open actions for ${document.title}`}>
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onClick={() => onEdit(document)}>
+                      <Pencil className="mr-2 inline h-4 w-4" />
                       Edit
-                    </Button>
-                    <Button type="button" variant="secondary" size="sm" onClick={() => onChangeStatus(document)}>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onChangeStatus(document)}>
+                      <ShieldAlert className="mr-2 inline h-4 w-4" />
                       Change status
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </DataTableShell>
   );
 }

@@ -14,8 +14,8 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import type { RoleFormDialogProps, RoleFormValues } from '@/features/roles/roles-page.types';
 
 const createSchema = z.object({
@@ -76,7 +76,8 @@ export function RoleFormDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form className="space-y-4" onSubmit={form.handleSubmit((values) => onSubmit(values))}>
+        <Form {...form}>
+          <form className="space-y-4" onSubmit={form.handleSubmit((values) => onSubmit(values))}>
           {errorMessage ? (
             <Alert className="border-red-200 bg-red-50 text-red-700">
               <AlertCircle className="mb-1 h-4 w-4" />
@@ -85,41 +86,58 @@ export function RoleFormDialog({
             </Alert>
           ) : null}
 
-          {mode === 'create' ? (
-            <div className="space-y-2">
-              <Label htmlFor="role-organization-readonly">Organization</Label>
-              <Input id="role-organization-readonly" value={organizationName ?? 'Select organization'} disabled />
-            </div>
-          ) : null}
+            {mode === 'create' ? (
+              <FormItem>
+                <FormLabel>Organization</FormLabel>
+                <Input value={organizationName ?? 'Select organization'} disabled />
+              </FormItem>
+            ) : null}
 
-          {mode === 'create' ? (
-            <div className="space-y-2">
-              <Label htmlFor="role-code">Code</Label>
-              <Input id="role-code" placeholder="documents_manager" {...form.register('code')} />
-              <p className="text-xs text-red-600">{form.formState.errors.code?.message}</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <Label htmlFor="role-code-readonly">Code</Label>
-              <Input id="role-code-readonly" value={role?.code ?? ''} disabled />
-            </div>
-          )}
+            {mode === 'create' ? (
+              <FormField
+                control={form.control}
+                name="code"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Code</FormLabel>
+                    <FormControl>
+                      <Input placeholder="documents_manager" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : (
+              <FormItem>
+                <FormLabel>Code</FormLabel>
+                <Input value={role?.code ?? ''} disabled />
+              </FormItem>
+            )}
 
-          <div className="space-y-2">
-            <Label htmlFor="role-name">Name</Label>
-            <Input id="role-name" {...form.register('name')} />
-            <p className="text-xs text-red-600">{form.formState.errors.name?.message}</p>
-          </div>
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting || isSubmitDisabled}>
-              {isSubmitting ? 'Saving...' : mode === 'create' ? 'Create role' : 'Save changes'}
-            </Button>
-          </DialogFooter>
-        </form>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting || isSubmitDisabled}>
+                {isSubmitting ? 'Saving...' : mode === 'create' ? 'Create role' : 'Save changes'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

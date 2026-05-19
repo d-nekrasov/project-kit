@@ -1,8 +1,10 @@
 import type { UserResponse } from '@project-kit/sdk';
 
+import { DataTableEmpty, DataTableShell } from '@/components/common/data-table-states';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 type UserOrganizationsCardProps = {
   user: UserResponse;
@@ -23,38 +25,38 @@ export function UserOrganizationsCard({ user, canManage, onManage }: UserOrganiz
       </CardHeader>
       <CardContent>
         {user.organizations.length ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b text-xs uppercase text-slate-500">
-                <tr>
-                  <th className="py-2 pr-4">Organization</th>
-                  <th className="py-2 pr-4">Slug</th>
-                  <th className="py-2 pr-4">Org status</th>
-                  <th className="py-2 pr-4">Membership</th>
-                  <th className="py-2 pr-4">Role</th>
-                </tr>
-              </thead>
-              <tbody>
+          <DataTableShell>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Organization</TableHead>
+                  <TableHead>Slug</TableHead>
+                  <TableHead>Org status</TableHead>
+                  <TableHead>Membership</TableHead>
+                  <TableHead>Role</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {user.organizations.map((organization) => (
-                  <tr key={organization.id} className="border-b last:border-0">
-                    <td className="py-3 pr-4 font-medium text-slate-900">{organization.name}</td>
-                    <td className="py-3 pr-4 text-slate-600">{organization.slug}</td>
-                    <td className="py-3 pr-4">
+                  <TableRow key={organization.id}>
+                    <TableCell className="font-medium text-foreground">{organization.name}</TableCell>
+                    <TableCell className="text-muted-foreground">{organization.slug}</TableCell>
+                    <TableCell>
                       <Badge>{organization.status}</Badge>
-                    </td>
-                    <td className="py-3 pr-4">
+                    </TableCell>
+                    <TableCell>
                       <Badge>{organization.membershipStatus}</Badge>
-                    </td>
-                    <td className="py-3 pr-4 text-slate-700">
+                    </TableCell>
+                    <TableCell className="text-foreground/80">
                       {organization.roleName} ({organization.role})
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </TableBody>
+            </Table>
+          </DataTableShell>
         ) : (
-          <p className="text-sm text-slate-500">No organization memberships.</p>
+          <DataTableEmpty title="No organization memberships" description="This user is not assigned to any organization yet." />
         )}
       </CardContent>
     </Card>

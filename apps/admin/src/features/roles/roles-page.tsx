@@ -165,8 +165,8 @@ export function RolesPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-slate-900">Roles</h2>
-          <p className="text-sm text-slate-600">Manage organization roles and permissions.</p>
+          <h2 className="text-2xl font-semibold text-foreground">Roles</h2>
+          <p className="text-sm text-muted-foreground">Manage organization roles and permissions.</p>
         </div>
         <Button type="button" onClick={() => setCreateDialogOpen(true)} disabled={shouldSelectOrganization}>
           Create role
@@ -204,7 +204,7 @@ export function RolesPage() {
       />
 
       {selectedOrganizationName ? (
-        <div className="text-sm text-slate-600">Managing roles for: {selectedOrganizationName}</div>
+        <div className="text-sm text-muted-foreground">Managing roles for: {selectedOrganizationName}</div>
       ) : null}
 
       {pageError ? <ErrorState message={pageError} /> : null}
@@ -230,8 +230,8 @@ export function RolesPage() {
         />
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-white p-4 text-sm">
-        <div className="text-slate-600">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4 text-sm">
+        <div className="text-muted-foreground">
           Page {rolesMeta?.page ?? page} of {rolesMeta?.totalPages ?? 1} • Total: {rolesMeta?.total ?? 0}
         </div>
 
@@ -251,7 +251,7 @@ export function RolesPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-slate-600">Rows per page</span>
+          <span className="text-muted-foreground">Rows per page</span>
           <Select
             value={String(limit)}
             onChange={(event) => {

@@ -11,5 +11,5 @@ export function ModuleStatusBadge({ status }: ModuleStatusBadgeProps) {
     return <Badge className="bg-emerald-100 text-emerald-800">ENABLED</Badge>;
   }
 
-  return <Badge className="bg-slate-200 text-slate-700">DISABLED</Badge>;
+  return <Badge className="bg-slate-200 text-foreground/80">DISABLED</Badge>;
 }

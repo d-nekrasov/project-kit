@@ -5,5 +5,5 @@ type SystemLogSourceBadgeProps = {
 };
 
 export function SystemLogSourceBadge({ source }: SystemLogSourceBadgeProps) {
-  return <Badge className="bg-slate-200 text-slate-800">{source || 'unknown'}</Badge>;
+  return <Badge className="bg-slate-200 text-foreground">{source || 'unknown'}</Badge>;
 }

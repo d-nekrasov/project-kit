@@ -7,7 +7,7 @@ type SystemLogLevelBadgeProps = {
 };
 
 const LEVEL_CLASSNAME: Record<SystemLogLevel, string> = {
-  DEBUG: 'bg-slate-100 text-slate-700',
+  DEBUG: 'bg-slate-100 text-foreground/80',
   INFO: 'bg-blue-100 text-blue-800',
   WARN: 'bg-amber-100 text-amber-800',
   ERROR: 'bg-rose-100 text-rose-800',

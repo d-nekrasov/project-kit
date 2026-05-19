@@ -8,7 +8,7 @@ type RoleTypeBadgeProps = {
 
 export function RoleTypeBadge({ type }: RoleTypeBadgeProps) {
   if (type === 'SYSTEM') {
-    return <Badge className="bg-slate-200 text-slate-700">SYSTEM</Badge>;
+    return <Badge className="bg-slate-200 text-foreground/80">SYSTEM</Badge>;
   }
 
   return <Badge className="bg-blue-100 text-blue-700">ORGANIZATION</Badge>;

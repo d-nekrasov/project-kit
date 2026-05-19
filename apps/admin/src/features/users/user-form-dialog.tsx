@@ -14,8 +14,8 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import type { UserFormDialogProps, UserFormValues } from '@/features/users/users-page.types';
 
@@ -111,7 +111,8 @@ export function UserFormDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form className="space-y-4" onSubmit={form.handleSubmit((values) => onSubmit(values))}>
+        <Form {...form}>
+          <form className="space-y-4" onSubmit={form.handleSubmit((values) => onSubmit(values))}>
           {errorMessage ? (
             <Alert className="border-red-200 bg-red-50 text-red-700">
               <AlertCircle className="mb-1 h-4 w-4" />
@@ -127,73 +128,113 @@ export function UserFormDialog({
             </Alert>
           ) : null}
 
-          {mode === 'create' ? (
-            <div className="space-y-2">
-              <Label htmlFor="user-email">Email</Label>
-              <Input id="user-email" type="email" {...form.register('email')} />
-              <p className="text-xs text-red-600">{form.formState.errors.email?.message}</p>
-            </div>
-          ) : null}
+            {mode === 'create' ? (
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : null}
 
-          {mode === 'create' && isSuperAdmin ? (
-            <div className="space-y-2">
-              <Label htmlFor="user-organization">Organization</Label>
-              <Select
-                id="user-organization"
-                {...form.register('organizationId', {
-                  onChange: (event) => {
-                    onOrganizationChange?.(event.target.value);
-                    form.setValue('roleId', '');
-                  }
-                })}
-              >
-                <option value="">Select organization</option>
-                {organizations.map((organization) => (
-                  <option key={organization.id} value={organization.id}>
-                    {organization.name}
-                  </option>
-                ))}
-              </Select>
-              <p className="text-xs text-red-600">{form.formState.errors.organizationId?.message}</p>
-            </div>
-          ) : null}
+            {mode === 'create' && isSuperAdmin ? (
+              <FormField
+                control={form.control}
+                name="organizationId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Organization</FormLabel>
+                    <FormControl>
+                      <Select
+                        {...field}
+                        onChange={(event) => {
+                          field.onChange(event);
+                          onOrganizationChange?.(event.target.value);
+                          form.setValue('roleId', '');
+                        }}
+                      >
+                        <option value="">Select organization</option>
+                        {organizations.map((organization) => (
+                          <option key={organization.id} value={organization.id}>
+                            {organization.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : null}
 
-          <div className="space-y-2">
-            <Label htmlFor="user-name">Name</Label>
-            <Input id="user-name" {...form.register('name')} />
-            <p className="text-xs text-red-600">{form.formState.errors.name?.message}</p>
-          </div>
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          {mode === 'create' ? (
-            <div className="space-y-2">
-              <Label htmlFor="user-password">Password</Label>
-              <Input id="user-password" type="password" {...form.register('password')} />
-              <p className="text-xs text-red-600">{form.formState.errors.password?.message}</p>
-            </div>
-          ) : null}
+            {mode === 'create' ? (
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : null}
 
-          <div className="space-y-2">
-            <Label htmlFor="user-role">Role</Label>
-            <Select id="user-role" {...form.register('roleId')}>
-              <option value="">Select role</option>
-              {roles.map((role) => (
-                <option key={role.id} value={role.id}>
-                  {role.name}
-                </option>
-              ))}
-            </Select>
-            <p className="text-xs text-red-600">{form.formState.errors.roleId?.message}</p>
-          </div>
+            <FormField
+              control={form.control}
+              name="roleId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Role</FormLabel>
+                  <FormControl>
+                    <Select {...field}>
+                      <option value="">Select role</option>
+                      {roles.map((role) => (
+                        <option key={role.id} value={role.id}>
+                          {role.name}
+                        </option>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : mode === 'create' ? 'Create user' : 'Save changes'}
-            </Button>
-          </DialogFooter>
-        </form>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : mode === 'create' ? 'Create user' : 'Save changes'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

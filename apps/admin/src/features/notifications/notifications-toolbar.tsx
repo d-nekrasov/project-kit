@@ -15,7 +15,7 @@ type NotificationsToolbarProps = {
 
 export function NotificationsToolbar({ event, onEventChange, status, onStatusChange }: NotificationsToolbarProps) {
   return (
-    <div className="grid gap-3 rounded-lg border bg-white p-4 md:grid-cols-2">
+    <div className="grid gap-3 rounded-lg border bg-card p-4 md:grid-cols-2">
       <div className="space-y-2">
         <Label htmlFor="notifications-event">Event</Label>
         <Input

@@ -36,37 +36,37 @@ export function NotificationDetailDialog({ open, notification, onOpenChange }: N
           <div className="space-y-5">
             <div className="grid gap-3 text-sm md:grid-cols-2">
               <div>
-                <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Status</div>
+                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Status</div>
                 <div className="mt-1">
                   <NotificationStatusBadge status={notification.status} />
                 </div>
               </div>
               <div>
-                <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Created at</div>
-                <div className="mt-1 text-slate-700">{formatDate(notification.createdAt)}</div>
+                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Created at</div>
+                <div className="mt-1 text-foreground/80">{formatDate(notification.createdAt)}</div>
               </div>
               <div>
-                <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Read at</div>
-                <div className="mt-1 text-slate-700">{formatDate(notification.readAt)}</div>
+                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Read at</div>
+                <div className="mt-1 text-foreground/80">{formatDate(notification.readAt)}</div>
               </div>
               <div>
-                <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Organization</div>
-                <div className="mt-1 font-mono text-xs text-slate-700">{notification.organizationId ?? '-'}</div>
+                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Organization</div>
+                <div className="mt-1 font-mono text-xs text-foreground/80">{notification.organizationId ?? '-'}</div>
               </div>
             </div>
 
             <div className="space-y-2">
-              <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Message</div>
-              <p className="rounded-md border bg-slate-50 p-3 text-sm text-slate-700">{notification.message}</p>
+              <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Message</div>
+              <p className="rounded-md border bg-muted/40 p-3 text-sm text-foreground/80">{notification.message}</p>
             </div>
 
             <div className="space-y-2">
-              <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Payload</div>
+              <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Payload</div>
               <JsonViewer value={notification.payload} emptyText="No payload." />
             </div>
 
             <div className="space-y-2">
-              <div className="text-xs font-medium uppercase tracking-wide text-slate-500">Deliveries</div>
+              <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Deliveries</div>
               <div className="overflow-hidden rounded-md border">
                 <Table>
                   <TableHeader>
@@ -91,7 +91,7 @@ export function NotificationDetailDialog({ open, notification, onOpenChange }: N
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center text-sm text-slate-500">
+                        <TableCell colSpan={5} className="text-center text-sm text-muted-foreground">
                           No deliveries.
                         </TableCell>
                       </TableRow>

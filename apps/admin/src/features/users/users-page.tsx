@@ -1,11 +1,12 @@
 import type { UserResponse, UserStatus } from '@project-kit/sdk';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Plus } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { CrudPageHeader, CrudPagination, CrudToolbarCard } from '@/components/common/crud-layout';
 import { ErrorState } from '@/components/common/error-state';
 import { Button } from '@/components/ui/button';
-import { Select } from '@/components/ui/select';
 import { UserFormDialog } from '@/features/users/user-form-dialog';
 import { UserStatusDialog } from '@/features/users/user-status-dialog';
 import { usersQueryKeys } from '@/features/users/users-query-keys';
@@ -135,28 +136,31 @@ export function UsersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-semibold text-slate-900">Users</h2>
-          <p className="text-sm text-slate-600">Manage organization users, roles and statuses.</p>
-        </div>
-        <Button type="button" onClick={() => setCreateDialogOpen(true)}>
-          Create user
-        </Button>
-      </div>
-
-      <UsersToolbar
-        search={search}
-        onSearchChange={(value) => {
-          setSearch(value);
-          setPage(1);
-        }}
-        status={status}
-        onStatusChange={(value) => {
-          setStatus(value);
-          setPage(1);
-        }}
+      <CrudPageHeader
+        title="Users"
+        description="Manage organization users, roles and statuses."
+        action={
+          <Button type="button" onClick={() => setCreateDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create user
+          </Button>
+        }
       />
+
+      <CrudToolbarCard>
+        <UsersToolbar
+          search={search}
+          onSearchChange={(value) => {
+            setSearch(value);
+            setPage(1);
+          }}
+          status={status}
+          onStatusChange={(value) => {
+            setStatus(value);
+            setPage(1);
+          }}
+        />
+      </CrudToolbarCard>
 
       {pageError ? <ErrorState message={pageError} /> : null}
 
@@ -168,42 +172,17 @@ export function UsersPage() {
         onViewDetails={(user) => navigate(`/users/${user.id}`)}
       />
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-white p-4 text-sm">
-        <div className="text-slate-600">
-          Page {usersMeta?.page ?? page} of {usersMeta?.totalPages ?? 1} • Total: {usersMeta?.total ?? 0}
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={() => setPage((value) => value - 1)} disabled={page <= 1}>
-            Previous
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setPage((value) => value + 1)}
-            disabled={page >= (usersMeta?.totalPages ?? 1)}
-          >
-            Next
-          </Button>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className="text-slate-600">Rows per page</span>
-          <Select
-            value={String(limit)}
-            onChange={(event) => {
-              setLimit(Number(event.target.value));
-              setPage(1);
-            }}
-          >
-            <option value="10">10</option>
-            <option value="20">20</option>
-            <option value="50">50</option>
-            <option value="100">100</option>
-          </Select>
-        </div>
-      </div>
+      <CrudPagination
+        page={usersMeta?.page ?? page}
+        totalPages={usersMeta?.totalPages ?? 1}
+        total={usersMeta?.total ?? 0}
+        limit={limit}
+        onPageChange={setPage}
+        onLimitChange={(value) => {
+          setLimit(value);
+          setPage(1);
+        }}
+      />
 
       <UserFormDialog
         open={createDialogOpen}

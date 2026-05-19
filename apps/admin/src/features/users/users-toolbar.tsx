@@ -5,7 +5,7 @@ import type { UsersToolbarProps } from '@/features/users/users-page.types';
 
 export function UsersToolbar({ search, onSearchChange, status, onStatusChange }: UsersToolbarProps) {
   return (
-    <div className="grid gap-3 rounded-lg border bg-white p-4 md:grid-cols-2">
+    <div className="grid gap-3 md:grid-cols-2">
       <div className="space-y-2">
         <Label htmlFor="users-search">Search</Label>
         <Input
@@ -18,7 +18,12 @@ export function UsersToolbar({ search, onSearchChange, status, onStatusChange }:
 
       <div className="space-y-2">
         <Label htmlFor="users-status">Status</Label>
-        <Select id="users-status" value={status} onChange={(event) => onStatusChange(event.target.value as typeof status)}>
+        <Select
+          id="users-status"
+          className="w-full md:max-w-36"
+          value={status}
+          onChange={(event) => onStatusChange(event.target.value as typeof status)}
+        >
           <option value="ALL">All</option>
           <option value="ACTIVE">Active</option>
           <option value="INACTIVE">Inactive</option>

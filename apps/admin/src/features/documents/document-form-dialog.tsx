@@ -14,8 +14,8 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { DocumentFormDialogProps, DocumentFormValues } from '@/features/documents/documents-page.types';
 
@@ -67,7 +67,8 @@ export function DocumentFormDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form className="space-y-4" onSubmit={form.handleSubmit((values) => onSubmit(values))}>
+        <Form {...form}>
+          <form className="space-y-4" onSubmit={form.handleSubmit((values) => onSubmit(values))}>
           {error ? (
             <Alert className="border-red-200 bg-red-50 text-red-700">
               <AlertCircle className="mb-1 h-4 w-4" />
@@ -76,27 +77,44 @@ export function DocumentFormDialog({
             </Alert>
           ) : null}
 
-          <div className="space-y-2">
-            <Label htmlFor="document-title">Title</Label>
-            <Input id="document-title" {...form.register('title')} />
-            <p className="text-xs text-red-600">{form.formState.errors.title?.message}</p>
-          </div>
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Title</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <div className="space-y-2">
-            <Label htmlFor="document-content">Content</Label>
-            <Textarea id="document-content" rows={8} {...form.register('content')} />
-            <p className="text-xs text-red-600">{form.formState.errors.content?.message}</p>
-          </div>
+            <FormField
+              control={form.control}
+              name="content"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Content</FormLabel>
+                  <FormControl>
+                    <Textarea rows={8} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : mode === 'create' ? 'Create document' : 'Save changes'}
-            </Button>
-          </DialogFooter>
-        </form>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : mode === 'create' ? 'Create document' : 'Save changes'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
