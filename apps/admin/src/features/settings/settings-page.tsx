@@ -2,8 +2,8 @@ import type { ModuleRegistryResponse, SettingResponse } from '@project-kit/sdk';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 
-import { ErrorState } from '@/components/common/error-state';
 import { LoadingScreen } from '@/components/common/loading-screen';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
 import { useAuth } from '@/features/auth/use-auth';
@@ -133,7 +133,12 @@ export function SettingsPage() {
         }}
       />
 
-      {pageError ? <ErrorState message={pageError} /> : null}
+      {pageError ? (
+        <Alert className="border-red-200 bg-red-50 text-red-700">
+          <AlertTitle>Failed to load settings</AlertTitle>
+          <AlertDescription>{pageError}</AlertDescription>
+        </Alert>
+      ) : null}
 
       <SettingsTable
         settings={settings}

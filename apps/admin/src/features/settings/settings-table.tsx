@@ -1,7 +1,9 @@
 import type { SettingResponse } from '@project-kit/sdk';
+import { MoreHorizontal, Pencil } from 'lucide-react';
 
 import { EmptyState } from '@/components/common/empty-state';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { SettingScopeBadge } from '@/features/settings/setting-scope-badge';
@@ -78,9 +80,19 @@ export function SettingsTable({ settings, isLoading, onEdit }: SettingsTableProp
                 <TableCell className="font-mono text-xs">{setting.organizationId ?? '—'}</TableCell>
                 <TableCell>{formatDate(setting.updatedAt)}</TableCell>
                 <TableCell className="text-right">
-                  <Button type="button" variant="outline" size="sm" onClick={() => onEdit(setting)}>
-                    Edit
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger>
+                      <Button type="button" variant="ghost" size="sm" aria-label={`Open actions for ${setting.key}`}>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => onEdit(setting)}>
+                        <Pencil className="mr-2 inline h-4 w-4" />
+                        Edit
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}
