@@ -48,11 +48,11 @@ type AdminNavigationGroupConfig = {
 
 const coreNavigationGroups = [
   {
-    label: 'Обзор',
+    label: 'Overview',
     items: [{ label: 'Dashboard', path: '/', permission: ROUTE_PERMISSIONS['/'], icon: Gauge }]
   },
   {
-    label: 'Управление',
+    label: 'Management',
     items: [
       { label: 'Users', path: '/users', permission: ROUTE_PERMISSIONS['/users'], icon: Users },
       {
@@ -64,7 +64,7 @@ const coreNavigationGroups = [
     ]
   },
   {
-    label: 'Безопасность',
+    label: 'Security',
     items: [
       { label: 'Roles', path: '/roles', permission: ROUTE_PERMISSIONS['/roles'], icon: ShieldCheck },
       { label: 'Permissions', path: '/permissions', permission: ROUTE_PERMISSIONS['/permissions'], icon: KeyRound },
@@ -72,7 +72,7 @@ const coreNavigationGroups = [
     ]
   },
   {
-    label: 'Система',
+    label: 'System',
     items: [
       { label: 'Settings', path: '/settings', permission: ROUTE_PERMISSIONS['/settings'], icon: Settings },
       { label: 'System Logs', path: '/system-logs', permission: ROUTE_PERMISSIONS['/system-logs'], icon: ScrollText },
@@ -85,7 +85,7 @@ const coreNavigationGroups = [
     ]
   },
   {
-    label: 'Модули',
+    label: 'Modules',
     items: [
       { label: 'Modules', path: '/modules', permission: ROUTE_PERMISSIONS['/modules'], icon: Boxes },
       { label: 'Documents', path: '/documents', permission: ROUTE_PERMISSIONS['/documents'], icon: FileText }
@@ -156,7 +156,7 @@ function appendModuleItems(
   auth: AuthContextValue
 ) {
   const groupsByLabel = new Map(groups.map((group) => [group.label, group]));
-  const moduleGroup = groupsByLabel.get('Модули');
+  const moduleGroup = groupsByLabel.get('Modules');
 
   if (!moduleGroup) {
     return groups;
