@@ -1,7 +1,9 @@
 import type { SettingResponse } from '@project-kit/sdk';
+import { MoreHorizontal, Pencil } from 'lucide-react';
 
 import { EmptyState } from '@/components/common/empty-state';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { SettingScopeBadge } from '@/features/settings/setting-scope-badge';
@@ -30,7 +32,7 @@ function toShortValue(value: SettingResponse['value']) {
 
 function SettingsTableSkeleton() {
   return (
-    <div className="rounded-lg border bg-white p-2">
+    <div className="rounded-lg border bg-card p-2">
       <div className="space-y-2">
         {Array.from({ length: 8 }).map((_, index) => (
           <Skeleton key={index} className="h-10 w-full" />
@@ -50,7 +52,7 @@ export function SettingsTable({ settings, isLoading, onEdit }: SettingsTableProp
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border bg-white">
+    <div className="overflow-hidden rounded-lg border bg-card">
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
@@ -69,7 +71,7 @@ export function SettingsTable({ settings, isLoading, onEdit }: SettingsTableProp
               <TableRow key={setting.id}>
                 <TableCell className="font-mono text-xs">{setting.key}</TableCell>
                 <TableCell className="max-w-[420px]">
-                  <span className="line-clamp-2 break-all font-mono text-xs text-slate-700">{toShortValue(setting.value)}</span>
+                  <span className="line-clamp-2 break-all font-mono text-xs text-foreground/80">{toShortValue(setting.value)}</span>
                 </TableCell>
                 <TableCell>
                   <SettingScopeBadge scope={setting.scope} />
@@ -78,9 +80,19 @@ export function SettingsTable({ settings, isLoading, onEdit }: SettingsTableProp
                 <TableCell className="font-mono text-xs">{setting.organizationId ?? '—'}</TableCell>
                 <TableCell>{formatDate(setting.updatedAt)}</TableCell>
                 <TableCell className="text-right">
-                  <Button type="button" variant="outline" size="sm" onClick={() => onEdit(setting)}>
-                    Edit
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger>
+                      <Button type="button" variant="ghost" size="sm" aria-label={`Open actions for ${setting.key}`}>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => onEdit(setting)}>
+                        <Pencil className="mr-2 inline h-4 w-4" />
+                        Edit
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}

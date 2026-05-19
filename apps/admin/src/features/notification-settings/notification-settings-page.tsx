@@ -75,8 +75,8 @@ export function NotificationSettingsPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h2 className="text-2xl font-semibold text-slate-900">Notification Settings</h2>
-        <p className="text-sm text-slate-600">Manage notification connectors and event templates.</p>
+        <h2 className="text-2xl font-semibold text-foreground">Notification Settings</h2>
+        <p className="text-sm text-muted-foreground">Manage notification connectors and event templates.</p>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -101,8 +101,8 @@ export function NotificationSettingsPage() {
       {activeSection === 'connectors' ? (
         <section className="space-y-3">
           <div>
-            <h3 className="text-lg font-semibold text-slate-900">Connectors</h3>
-            <p className="text-sm text-slate-600">Configure in-app and SMTP notification delivery.</p>
+            <h3 className="text-lg font-semibold text-foreground">Connectors</h3>
+            <p className="text-sm text-muted-foreground">Configure in-app and SMTP notification delivery.</p>
           </div>
           <NotificationConnectorsTable
             connectors={connectorsQuery.isError ? [] : connectorsQuery.data ?? []}
@@ -112,10 +112,10 @@ export function NotificationSettingsPage() {
         </section>
       ) : (
         <section className="space-y-3">
-          <div className="grid gap-3 rounded-lg border bg-white p-4 md:grid-cols-[1fr_320px]">
+          <div className="grid gap-3 rounded-lg border bg-card p-4 md:grid-cols-[1fr_320px]">
             <div>
-              <h3 className="text-lg font-semibold text-slate-900">Templates</h3>
-              <p className="text-sm text-slate-600">Edit event copy and delivery channels.</p>
+              <h3 className="text-lg font-semibold text-foreground">Templates</h3>
+              <p className="text-sm text-muted-foreground">Edit event copy and delivery channels.</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="notification-template-search">Search</Label>

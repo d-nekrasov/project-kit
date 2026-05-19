@@ -124,8 +124,8 @@ export function UserDetailPage() {
           <Button type="button" variant="ghost" className="mb-2 px-0" onClick={() => navigate('/users')}>
             Back to users
           </Button>
-          <h2 className="text-2xl font-semibold text-slate-900">{user.name || user.email}</h2>
-          <p className="text-sm text-slate-600">{user.email}</p>
+          <h2 className="text-2xl font-semibold text-foreground">{user.name || user.email}</h2>
+          <p className="text-sm text-muted-foreground">{user.email}</p>
         </div>
         {canUpdate ? (
           <div className="flex flex-wrap gap-2">

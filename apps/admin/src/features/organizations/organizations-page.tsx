@@ -1,11 +1,12 @@
 import type { OrganizationResponse, OrganizationStatus } from '@project-kit/sdk';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Plus } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
+import { CrudPageHeader, CrudPagination, CrudToolbarCard } from '@/components/common/crud-layout';
 import { EmptyState } from '@/components/common/empty-state';
 import { ErrorState } from '@/components/common/error-state';
 import { Button } from '@/components/ui/button';
-import { Select } from '@/components/ui/select';
 import { useAuth } from '@/features/auth/use-auth';
 import { OrganizationFormDialog } from '@/features/organizations/organization-form-dialog';
 import { OrganizationsTable } from '@/features/organizations/organizations-table';
@@ -120,30 +121,33 @@ export function OrganizationsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-semibold text-slate-900">Organizations</h2>
-          <p className="text-sm text-slate-600">Manage organizations, their statuses and core counters.</p>
-        </div>
-        {isSuperAdmin ? (
-          <Button type="button" onClick={() => setCreateDialogOpen(true)}>
-            Create organization
-          </Button>
-        ) : null}
-      </div>
-
-      <OrganizationsToolbar
-        search={search}
-        onSearchChange={(value) => {
-          setSearch(value);
-          setPage(1);
-        }}
-        status={status}
-        onStatusChange={(value) => {
-          setStatus(value);
-          setPage(1);
-        }}
+      <CrudPageHeader
+        title="Organizations"
+        description="Manage organizations, their statuses and core counters."
+        action={
+          isSuperAdmin ? (
+            <Button type="button" onClick={() => setCreateDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create organization
+            </Button>
+          ) : null
+        }
       />
+
+      <CrudToolbarCard>
+        <OrganizationsToolbar
+          search={search}
+          onSearchChange={(value) => {
+            setSearch(value);
+            setPage(1);
+          }}
+          status={status}
+          onStatusChange={(value) => {
+            setStatus(value);
+            setPage(1);
+          }}
+        />
+      </CrudToolbarCard>
 
       {pageError ? <ErrorState message={pageError} /> : null}
 
@@ -160,42 +164,17 @@ export function OrganizationsPage() {
         />
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-white p-4 text-sm">
-        <div className="text-slate-600">
-          Page {organizationsMeta?.page ?? page} of {organizationsMeta?.totalPages ?? 1} • Total: {organizationsMeta?.total ?? 0}
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={() => setPage((value) => value - 1)} disabled={page <= 1}>
-            Previous
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setPage((value) => value + 1)}
-            disabled={page >= (organizationsMeta?.totalPages ?? 1)}
-          >
-            Next
-          </Button>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className="text-slate-600">Rows per page</span>
-          <Select
-            value={String(limit)}
-            onChange={(event) => {
-              setLimit(Number(event.target.value));
-              setPage(1);
-            }}
-          >
-            <option value="10">10</option>
-            <option value="20">20</option>
-            <option value="50">50</option>
-            <option value="100">100</option>
-          </Select>
-        </div>
-      </div>
+      <CrudPagination
+        page={organizationsMeta?.page ?? page}
+        totalPages={organizationsMeta?.totalPages ?? 1}
+        total={organizationsMeta?.total ?? 0}
+        limit={limit}
+        onPageChange={setPage}
+        onLimitChange={(value) => {
+          setLimit(value);
+          setPage(1);
+        }}
+      />
 
       <OrganizationFormDialog
         open={createDialogOpen}

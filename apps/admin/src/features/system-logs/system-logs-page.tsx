@@ -2,8 +2,8 @@ import type { SystemLogResponse } from '@project-kit/sdk';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 
-import { ErrorState } from '@/components/common/error-state';
 import { LoadingScreen } from '@/components/common/loading-screen';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
 import { useAuth } from '@/features/auth/use-auth';
@@ -95,8 +95,8 @@ export function SystemLogsPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h2 className="text-2xl font-semibold text-slate-900">System Logs</h2>
-        <p className="text-sm text-slate-600">Technical and runtime events from the platform.</p>
+        <h2 className="text-2xl font-semibold text-foreground">System Logs</h2>
+        <p className="text-sm text-muted-foreground">Technical and runtime events from the platform.</p>
       </div>
 
       <SystemLogsToolbar
@@ -147,7 +147,12 @@ export function SystemLogsPage() {
         }}
       />
 
-      {pageError ? <ErrorState message={pageError} /> : null}
+      {pageError ? (
+        <Alert className="border-red-200 bg-red-50">
+          <AlertTitle className="text-red-700">Failed to load system logs</AlertTitle>
+          <AlertDescription className="text-red-700">{pageError}</AlertDescription>
+        </Alert>
+      ) : null}
 
       <SystemLogsTable
         logs={logs}
@@ -158,8 +163,8 @@ export function SystemLogsPage() {
         }}
       />
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-white p-4 text-sm">
-        <div className="text-slate-600">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4 text-sm">
+        <div className="text-muted-foreground">
           Page {meta?.page ?? page} of {meta?.totalPages ?? 1} • Total: {meta?.total ?? 0}
         </div>
 
@@ -179,7 +184,7 @@ export function SystemLogsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-slate-600">Rows per page</span>
+          <span className="text-muted-foreground">Rows per page</span>
           <Select
             value={String(limit)}
             onChange={(event) => {

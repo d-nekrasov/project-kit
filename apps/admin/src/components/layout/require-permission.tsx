@@ -25,9 +25,9 @@ export function RequirePermission({ permission, children }: RequirePermissionPro
   if (!auth.hasPermission(permission)) {
     return (
       <div className="flex min-h-[360px] items-center justify-center">
-        <div className="max-w-md rounded-md border border-slate-200 bg-white p-6 text-center shadow-sm">
-          <h2 className="text-xl font-semibold text-slate-900">Access denied</h2>
-          <p className="mt-2 text-sm text-slate-600">You do not have permission to view this page.</p>
+        <div className="max-w-md rounded-md border border-border bg-card p-6 text-center shadow-sm">
+          <h2 className="text-xl font-semibold text-foreground">Access denied</h2>
+          <p className="mt-2 text-sm text-muted-foreground">You do not have permission to view this page.</p>
           <Button type="button" className="mt-5" onClick={() => navigate('/')}>
             Go to dashboard
           </Button>

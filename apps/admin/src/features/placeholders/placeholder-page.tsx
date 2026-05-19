@@ -11,7 +11,7 @@ export function PlaceholderPage({ title }: PlaceholderPageProps) {
         <CardTitle>{title}</CardTitle>
         <CardDescription>{title} page will be implemented next.</CardDescription>
       </CardHeader>
-      <CardContent className="text-sm text-slate-600">Coming soon.</CardContent>
+      <CardContent className="text-sm text-muted-foreground">Coming soon.</CardContent>
     </Card>
   );
 }

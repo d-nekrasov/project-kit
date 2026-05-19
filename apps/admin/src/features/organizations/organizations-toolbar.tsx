@@ -5,7 +5,7 @@ import type { OrganizationsToolbarProps } from '@/features/organizations/organiz
 
 export function OrganizationsToolbar({ search, onSearchChange, status, onStatusChange }: OrganizationsToolbarProps) {
   return (
-    <div className="grid gap-3 rounded-lg border bg-white p-4 md:grid-cols-2">
+    <div className="grid gap-3 md:grid-cols-2">
       <div className="space-y-2">
         <Label htmlFor="organizations-search">Search</Label>
         <Input
@@ -20,6 +20,7 @@ export function OrganizationsToolbar({ search, onSearchChange, status, onStatusC
         <Label htmlFor="organizations-status">Status</Label>
         <Select
           id="organizations-status"
+          className="w-full md:max-w-36"
           value={status}
           onChange={(event) => onStatusChange(event.target.value as typeof status)}
         >

@@ -1,6 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 
-import { AppLayout } from '@/components/layout/app-layout';
+import { AdminLayout } from '@/components/layout/AdminLayout';
 import { ProtectedRoute } from '@/components/layout/protected-route';
 import { RequirePermission } from '@/components/layout/require-permission';
 import { AuditLogsPage } from '@/features/audit-logs/audit-logs-page';
@@ -35,7 +35,7 @@ export const router = createBrowserRouter([
     element: <ProtectedRoute />,
     children: [
       {
-        element: <AppLayout />,
+        element: <AdminLayout />,
         children: [
           { index: true, element: <DashboardPage /> },
           {
