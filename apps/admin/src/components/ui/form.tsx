@@ -73,7 +73,7 @@ function FormLabel({ className, ...props }: React.ComponentProps<typeof Label>) 
   return <Label className={cn(error && 'text-red-600', className)} htmlFor={formItemId} {...props} />;
 }
 
-function FormControl({ children }: { children: React.ReactElement }) {
+function FormControl({ children }: { children: React.ReactElement<Record<string, unknown>> }) {
   const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
 
   if (!React.isValidElement(children)) {

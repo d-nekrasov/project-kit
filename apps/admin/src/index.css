@@ -12,6 +12,12 @@
   --primary-foreground: #ffffff;
   --border: #dce3ec;
   --input: #ffffff;
+  --z-header: 30;
+  --z-dropdown: 70;
+  --z-popover: 70;
+  --z-overlay: 80;
+  --z-sheet: 90;
+  --z-dialog: 100;
 }
 
 * {

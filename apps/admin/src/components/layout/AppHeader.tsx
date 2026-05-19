@@ -9,7 +9,7 @@ export function AppHeader() {
   const appName = import.meta.env.VITE_APP_NAME || 'Project Kit';
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-white/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-white/80 sm:px-6">
+    <header className="sticky top-0 z-[var(--z-header)] flex h-16 items-center justify-between border-b bg-white/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-white/80 sm:px-6">
       <div className="flex min-w-0 items-center gap-2">
         <MobileSidebar />
         <SidebarTrigger className="hidden md:inline-flex" />

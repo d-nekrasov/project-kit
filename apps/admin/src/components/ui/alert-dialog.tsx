@@ -13,7 +13,7 @@ export function AlertDialog({ open, children }: PropsWithChildren<{ open: boolea
 
 export function AlertDialogContent({ className, children }: PropsWithChildren<{ className?: string }>) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[var(--z-dialog)] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-900/40" />
       <div className={cn('relative z-10 w-full max-w-md rounded-lg border bg-white p-6 shadow-xl', className)}>
         {children}

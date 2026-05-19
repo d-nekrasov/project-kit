@@ -26,7 +26,7 @@ export function MobileSidebar() {
       >
         <Menu className="size-5" aria-hidden="true" />
       </Button>
-      <SheetContent className="fixed inset-y-0 left-0 z-50 flex w-80 max-w-[85vw] flex-col border-r bg-white p-0 shadow-xl md:hidden">
+      <SheetContent className="fixed inset-y-0 left-0 z-[var(--z-sheet)] flex w-80 max-w-[85vw] flex-col border-r bg-white p-0 shadow-xl md:hidden">
         <div className="flex min-h-16 items-center px-5">
           <div>
             <div className="text-sm font-semibold">{appName}</div>
