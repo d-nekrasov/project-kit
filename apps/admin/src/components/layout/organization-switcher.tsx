@@ -1,11 +1,8 @@
-import { useQueryClient } from '@tanstack/react-query';
-
 import { Select } from '@/components/ui/select';
 import { useAuth } from '@/features/auth/use-auth';
 
 export function OrganizationSwitcher() {
   const auth = useAuth();
-  const queryClient = useQueryClient();
 
   const organizations = auth.user?.organizations ?? [];
 
@@ -17,8 +14,7 @@ export function OrganizationSwitcher() {
     <Select
       value={auth.activeOrganizationId ?? ''}
       onChange={(event) => {
-        auth.setActiveOrganization(event.target.value);
-        void queryClient.invalidateQueries();
+        void auth.setActiveOrganization(event.target.value);
       }}
     >
       {organizations.map((org) => (

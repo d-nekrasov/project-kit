@@ -26,7 +26,9 @@ export const CORE_MODULE_MANIFESTS: AppModuleManifest[] = [
       'systemLogs.read',
       'modules.read',
       'modules.update',
-      'installer.read'
+      'installer.read',
+      'notifications.read',
+      'notifications.manage'
     ],
     adminMenu: [
       { label: 'Dashboard', path: '/', order: 1 },

@@ -15,6 +15,7 @@ import { ModuleRegistryModule } from './core/module-registry/module-registry.mod
 import { InstallerModule } from './core/installer/installer.module';
 import { DocumentsModule } from './modules/documents/documents.module';
 import { OrganizationContextModule } from './core/organization-context/organization-context.module';
+import { NotificationsModule } from './core/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { OrganizationContextModule } from './core/organization-context/organizat
     SystemLogsModule,
     ModuleRegistryModule,
     InstallerModule,
+    NotificationsModule,
     DocumentsModule,
     OrganizationContextModule
   ]

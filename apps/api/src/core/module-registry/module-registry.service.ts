@@ -13,6 +13,7 @@ import { AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } from '../audit-logs/constants/audit
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { CurrentUser } from '../auth/types/current-user.type';
 import { CurrentOrganization } from '../organization-context/types/current-organization.type';
+import { RbacSyncService } from '../rbac-sync/rbac-sync.service';
 import { SYSTEM_LOG_SOURCES } from '../system-logs/constants/system-log-sources.constants';
 import { SystemLogsService } from '../system-logs/system-logs.service';
 import { CORE_MODULE_MANIFESTS } from './constants/core-module-manifests.constants';
@@ -28,7 +29,8 @@ export class ModuleRegistryService implements OnModuleInit {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditLogsService: AuditLogsService,
-    private readonly systemLogsService: SystemLogsService
+    private readonly systemLogsService: SystemLogsService,
+    private readonly rbacSyncService: RbacSyncService
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -222,7 +224,7 @@ export class ModuleRegistryService implements OnModuleInit {
         }
       }
       await this.refreshModuleStatusCache();
-      // TODO: consider casbin reload if role-permission assignments are auto-managed here.
+      await this.rbacSyncService.syncSuperAdminPermissions('module_permissions_registered');
     } catch (error) {
       await this.systemLogsService.write({
         level: SystemLogLevel.ERROR,

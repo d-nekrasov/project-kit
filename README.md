@@ -2,6 +2,10 @@
 
 Monorepo skeleton for modular client web applications.
 
+## MVP smoke test
+
+See `docs/smoke-test.md`.
+
 ## Admin App
 
 `apps/admin` is the Project Kit administration UI.
@@ -44,9 +48,13 @@ Routes:
 - `/audit-logs`
 - `/system-logs`
 - `/documents`
+- `/notifications`
+- `/notification-settings`
 
 The admin app uses `@project-kit/sdk` for all API calls.
 The SDK receives the access token and active organization id from admin auth storage.
+Admin routes and sidebar items are filtered by effective permissions from `GET /api/auth/permissions`.
+TanStack Query cache is cleared on login, logout, unauthorized responses, and active organization changes.
 
 ### Users page
 
@@ -63,18 +71,29 @@ Capabilities:
 - search users
 - filter by status
 - create user
+- choose target organization during user creation where permissions allow it
 - edit user name/role
 - change status
+- open user detail at `/users/:id`
+- view user memberships, system roles and audit-relevant metadata
+- manage organization memberships where permissions allow it
+- remove organization memberships as a super admin when the user keeps at least one active membership
+
+Moving a user between organizations is done by adding or activating the target organization membership with a role from that organization, then removing the old membership. Inactive memberships do not grant permissions and are not returned in `/auth/me` for organization switching.
+
+The user menu also includes `/profile`, where any authenticated user can view their own account and update only their display name.
 
 ### Roles page
 
 The `/roles` page allows administrators to manage organization roles.
+Roles and permissions are organization-scoped. Super admins can select an organization on `/roles` before listing, creating, or editing organization roles. The same role code, such as `user`, can have different permissions in different organizations.
 It uses:
 - `@project-kit/sdk`
 - TanStack Query
 - Roles API
 - Permissions grouped API
 - current organization context
+- optional super admin organization selector
 
 Capabilities:
 - list roles
@@ -187,6 +206,24 @@ Capabilities:
 - display createdBy and updatedBy
 
 If the `documents` module is disabled in Module Registry, the API returns `403 Module is disabled`, and the page shows a module disabled state.
+
+### Notifications UI
+
+The admin app includes:
+- notification bell with unread count;
+- `/notifications` personal notification inbox;
+- `/notification-settings` connector/template management for users with `notifications.manage`.
+
+### Notifications backend
+
+`NotificationsModule` provides the backend notification boundary.
+Business modules call `NotificationsService.notify(...)`; they do not send email directly.
+
+Supported MVP channels:
+- in-app notifications;
+- email through the global `smtp_email` connector.
+
+Realtime notification updates use SSE in the admin app. WebSockets, SMS, messengers, retries, digests, and user preferences are not included yet.
 
 ### Audit Logs page
 
@@ -303,6 +340,10 @@ Me:
 
 `GET /api/auth/me`
 
+Effective permissions for the active organization:
+
+`GET /api/auth/permissions`
+
 Authorization header:
 
 `Authorization: Bearer <accessToken>`
@@ -319,6 +360,10 @@ curl -X POST http://localhost:3000/api/auth/login \
 
 curl http://localhost:3000/api/auth/me \
   -H "Authorization: Bearer <accessToken>"
+
+curl http://localhost:3000/api/auth/permissions \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "x-organization-id: <organizationId>"
 ```
 
 ## Organization Context
@@ -344,7 +389,7 @@ Casbin policies are loaded into memory.
 Available reload modes:
 - full reload after installer setup;
 - role policy reload after role permissions changes;
-- user organization grouping reload after user role changes.
+- user organization grouping reload after user role, status, add, remove, or organization membership changes.
 
 Full reload remains available as a safe fallback.
 
@@ -389,11 +434,12 @@ curl http://localhost:3000/api/permissions/modules \
 
 ## Users
 
-All users endpoints require:
+Users endpoints require:
 
 `Authorization: Bearer <accessToken>`
 
-`x-organization-id: <organizationId>`
+Most admin-scoped endpoints also require `x-organization-id: <organizationId>`.
+Self profile endpoints (`GET /api/users/me`, `PATCH /api/users/me`) do not require an organization header.
 
 Examples:
 
@@ -410,9 +456,19 @@ curl -X POST http://localhost:3000/api/users \
     "email": "manager@example.com",
     "name": "Manager",
     "password": "password123",
-    "roleId": "<roleId>"
+    "roleId": "<roleId>",
+    "organizationId": "<optionalOrganizationId>"
   }'
 ```
+
+Implemented users endpoints include:
+- `GET /api/users/me`
+- `PATCH /api/users/me`
+- `GET /api/users/:id`
+- `PATCH /api/users/:id`
+- `POST /api/users`
+- `PATCH /api/users/:id/status`
+- `PUT /api/users/:id/organizations`
 
 ## Roles
 
@@ -631,6 +687,7 @@ Endpoints:
 
 Documents endpoints are protected by `ModuleEnabledGuard`.
 If module `documents` is disabled, documents API returns `403`.
+When a document status changes, the backend notifies the document creator if another user made the change.
 
 Required headers:
 - `Authorization: Bearer <accessToken>`
@@ -668,6 +725,67 @@ curl -X PATCH "http://localhost:3000/api/documents/<documentId>/status" \
     "status": "PUBLISHED"
   }'
 ```
+
+## Notifications Module
+
+Backend notifications are documented in `docs/notifications.md`.
+
+Internal usage:
+
+```ts
+await notificationsService.notify({
+  event: 'document.status_changed',
+  organizationId,
+  recipientUserIds: [userId],
+  payload: {
+    documentId,
+    title,
+    status
+  }
+});
+```
+
+Own notification endpoints require only `Authorization: Bearer <accessToken>`:
+- `POST /api/notifications/stream-token`
+- `GET /api/notifications/stream?token=<streamToken>`
+- `GET /api/notifications/my`
+- `GET /api/notifications/my/unread-count`
+- `PATCH /api/notifications/:id/read`
+- `PATCH /api/notifications/read-all`
+
+The admin notification bell uses SSE for realtime updates. Polling is only a fallback while SSE is disconnected, at most once per minute, plus normal focus/reconnect sync. The SSE registry is in memory for the single API instance MVP; multi-instance production should add Redis pub/sub or another broker. Sound alerts are controlled by a local browser preference on `/notifications`; the browser may require prior user interaction before allowing playback.
+
+Connector and template management requires `Authorization`, `x-organization-id`, `notifications.manage`, and `super_admin`:
+- `GET /api/notification-connectors`
+- `PATCH /api/notification-connectors/:code`
+- `GET /api/notification-templates`
+- `PUT /api/notification-templates/:event`
+
+Default connectors:
+- `in_app`: enabled by default.
+- `smtp_email`: disabled by default; password is masked in API responses.
+
+Default templates:
+- `document.created`
+- `document.status_changed`
+- `user.created`
+- `user.status_changed`
+- `user.organizations_changed`
+- `user.profile_updated`
+
+DocumentsModule emits:
+- `document.created` after document creation, to `document.createdById`.
+- `document.status_changed` after an actual status change, to `document.createdById`.
+
+UsersModule emits:
+- `user.created` after user creation, to the created user.
+- `user.status_changed` after an actual user status change, to the target user.
+- `user.organizations_changed` after membership role/status changes or membership removal, to the target user.
+- `user.profile_updated` after a profile name change, including self profile updates, to the target user.
+
+User notification payloads never include passwords, password hashes, or temporary credentials. User notifications are visible in the target user's inbox, not the actor/admin inbox.
+
+Notification delivery is best-effort from business flows: notification failures are written to system logs with source `notifications` and do not roll back document or user changes.
 
 ## System Logs
 

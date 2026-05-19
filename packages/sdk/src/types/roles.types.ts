@@ -26,6 +26,7 @@ export type RolesListQuery = {
   limit?: number;
   search?: string;
   includeSystem?: boolean;
+  organizationId?: string;
 };
 
 export type RolesListResponse = PaginatedResponse<RoleResponse>;
@@ -34,6 +35,7 @@ export type CreateRoleDto = {
   code: string;
   name: string;
   permissions?: string[];
+  organizationId?: string;
 };
 
 export type UpdateRoleDto = {

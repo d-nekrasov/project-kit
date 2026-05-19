@@ -3,6 +3,7 @@ import { OrganizationStatus, RoleType, SystemLogLevel, UserStatus } from '@prism
 import * as argon2 from 'argon2';
 import { CasbinService } from '../../infrastructure/casbin/casbin.service';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
+import { RbacSyncService } from '../rbac-sync/rbac-sync.service';
 import { SYSTEM_LOG_EVENTS } from '../system-logs/constants/system-log-events.constants';
 import { SYSTEM_LOG_SOURCES } from '../system-logs/constants/system-log-sources.constants';
 import { SystemLogsService } from '../system-logs/system-logs.service';
@@ -29,7 +30,9 @@ const CORE_PERMISSIONS = [
   'systemLogs.read',
   'modules.read',
   'modules.update',
-  'installer.read'
+  'installer.read',
+  'notifications.read',
+  'notifications.manage'
 ] as const;
 
 const ORG_ADMIN_PERMISSIONS = [
@@ -48,7 +51,8 @@ export class InstallerService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly casbinService: CasbinService,
-    private readonly systemLogsService: SystemLogsService
+    private readonly systemLogsService: SystemLogsService,
+    private readonly rbacSyncService: RbacSyncService
   ) {}
 
   async getStatus(): Promise<InstallerStatusDto> {
@@ -299,6 +303,8 @@ export class InstallerService {
           }
         };
       });
+
+      await this.rbacSyncService.syncSuperAdminPermissions('installer_setup_completed');
 
       try {
         await this.casbinService.reloadAllPolicies();

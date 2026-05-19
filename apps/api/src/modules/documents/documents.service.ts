@@ -1,9 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, SystemLogLevel } from '@prisma/client';
 import { RequestMetadata } from '../../common/utils/request-metadata.util';
 import { AuditLogsService } from '../../core/audit-logs/audit-logs.service';
 import { CurrentUser } from '../../core/auth/types/current-user.type';
+import { NotificationsService } from '../../core/notifications/notifications.service';
 import { CurrentOrganization } from '../../core/organization-context/types/current-organization.type';
+import { SYSTEM_LOG_EVENTS } from '../../core/system-logs/constants/system-log-events.constants';
+import { SYSTEM_LOG_SOURCES } from '../../core/system-logs/constants/system-log-sources.constants';
+import { SystemLogsService } from '../../core/system-logs/system-logs.service';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { DOCUMENT_AUDIT_ACTIONS, DOCUMENT_AUDIT_ENTITY_TYPES } from './constants/document-audit.constants';
 import { CreateDocumentDto } from './dto/create-document.dto';
@@ -21,7 +25,9 @@ const DOCUMENT_INCLUDE = {
 export class DocumentsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly auditLogsService: AuditLogsService
+    private readonly auditLogsService: AuditLogsService,
+    private readonly notificationsService: NotificationsService,
+    private readonly systemLogsService: SystemLogsService
   ) {}
 
   async findAll(
@@ -100,6 +106,8 @@ export class DocumentsService {
       userAgent: requestMetadata?.userAgent
     });
 
+    await this.notifyDocumentCreated(document, currentUser, currentOrganization);
+
     return this.toDocumentResponse(document);
   }
 
@@ -144,7 +152,11 @@ export class DocumentsService {
     currentOrganization: CurrentOrganization,
     requestMetadata?: RequestMetadata
   ): Promise<DocumentResponseDto> {
-    await this.ensureExists(id, currentOrganization.id);
+    const existing = await this.prisma.document.findFirst({
+      where: { id, organizationId: currentOrganization.id },
+      select: { id: true, title: true, status: true, createdById: true }
+    });
+    if (!existing) throw new NotFoundException('Document not found');
 
     const document = await this.prisma.document.update({
       where: { id },
@@ -163,6 +175,10 @@ export class DocumentsService {
       userAgent: requestMetadata?.userAgent
     });
 
+    if (existing.status !== dto.status) {
+      await this.notifyDocumentStatusChanged(document, existing.status, currentUser, currentOrganization);
+    }
+
     return this.toDocumentResponse(document);
   }
 
@@ -172,6 +188,96 @@ export class DocumentsService {
       select: { id: true }
     });
     if (!exists) throw new NotFoundException('Document not found');
+  }
+
+  private async notifyDocumentCreated(
+    document: Prisma.DocumentGetPayload<{ include: typeof DOCUMENT_INCLUDE }>,
+    currentUser: CurrentUser,
+    currentOrganization: CurrentOrganization
+  ): Promise<void> {
+    await this.notifyDocumentEvent(
+      'document.created',
+      document,
+      currentUser,
+      currentOrganization,
+      {
+        documentId: document.id,
+        title: document.title,
+        status: document.status,
+        actorId: currentUser.id
+      },
+      'Failed to create document.created notification'
+    );
+  }
+
+  private async notifyDocumentStatusChanged(
+    document: Prisma.DocumentGetPayload<{ include: typeof DOCUMENT_INCLUDE }>,
+    previousStatus: Prisma.DocumentGetPayload<{ include: typeof DOCUMENT_INCLUDE }>['status'],
+    currentUser: CurrentUser,
+    currentOrganization: CurrentOrganization
+  ): Promise<void> {
+    await this.notifyDocumentEvent(
+      'document.status_changed',
+      document,
+      currentUser,
+      currentOrganization,
+      {
+        documentId: document.id,
+        title: document.title,
+        previousStatus,
+        status: document.status,
+        actorId: currentUser.id
+      },
+      'Failed to create document.status_changed notification'
+    );
+  }
+
+  private async notifyDocumentEvent(
+    event: 'document.created' | 'document.status_changed',
+    document: Prisma.DocumentGetPayload<{ include: typeof DOCUMENT_INCLUDE }>,
+    currentUser: CurrentUser,
+    currentOrganization: CurrentOrganization,
+    payload: Record<string, unknown>,
+    failureMessage: string
+  ): Promise<void> {
+    if (!document.createdBy.id) {
+      await this.systemLogsService.write({
+        level: SystemLogLevel.WARN,
+        source: SYSTEM_LOG_SOURCES.NOTIFICATIONS,
+        message: 'Document notification skipped because document creator is missing',
+        context: {
+          event: SYSTEM_LOG_EVENTS.NOTIFICATION_NO_RECIPIENTS,
+          documentId: document.id,
+          notificationEvent: event
+        },
+        userId: currentUser.id,
+        organizationId: currentOrganization.id
+      });
+      return;
+    }
+
+    try {
+      await this.notificationsService.notify({
+        event,
+        organizationId: currentOrganization.id,
+        recipientUserIds: [document.createdBy.id],
+        payload
+      });
+    } catch (error) {
+      await this.systemLogsService.write({
+        level: SystemLogLevel.ERROR,
+        source: SYSTEM_LOG_SOURCES.NOTIFICATIONS,
+        message: failureMessage,
+        context: {
+          event: SYSTEM_LOG_EVENTS.NOTIFICATION_SEND_FAILED,
+          documentId: document.id,
+          notificationEvent: event
+        },
+        errorStack: error instanceof Error ? error.stack ?? error.message : String(error),
+        userId: currentUser.id,
+        organizationId: currentOrganization.id
+      });
+    }
   }
 
   private toDocumentResponse(

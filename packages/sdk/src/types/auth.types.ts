@@ -8,6 +8,8 @@ export type CurrentUserOrganization = {
   name: string;
   slug: string;
   role: string;
+  roleId?: string;
+  roleName?: string;
 };
 
 export type CurrentUser = {
@@ -37,4 +39,13 @@ export type AuthContextResponse = {
 export type PermissionsCheckResponse = {
   allowed: boolean;
   permission: string;
+};
+
+export type AuthPermissionsResponse = {
+  permissions: string[];
+  systemRoles: string[];
+  organization: {
+    id: string;
+    role: string;
+  };
 };

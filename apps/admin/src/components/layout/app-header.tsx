@@ -10,7 +10,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useAuth } from '@/features/auth/use-auth';
+import { NotificationBell } from '@/features/notifications/notification-bell';
 
 export function AppHeader() {
   const auth = useAuth();
@@ -19,12 +21,14 @@ export function AppHeader() {
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-6">
-      <div>
+      <div className="flex items-center gap-3">
+        <SidebarTrigger className="-ml-2 hidden md:inline-flex" />
         <h1 className="text-lg font-semibold">{import.meta.env.VITE_APP_NAME || 'Project Kit'}</h1>
       </div>
 
       <div className="flex items-center gap-3">
         <OrganizationSwitcher />
+        <NotificationBell />
         <DropdownMenu>
           <DropdownMenuTrigger>
             <Button variant="ghost" size="sm" onClick={() => setMenuOpen((value) => !value)}>
@@ -38,6 +42,15 @@ export function AppHeader() {
               <div className="px-2 py-1 text-xs text-slate-500">{auth.user?.email}</div>
               <DropdownMenuItem
                 onClick={() => {
+                  setMenuOpen(false);
+                  navigate('/profile');
+                }}
+              >
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  setMenuOpen(false);
                   auth.logout();
                   navigate('/login');
                 }}

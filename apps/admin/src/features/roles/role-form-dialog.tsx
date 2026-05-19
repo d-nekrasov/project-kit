@@ -34,6 +34,8 @@ export function RoleFormDialog({
   open,
   mode,
   role,
+  organizationName,
+  isSubmitDisabled,
   isSubmitting,
   errorMessage,
   onOpenChange,
@@ -85,6 +87,13 @@ export function RoleFormDialog({
 
           {mode === 'create' ? (
             <div className="space-y-2">
+              <Label htmlFor="role-organization-readonly">Organization</Label>
+              <Input id="role-organization-readonly" value={organizationName ?? 'Select organization'} disabled />
+            </div>
+          ) : null}
+
+          {mode === 'create' ? (
+            <div className="space-y-2">
               <Label htmlFor="role-code">Code</Label>
               <Input id="role-code" placeholder="documents_manager" {...form.register('code')} />
               <p className="text-xs text-red-600">{form.formState.errors.code?.message}</p>
@@ -106,7 +115,7 @@ export function RoleFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting || isSubmitDisabled}>
               {isSubmitting ? 'Saving...' : mode === 'create' ? 'Create role' : 'Save changes'}
             </Button>
           </DialogFooter>

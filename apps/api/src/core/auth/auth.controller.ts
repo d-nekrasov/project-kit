@@ -2,6 +2,7 @@ import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { getRequestMetadata } from '../../common/utils/request-metadata.util';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
+import { AuthPermissionsResponseDto } from './dto/auth-permissions-response.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { LoginDto } from './dto/login.dto';
 import { MeResponseDto } from './dto/me-response.dto';
@@ -26,6 +27,15 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   me(@CurrentUser() user: CurrentUserType): MeResponseDto {
     return user;
+  }
+
+  @Get('permissions')
+  @UseGuards(JwtAuthGuard, OrganizationGuard)
+  permissions(
+    @CurrentUser() user: CurrentUserType,
+    @CurrentOrganization() organization: CurrentOrganizationType
+  ): Promise<AuthPermissionsResponseDto> {
+    return this.authService.getEffectivePermissions(user, organization);
   }
 
   // TODO: remove or move to diagnostics controller.

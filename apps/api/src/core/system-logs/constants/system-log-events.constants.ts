@@ -4,5 +4,11 @@ export const SYSTEM_LOG_EVENTS = {
   AUDIT_WRITE_FAILED: 'audit.write_failed',
   INSTALLER_SETUP_FAILED: 'installer.setup_failed',
   INSTALLER_POLICY_RELOAD_FAILED: 'installer.policy_reload_failed',
-  SYSTEM_LOG_WRITE_FAILED: 'system_log.write_failed'
+  SYSTEM_LOG_WRITE_FAILED: 'system_log.write_failed',
+  NOTIFICATION_SEND_FAILED: 'notification.send_failed',
+  NOTIFICATION_TEMPLATE_NOT_FOUND: 'notification.template_not_found',
+  NOTIFICATION_NO_RECIPIENTS: 'notification.no_recipients',
+  NOTIFICATION_DELIVERY_FAILED: 'notification.delivery_failed',
+  NOTIFICATION_CONNECTOR_FAILED: 'notification.connector_failed',
+  NOTIFICATION_TEMPLATE_RENDER_FAILED: 'notification.template_render_failed'
 } as const;

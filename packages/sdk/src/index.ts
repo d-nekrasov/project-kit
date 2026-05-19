@@ -16,6 +16,7 @@ export * from './types/audit-logs.types';
 export * from './types/system-logs.types';
 export * from './types/documents.types';
 export * from './types/installer.types';
+export * from './types/notifications.types';
 
 export * from './resources/installer.api';
 export * from './resources/auth.api';
@@ -28,3 +29,6 @@ export * from './resources/modules.api';
 export * from './resources/audit-logs.api';
 export * from './resources/system-logs.api';
 export * from './resources/documents.api';
+export * from './resources/notifications.api';
+export * from './resources/notification-connectors.api';
+export * from './resources/notification-templates.api';

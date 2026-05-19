@@ -1,3 +1,4 @@
+import { ApiError } from '@project-kit/sdk';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -10,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/features/auth/use-auth';
+import { getApiErrorMessage } from '@/lib/api-error-message';
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -50,8 +52,18 @@ export function LoginPage() {
               try {
                 await auth.login(values.email, values.password);
                 navigate('/');
-              } catch {
-                setError('Invalid email or password.');
+              } catch (nextError) {
+                if (nextError instanceof ApiError && nextError.status === 401) {
+                  setError('Invalid email or password.');
+                  return;
+                }
+
+                if (nextError instanceof ApiError && nextError.status === 0) {
+                  setError(import.meta.env.DEV ? nextError.message : 'Unable to connect to API. Check that backend is running.');
+                  return;
+                }
+
+                setError(getApiErrorMessage(nextError));
               }
             })}
           >

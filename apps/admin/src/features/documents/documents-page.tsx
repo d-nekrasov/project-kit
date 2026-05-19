@@ -118,8 +118,8 @@ export function DocumentsPage() {
     }
   });
 
-  const documentsMeta = documentsQuery.data?.meta;
-  const documents = documentsQuery.data?.items ?? [];
+  const documentsMeta = documentsQuery.isError ? undefined : documentsQuery.data?.meta;
+  const documents = documentsQuery.isError ? [] : documentsQuery.data?.items ?? [];
   const moduleDisabled = documentsQuery.isError && isModuleDisabledError(documentsQuery.error);
   const pageError = documentsQuery.isError && !moduleDisabled ? getApiErrorMessage(documentsQuery.error) : null;
 

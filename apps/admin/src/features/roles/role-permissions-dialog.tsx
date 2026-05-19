@@ -20,6 +20,7 @@ function isPermissionsReadonly(roleCode?: string) {
 export function RolePermissionsDialog({
   open,
   role,
+  organizationName,
   permissionGroups,
   isLoading,
   isSubmitting,
@@ -73,7 +74,10 @@ export function RolePermissionsDialog({
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Edit permissions: {role?.name ?? '-'}</DialogTitle>
-          <DialogDescription>Configure role permissions grouped by module.</DialogDescription>
+          <DialogDescription>
+            Configure role permissions grouped by module.
+            {organizationName ? ` Organization: ${organizationName}.` : ''}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">

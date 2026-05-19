@@ -14,7 +14,7 @@ export class ApiClient {
     this.getAccessToken = options.getAccessToken;
     this.getOrganizationId = options.getOrganizationId;
     this.onUnauthorized = options.onUnauthorized;
-    this.fetchImpl = options.fetchImpl ?? fetch;
+    this.fetchImpl = options.fetchImpl ?? globalThis.fetch.bind(globalThis);
   }
 
   get<T>(path: string, options?: RequestOptions): Promise<T> {
@@ -59,11 +59,22 @@ export class ApiClient {
     }
 
     const url = `${this.baseUrl}${path}${buildQueryString(options.query)}`;
-    const response = await this.fetchImpl(url, {
-      method,
-      headers,
-      body: options.body === undefined ? undefined : JSON.stringify(options.body)
-    });
+    let response: Response;
+    try {
+      response = await this.fetchImpl(url, {
+        method,
+        headers,
+        body: options.body === undefined ? undefined : JSON.stringify(options.body)
+      });
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : 'Failed to fetch';
+      throw new ApiError({
+        status: 0,
+        statusText: 'NETWORK_ERROR',
+        message: `Network request failed (${method} ${url}): ${message}`,
+        data: cause
+      });
+    }
 
     if (response.ok) {
       if (response.status === 204) {

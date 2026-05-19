@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 
 import { ErrorState } from '@/components/common/error-state';
+import { EmptyState } from '@/components/common/empty-state';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
 import { useAuth } from '@/features/auth/use-auth';
@@ -25,13 +26,52 @@ export function RolesPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editRole, setEditRole] = useState<RoleResponse | null>(null);
   const [permissionsRole, setPermissionsRole] = useState<RoleResponse | null>(null);
+  const [selectedOrganizationId, setSelectedOrganizationId] = useState<string | null>(auth.activeOrganizationId);
+
+  const isSuperAdmin = auth.user?.systemRoles.includes('super_admin') ?? false;
 
   useEffect(() => {
+    setSelectedOrganizationId((current) => {
+      if (!isSuperAdmin) {
+        return auth.activeOrganizationId;
+      }
+
+      return current || auth.activeOrganizationId;
+    });
+
     setPage(1);
     setCreateDialogOpen(false);
     setEditRole(null);
     setPermissionsRole(null);
-  }, [auth.activeOrganizationId]);
+  }, [auth.activeOrganizationId, isSuperAdmin]);
+
+  const organizationsQuery = useQuery({
+    queryKey: ['organizations', 'roles-selector'],
+    queryFn: () => sdk.organizations.list({ page: 1, limit: 200, status: 'ACTIVE' }),
+    select: (response) => response.items,
+    enabled: isSuperAdmin
+  });
+
+  const organizations =
+    organizationsQuery.data?.length
+      ? organizationsQuery.data
+      : (auth.user?.organizations.map((organization) => ({
+          id: organization.id,
+          name: organization.name,
+          slug: organization.slug
+        })) ?? []);
+  const currentOrganizationName =
+    auth.user?.organizations.find((organization) => organization.id === auth.activeOrganizationId)?.name ?? null;
+  const selectedOrganizationName = useMemo(() => {
+    if (!selectedOrganizationId) {
+      return null;
+    }
+
+    const organization =
+      organizations.find((item) => item.id === selectedOrganizationId) ??
+      auth.user?.organizations.find((item) => item.id === selectedOrganizationId);
+    return organization?.name ?? null;
+  }, [auth.user?.organizations, organizations, selectedOrganizationId]);
 
   const rolesQueryParams = useMemo(
     () => ({
@@ -39,20 +79,23 @@ export function RolesPage() {
       limit,
       search: search || undefined,
       includeSystem,
-      org: auth.activeOrganizationId
+      activeOrganizationId: auth.activeOrganizationId,
+      selectedOrganizationId
     }),
-    [auth.activeOrganizationId, includeSystem, limit, page, search]
+    [auth.activeOrganizationId, includeSystem, limit, page, search, selectedOrganizationId]
   );
 
   const rolesQuery = useQuery({
-    queryKey: rolesQueryKeys.list(rolesQueryParams, auth.activeOrganizationId),
+    queryKey: rolesQueryKeys.list(rolesQueryParams, selectedOrganizationId ?? auth.activeOrganizationId),
     queryFn: () =>
       sdk.roles.list({
         page,
         limit,
         search: search || undefined,
-        includeSystem
-      })
+        includeSystem,
+        organizationId: isSuperAdmin ? selectedOrganizationId ?? undefined : undefined
+      }),
+    enabled: !isSuperAdmin || Boolean(selectedOrganizationId)
   });
 
   const permissionsQuery = useQuery({
@@ -66,7 +109,8 @@ export function RolesPage() {
       sdk.roles.create({
         code: values.code ?? '',
         name: values.name,
-        permissions: []
+        permissions: [],
+        organizationId: isSuperAdmin ? selectedOrganizationId ?? undefined : undefined
       }),
     onSuccess: async () => {
       setCreateDialogOpen(false);
@@ -112,9 +156,10 @@ export function RolesPage() {
     }
   });
 
-  const rolesMeta = rolesQuery.data?.meta;
-  const roles = rolesQuery.data?.items ?? [];
+  const rolesMeta = rolesQuery.isError ? undefined : rolesQuery.data?.meta;
+  const roles = rolesQuery.isError ? [] : rolesQuery.data?.items ?? [];
   const pageError = rolesQuery.isError ? getApiErrorMessage(rolesQuery.error) : null;
+  const shouldSelectOrganization = isSuperAdmin && !selectedOrganizationId;
 
   return (
     <div className="space-y-6">
@@ -123,9 +168,13 @@ export function RolesPage() {
           <h2 className="text-2xl font-semibold text-slate-900">Roles</h2>
           <p className="text-sm text-slate-600">Manage organization roles and permissions.</p>
         </div>
-        <Button type="button" onClick={() => setCreateDialogOpen(true)}>
+        <Button type="button" onClick={() => setCreateDialogOpen(true)} disabled={shouldSelectOrganization}>
           Create role
         </Button>
+      </div>
+
+      <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-900">
+        Roles are scoped by organization. Select organization before editing role permissions.
       </div>
 
       <RolesToolbar
@@ -139,26 +188,47 @@ export function RolesPage() {
           setIncludeSystem(value);
           setPage(1);
         }}
+        isSuperAdmin={isSuperAdmin}
+        organizations={organizations}
+        selectedOrganizationId={selectedOrganizationId}
+        currentOrganizationName={currentOrganizationName}
+        onSelectedOrganizationIdChange={(organizationId) => {
+          setSelectedOrganizationId(organizationId || null);
+          setPage(1);
+          setCreateDialogOpen(false);
+          setEditRole(null);
+          setPermissionsRole(null);
+        }}
+        isOrganizationsLoading={organizationsQuery.isLoading}
+        organizationsErrorMessage={organizationsQuery.isError ? getApiErrorMessage(organizationsQuery.error) : null}
       />
+
+      {selectedOrganizationName ? (
+        <div className="text-sm text-slate-600">Managing roles for: {selectedOrganizationName}</div>
+      ) : null}
 
       {pageError ? <ErrorState message={pageError} /> : null}
 
-      <RolesTable
-        roles={roles}
-        isLoading={rolesQuery.isLoading}
-        onEdit={(role) => {
-          if (role.type === 'SYSTEM') {
-            return;
-          }
-          setEditRole(role);
-        }}
-        onEditPermissions={(role) => {
-          if (role.type === 'SYSTEM' || role.code === 'organization_admin') {
-            return;
-          }
-          setPermissionsRole(role);
-        }}
-      />
+      {shouldSelectOrganization ? (
+        <EmptyState title="Select organization to manage roles" description="Roles are scoped to a single organization." />
+      ) : (
+        <RolesTable
+          roles={roles}
+          isLoading={rolesQuery.isLoading}
+          onEdit={(role) => {
+            if (role.type === 'SYSTEM') {
+              return;
+            }
+            setEditRole(role);
+          }}
+          onEditPermissions={(role) => {
+            if (role.type === 'SYSTEM' || role.code === 'organization_admin') {
+              return;
+            }
+            setPermissionsRole(role);
+          }}
+        />
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-white p-4 text-sm">
         <div className="text-slate-600">
@@ -200,6 +270,8 @@ export function RolesPage() {
       <RoleFormDialog
         open={createDialogOpen}
         mode="create"
+        organizationName={selectedOrganizationName}
+        isSubmitDisabled={shouldSelectOrganization}
         isSubmitting={createRoleMutation.isPending}
         errorMessage={createRoleMutation.isError ? getApiErrorMessage(createRoleMutation.error) : null}
         onOpenChange={setCreateDialogOpen}
@@ -210,6 +282,7 @@ export function RolesPage() {
         open={Boolean(editRole)}
         mode="edit"
         role={editRole}
+        organizationName={selectedOrganizationName}
         isSubmitting={updateRoleMutation.isPending}
         errorMessage={updateRoleMutation.isError ? getApiErrorMessage(updateRoleMutation.error) : null}
         onOpenChange={(open) => {
@@ -223,7 +296,8 @@ export function RolesPage() {
       <RolePermissionsDialog
         open={Boolean(permissionsRole)}
         role={permissionsRole}
-        permissionGroups={permissionsQuery.data?.groups ?? []}
+        organizationName={selectedOrganizationName}
+        permissionGroups={permissionsQuery.isError ? [] : permissionsQuery.data?.groups ?? []}
         isLoading={permissionsQuery.isLoading}
         isSubmitting={updateRolePermissionsMutation.isPending}
         errorMessage={

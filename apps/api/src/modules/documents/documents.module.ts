@@ -4,6 +4,8 @@ import { ModuleRegistryModule } from '../../core/module-registry/module-registry
 import { ModuleRegistryService } from '../../core/module-registry/module-registry.service';
 import { OrganizationContextModule } from '../../core/organization-context/organization-context.module';
 import { PermissionsModule } from '../../core/permissions/permissions.module';
+import { NotificationsModule } from '../../core/notifications/notifications.module';
+import { SystemLogsModule } from '../../core/system-logs/system-logs.module';
 import { CasbinModule } from '../../infrastructure/casbin/casbin.module';
 import { PrismaModule } from '../../infrastructure/prisma/prisma.module';
 import { DocumentsController } from './documents.controller';
@@ -17,7 +19,9 @@ import { DocumentsService } from './documents.service';
     PermissionsModule,
     OrganizationContextModule,
     ModuleRegistryModule,
-    AuditLogsModule
+    AuditLogsModule,
+    SystemLogsModule,
+    NotificationsModule
   ],
   controllers: [DocumentsController],
   providers: [DocumentsService]
