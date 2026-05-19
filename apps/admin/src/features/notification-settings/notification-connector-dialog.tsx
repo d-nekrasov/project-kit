@@ -7,6 +7,7 @@ import { z } from 'zod';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -15,8 +16,8 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 
 const connectorFormSchema = z
@@ -131,7 +132,8 @@ export function NotificationConnectorDialog({
           <DialogDescription>{connector?.code ?? 'Connector'}</DialogDescription>
         </DialogHeader>
 
-        <form className="space-y-4" onSubmit={form.handleSubmit(submitHandler)}>
+        <Form {...form}>
+          <form className="space-y-4" onSubmit={form.handleSubmit(submitHandler)}>
           {error ? (
             <Alert className="border-red-200 bg-red-50 text-red-700">
               <AlertCircle className="mb-1 h-4 w-4" />
@@ -140,66 +142,138 @@ export function NotificationConnectorDialog({
             </Alert>
           ) : null}
 
-          <div className="space-y-2">
-            <Label htmlFor="connector-status">Status</Label>
-            <Select id="connector-status" {...form.register('status')}>
-              <option value="ENABLED">ENABLED</option>
-              <option value="DISABLED">DISABLED</option>
-            </Select>
-            <p className="text-xs text-red-600">{form.formState.errors.status?.message}</p>
-          </div>
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <FormControl>
+                    <Select {...field}>
+                      <option value="ENABLED">ENABLED</option>
+                      <option value="DISABLED">DISABLED</option>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          {isSmtp ? (
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="connector-host">Host</Label>
-                <Input id="connector-host" {...form.register('host')} placeholder="smtp.example.com" />
-                <p className="text-xs text-red-600">{form.formState.errors.host?.message}</p>
+            {isSmtp ? (
+              <div className="grid gap-4 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="host"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Host</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="smtp.example.com" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="port"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Port</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          value={field.value}
+                          onChange={(event) => field.onChange(event.target.valueAsNumber)}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                          ref={field.ref}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="secure"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center gap-2 space-y-0 pt-8">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onChange={(event) => field.onChange(event.target.checked)}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                          ref={field.ref}
+                        />
+                      </FormControl>
+                      <FormLabel>Secure</FormLabel>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="from"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>From</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Project Kit <noreply@example.com>" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Username</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input type="password" {...field} />
+                      </FormControl>
+                      <FormDescription>Leave password unchanged to keep the current value.</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
+            ) : (
+              <p className="rounded-md border bg-slate-50 p-3 text-sm text-slate-600">
+                This connector does not expose editable configuration.
+              </p>
+            )}
 
-              <div className="space-y-2">
-                <Label htmlFor="connector-port">Port</Label>
-                <Input id="connector-port" type="number" {...form.register('port', { valueAsNumber: true })} />
-                <p className="text-xs text-red-600">{form.formState.errors.port?.message}</p>
-              </div>
-
-              <label className="flex items-center gap-2 text-sm text-slate-700">
-                <input type="checkbox" {...form.register('secure')} />
-                secure
-              </label>
-
-              <div className="space-y-2">
-                <Label htmlFor="connector-from">From</Label>
-                <Input id="connector-from" {...form.register('from')} placeholder="Project Kit <noreply@example.com>" />
-                <p className="text-xs text-red-600">{form.formState.errors.from?.message}</p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="connector-username">Username</Label>
-                <Input id="connector-username" {...form.register('username')} />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="connector-password">Password</Label>
-                <Input id="connector-password" type="password" {...form.register('password')} />
-                <p className="text-xs text-slate-500">Leave password unchanged to keep the current value.</p>
-              </div>
-            </div>
-          ) : (
-            <p className="rounded-md border bg-slate-50 p-3 text-sm text-slate-600">
-              This connector does not expose editable configuration.
-            </p>
-          )}
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : 'Save changes'}
-            </Button>
-          </DialogFooter>
-        </form>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : 'Save changes'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

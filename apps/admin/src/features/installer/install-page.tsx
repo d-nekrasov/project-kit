@@ -8,8 +8,8 @@ import { LoadingScreen } from '@/components/common/loading-screen';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { sdk } from '@/lib/sdk';
 
 const installSchema = z.object({
@@ -59,53 +59,109 @@ export function InstallPage() {
           <CardDescription>Create first organization and admin user.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form
-            className="grid gap-4"
-            onSubmit={form.handleSubmit(async (values) => {
-              await sdk.installer.setup(values);
-              navigate('/login');
-            })}
-          >
-            <div className="space-y-2">
-              <Label htmlFor="appName">App Name</Label>
-              <Input id="appName" {...form.register('appName')} />
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="organizationName">Organization Name</Label>
-                <Input id="organizationName" {...form.register('organizationName')} />
+          <Form {...form}>
+            <form
+              className="grid gap-4"
+              onSubmit={form.handleSubmit(async (values) => {
+                await sdk.installer.setup(values);
+                navigate('/login');
+              })}
+            >
+              <FormField
+                control={form.control}
+                name="appName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>App Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="grid gap-4 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="organizationName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Organization Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="organizationSlug"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Organization Slug</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="organizationSlug">Organization Slug</Label>
-                <Input id="organizationSlug" {...form.register('organizationSlug')} />
+              <div className="grid gap-4 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="adminName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Admin Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="adminEmail"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Admin Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="adminName">Admin Name</Label>
-                <Input id="adminName" {...form.register('adminName')} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="adminEmail">Admin Email</Label>
-                <Input id="adminEmail" type="email" {...form.register('adminEmail')} />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="adminPassword">Admin Password</Label>
-              <Input id="adminPassword" type="password" {...form.register('adminPassword')} />
-            </div>
+              <FormField
+                control={form.control}
+                name="adminPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Admin Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {form.formState.isSubmitSuccessful ? (
-              <Alert>
-                <AlertTitle>Setup complete</AlertTitle>
-                <AlertDescription>Redirecting to login...</AlertDescription>
-              </Alert>
-            ) : null}
+              {form.formState.isSubmitSuccessful ? (
+                <Alert>
+                  <AlertTitle>Setup complete</AlertTitle>
+                  <AlertDescription>Redirecting to login...</AlertDescription>
+                </Alert>
+              ) : null}
 
-            <Button type="submit" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? 'Installing...' : 'Run setup'}
-            </Button>
-          </form>
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? 'Installing...' : 'Run setup'}
+              </Button>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>

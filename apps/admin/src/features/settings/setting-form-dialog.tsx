@@ -7,6 +7,7 @@ import { z } from 'zod';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -15,8 +16,8 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { JsonValueEditor } from '@/features/settings/json-value-editor';
 import type { SettingFormDialogProps, SettingFormDialogSubmitValues } from '@/features/settings/settings-page.types';
@@ -146,7 +147,8 @@ export function SettingFormDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form className="space-y-4" onSubmit={form.handleSubmit(submitHandler)}>
+        <Form {...form}>
+          <form className="space-y-4" onSubmit={form.handleSubmit(submitHandler)}>
           {error ? (
             <Alert className="border-red-200 bg-red-50 text-red-700">
               <AlertCircle className="mb-1 h-4 w-4" />
@@ -163,43 +165,81 @@ export function SettingFormDialog({
             </Alert>
           ) : null}
 
-          <div className="space-y-2">
-            <Label htmlFor="setting-key">Key</Label>
-            <Input id="setting-key" {...form.register('key')} disabled={isEdit} placeholder="app.demo" />
-            <p className="text-xs text-red-600">{form.formState.errors.key?.message}</p>
-          </div>
+            <FormField
+              control={form.control}
+              name="key"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Key</FormLabel>
+                  <FormControl>
+                    <Input {...field} disabled={isEdit} placeholder="app.demo" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <div className="space-y-2">
-            <Label htmlFor="setting-scope">Scope</Label>
-            <Select id="setting-scope" {...form.register('scope')} disabled={isEdit}>
-              <option value="GLOBAL">GLOBAL</option>
-              <option value="ORGANIZATION">ORGANIZATION</option>
-              <option value="MODULE">MODULE</option>
-            </Select>
-            <p className="text-xs text-red-600">{form.formState.errors.scope?.message}</p>
-          </div>
+            <FormField
+              control={form.control}
+              name="scope"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Scope</FormLabel>
+                  <FormControl>
+                    <Select {...field} disabled={isEdit}>
+                      <option value="GLOBAL">GLOBAL</option>
+                      <option value="ORGANIZATION">ORGANIZATION</option>
+                      <option value="MODULE">MODULE</option>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          {isModuleScope || (isEdit && setting?.scope === 'MODULE') ? (
-            <div className="space-y-2">
-              <Label htmlFor="setting-module">Module</Label>
-              <Select id="setting-module" {...form.register('module')} disabled={isEdit}>
-                <option value="">Select module</option>
-                {modules.map((module) => (
-                  <option key={module.name} value={module.name}>
-                    {module.title}
-                  </option>
-                ))}
-              </Select>
-              <p className="text-xs text-red-600">{form.formState.errors.module?.message}</p>
-            </div>
-          ) : null}
+            {isModuleScope || (isEdit && setting?.scope === 'MODULE') ? (
+              <FormField
+                control={form.control}
+                name="module"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Module</FormLabel>
+                    <FormControl>
+                      <Select {...field} disabled={isEdit}>
+                        <option value="">Select module</option>
+                        {modules.map((module) => (
+                          <option key={module.name} value={module.name}>
+                            {module.title}
+                          </option>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : null}
 
-          {isModuleScope && !isEdit ? (
-            <label className="flex items-center gap-2 text-sm text-slate-700">
-              <input type="checkbox" {...form.register('organizationSpecific')} />
-              organizationSpecific
-            </label>
-          ) : null}
+            {isModuleScope && !isEdit ? (
+              <FormField
+                control={form.control}
+                name="organizationSpecific"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center gap-2 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onChange={(event) => field.onChange(event.target.checked)}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                      />
+                    </FormControl>
+                    <FormLabel>organizationSpecific</FormLabel>
+                  </FormItem>
+                )}
+              />
+            ) : null}
 
           <JsonValueEditor
             value={form.watch('valueRaw')}
@@ -207,15 +247,16 @@ export function SettingFormDialog({
             error={form.formState.errors.valueRaw?.message}
           />
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting || isSubmitDisabled}>
-              {isSubmitting ? 'Saving...' : isEdit ? 'Save changes' : 'Create setting'}
-            </Button>
-          </DialogFooter>
-        </form>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting || isSubmitDisabled}>
+                {isSubmitting ? 'Saving...' : isEdit ? 'Save changes' : 'Create setting'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
