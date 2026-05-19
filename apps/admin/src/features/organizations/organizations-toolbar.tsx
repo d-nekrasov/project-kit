@@ -20,7 +20,7 @@ export function OrganizationsToolbar({ search, onSearchChange, status, onStatusC
         <Label htmlFor="organizations-status">Status</Label>
         <Select
           id="organizations-status"
-          className="block w-full md:max-w-36"
+          className="w-full md:max-w-36"
           value={status}
           onChange={(event) => onStatusChange(event.target.value as typeof status)}
         >
