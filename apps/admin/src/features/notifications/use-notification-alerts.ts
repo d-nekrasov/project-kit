@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { getNotificationSoundEnabled } from '@/features/notifications/notification-sound-preferences';
-import { playNotificationSound, unlockNotificationSound } from '@/features/notifications/notification-sound';
+import { enableNotificationSound, isNotificationSoundReady, playNotificationSound } from '@/features/notifications/notification-sound';
 
 type UseNotificationAlertsParams = {
   count: number | null;
@@ -17,20 +17,36 @@ export function useNotificationAlerts({ count, userId, fallbackDetectionEnabled 
   const [highlight, setHighlight] = useState(false);
 
   useEffect(() => {
-    const unlock = () => {
-      if (getNotificationSoundEnabled()) {
-        unlockNotificationSound();
-      }
+    if (!getNotificationSoundEnabled() || isNotificationSoundReady()) {
+      return;
+    }
+
+    let disposed = false;
+
+    const armSound = () => {
+      void enableNotificationSound().then((ready) => {
+        if (ready || disposed) {
+          window.removeEventListener('pointerdown', armSound, true);
+          window.removeEventListener('click', armSound, true);
+          window.removeEventListener('keydown', armSound, true);
+          window.removeEventListener('touchstart', armSound, true);
+        }
+      });
     };
 
-    window.addEventListener('pointerdown', unlock);
-    window.addEventListener('keydown', unlock);
+    window.addEventListener('pointerdown', armSound, true);
+    window.addEventListener('click', armSound, true);
+    window.addEventListener('keydown', armSound, true);
+    window.addEventListener('touchstart', armSound, true);
 
     return () => {
-      window.removeEventListener('pointerdown', unlock);
-      window.removeEventListener('keydown', unlock);
+      disposed = true;
+      window.removeEventListener('pointerdown', armSound, true);
+      window.removeEventListener('click', armSound, true);
+      window.removeEventListener('keydown', armSound, true);
+      window.removeEventListener('touchstart', armSound, true);
     };
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     previousCountRef.current = null;

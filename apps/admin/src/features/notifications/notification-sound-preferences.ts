@@ -2,10 +2,10 @@ const NOTIFICATION_SOUND_ENABLED_KEY = 'project_kit_notification_sound_enabled';
 
 export function getNotificationSoundEnabled(): boolean {
   if (typeof window === 'undefined') {
-    return true;
+    return false;
   }
 
-  return window.localStorage.getItem(NOTIFICATION_SOUND_ENABLED_KEY) !== 'false';
+  return window.localStorage.getItem(NOTIFICATION_SOUND_ENABLED_KEY) === 'true';
 }
 
 export function setNotificationSoundEnabled(enabled: boolean): void {

@@ -7,81 +7,103 @@ declare global {
 }
 
 let audioContext: AudioContext | null = null;
-let unlockAttempted = false;
-const NOTIFICATION_VOLUME = 1.0;
+let enablePromise: Promise<boolean> | null = null;
+const NOTIFICATION_VOLUME = 0.45;
 
-function getAudioContext(): AudioContext | null {
+function createAudioContext(): AudioContext | null {
   const AudioContextClass = window.AudioContext ?? window.webkitAudioContext;
 
   if (!AudioContextClass) {
     return null;
   }
 
-  audioContext ??= new AudioContextClass();
-
-  return audioContext;
+  return new AudioContextClass();
 }
 
-function playTone(context: AudioContext, volume: number, duration: number): void {
+function playTone(context: AudioContext, volume: number, duration: number, frequency: number, delay = 0): void {
   const oscillator = context.createOscillator();
   const gain = context.createGain();
+  const startAt = context.currentTime + delay;
 
   oscillator.type = 'sine';
-  oscillator.frequency.setValueAtTime(880, context.currentTime);
-  gain.gain.setValueAtTime(0.0001, context.currentTime);
-  gain.gain.exponentialRampToValueAtTime(volume, context.currentTime + 0.01);
-  gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + duration - 0.02);
+  oscillator.frequency.setValueAtTime(frequency, startAt);
+  gain.gain.setValueAtTime(0.0001, startAt);
+  gain.gain.exponentialRampToValueAtTime(volume, startAt + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration - 0.02);
 
   oscillator.connect(gain);
   gain.connect(context.destination);
-  oscillator.start();
-  oscillator.stop(context.currentTime + duration);
+  oscillator.start(startAt);
+  oscillator.stop(startAt + duration);
+}
+
+function playNotificationChime(context: AudioContext): void {
+  playTone(context, NOTIFICATION_VOLUME, 0.16, 784);
+  playTone(context, NOTIFICATION_VOLUME * 0.8, 0.2, 1046.5, 0.12);
+}
+
+export function isNotificationSoundReady(): boolean {
+  return audioContext?.state === 'running';
+}
+
+export async function enableNotificationSound(options: { test?: boolean } = {}): Promise<boolean> {
+  if (enablePromise) {
+    return enablePromise;
+  }
+
+  enablePromise = (async () => {
+    if (audioContext && audioContext.state === 'closed') {
+      audioContext = null;
+    }
+
+    audioContext ??= createAudioContext();
+    const context = audioContext;
+
+    if (!context) {
+      return false;
+    }
+
+    if (context.state === 'suspended') {
+      await context.resume();
+    }
+
+    if (context.state !== 'running') {
+      return false;
+    }
+
+    if (options.test) {
+      playNotificationChime(context);
+    } else {
+      playTone(context, 0.0001, 0.03, 880);
+    }
+
+    return true;
+  })()
+    .catch(() => false)
+    .finally(() => {
+      enablePromise = null;
+    });
+
+  return enablePromise;
 }
 
 export function unlockNotificationSound(): void {
-  if (unlockAttempted) {
-    return;
-  }
-
-  unlockAttempted = true;
-
-  try {
-    const context = getAudioContext();
-
-    if (!context) {
-      return;
-    }
-
-    const playUnlockTone = () => playTone(context, 0.0001, 0.03);
-
-    if (context.state === 'suspended') {
-      void context.resume().then(playUnlockTone).catch(() => {
-        unlockAttempted = false;
-      });
-      return;
-    }
-
-    playUnlockTone();
-  } catch {
-    // Browsers can block audio until the user has interacted with the page.
-    unlockAttempted = false;
-  }
+  void enableNotificationSound();
 }
 
 export function playNotificationSound(): void {
   try {
-    const context = getAudioContext();
+    const context = audioContext;
 
     if (!context) {
       return;
     }
 
-    if (context.state === 'suspended') {
-    void context.resume().then(() => playTone(context, NOTIFICATION_VOLUME, 0.2));
-    return;
-  }
+    if (context.state !== 'running') {
+      return;
+    }
 
-    playTone(context, NOTIFICATION_VOLUME, 0.2);
+    playNotificationChime(context);
   } catch {
     // Ignore best-effort notification sound failures.
   }

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
 import { useAuth } from '@/features/auth/use-auth';
 import { NotificationDetailDialog } from '@/features/notifications/notification-detail-dialog';
-import { unlockNotificationSound } from '@/features/notifications/notification-sound';
+import { enableNotificationSound } from '@/features/notifications/notification-sound';
 import {
   getNotificationSoundEnabled,
   setNotificationSoundEnabled
@@ -29,6 +29,8 @@ export function NotificationsPage() {
   const [selectedNotification, setSelectedNotification] = useState<NotificationResponse | null>(null);
   const [markReadId, setMarkReadId] = useState<string | null>(null);
   const [soundEnabled, setSoundEnabledState] = useState(getNotificationSoundEnabled);
+  const [soundSetupError, setSoundSetupError] = useState<string | null>(null);
+  const [isSoundSetupPending, setIsSoundSetupPending] = useState(false);
 
   const queryParams = useMemo(
     () => ({
@@ -71,13 +73,24 @@ export function NotificationsPage() {
     }
   });
 
-  const setSoundEnabled = (enabled: boolean) => {
-    setNotificationSoundEnabled(enabled);
-    setSoundEnabledState(enabled);
+  const setSoundEnabled = async (enabled: boolean) => {
+    setSoundSetupError(null);
 
     if (enabled) {
-      unlockNotificationSound();
+      setIsSoundSetupPending(true);
+      const isReady = await enableNotificationSound({ test: true });
+      setIsSoundSetupPending(false);
+
+      if (!isReady) {
+        setNotificationSoundEnabled(false);
+        setSoundEnabledState(false);
+        setSoundSetupError('Browser blocked notification sound. Use this button after interacting with the page.');
+        return;
+      }
     }
+
+    setNotificationSoundEnabled(enabled);
+    setSoundEnabledState(enabled);
   };
 
   const meta = notificationsQuery.isError ? undefined : notificationsQuery.data?.meta;
@@ -108,12 +121,14 @@ export function NotificationsPage() {
               type="button"
               variant={soundEnabled ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setSoundEnabled(!soundEnabled)}
+              onClick={() => void setSoundEnabled(!soundEnabled)}
               aria-pressed={soundEnabled}
+              disabled={isSoundSetupPending}
             >
-              {soundEnabled ? 'On' : 'Off'}
+              {isSoundSetupPending ? 'Testing...' : soundEnabled ? 'On' : 'Off'}
             </Button>
           </div>
+          {soundSetupError ? <div className="text-sm text-red-600">{soundSetupError}</div> : null}
           <Button
             type="button"
             variant="outline"
