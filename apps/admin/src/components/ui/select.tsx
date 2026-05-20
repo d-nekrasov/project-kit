@@ -110,7 +110,7 @@ export function Select({
         <SelectPrimitive.Content
           position="popper"
           sideOffset={4}
-          className="z-50 min-w-[8rem] overflow-hidden rounded-md border border-border bg-card shadow-md"
+          className="z-[var(--z-floating)] min-w-[8rem] overflow-hidden rounded-md border border-border bg-card shadow-md"
         >
           <SelectPrimitive.Viewport className="p-1">
             {options.map((option) => (
