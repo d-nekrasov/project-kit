@@ -309,6 +309,10 @@ The SDK does not store tokens itself. The application decides where to store acc
 4. `pnpm --filter api prisma:migrate dev`
 5. `pnpm --filter api start:dev`
 
+To start the API from the project root via `pnpm`, run:
+
+`pnpm --filter api start:dev`
+
 ### API environment
 
 Create `apps/api/.env` or copy `apps/api/.env.example`.
