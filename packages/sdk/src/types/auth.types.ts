@@ -21,6 +21,16 @@ export type ResetPasswordResponse = {
   message: string;
 };
 
+export type ValidateResetPasswordTokenDto = {
+  token: string;
+};
+
+export type ValidateResetPasswordTokenResponse = {
+  valid: boolean;
+  reason?: 'invalid' | 'expired' | 'used' | 'user_inactive';
+  expiresAt?: string;
+};
+
 export type CurrentUserOrganization = {
   id: string;
   name: string;

@@ -9,6 +9,8 @@ import { ForgotPasswordDto } from "./dto/forgot-password.dto";
 import { LoginDto } from "./dto/login.dto";
 import { MeResponseDto } from "./dto/me-response.dto";
 import { ResetPasswordDto } from "./dto/reset-password.dto";
+import { ValidateResetPasswordTokenDto } from "./dto/validate-reset-password-token.dto";
+import { ValidateResetPasswordTokenResponseDto } from "./dto/validate-reset-password-token-response.dto";
 import { AuthRateLimit } from "./decorators/auth-rate-limit.decorator";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { AuthRateLimitGuard } from "./guards/auth-rate-limit.guard";
@@ -73,6 +75,13 @@ export class AuthController {
     },
   ): Promise<AuthMessageResponseDto> {
     return this.authService.resetPassword(dto, getRequestMetadata(req));
+  }
+
+  @Post("reset-password/validate")
+  validateResetPasswordToken(
+    @Body() dto: ValidateResetPasswordTokenDto,
+  ): Promise<ValidateResetPasswordTokenResponseDto> {
+    return this.authService.validateResetPasswordToken(dto);
   }
 
   @Get("me")

@@ -9,7 +9,9 @@ import type {
   LoginDto,
   PermissionsCheckResponse,
   ResetPasswordDto,
-  ResetPasswordResponse
+  ResetPasswordResponse,
+  ValidateResetPasswordTokenDto,
+  ValidateResetPasswordTokenResponse
 } from '../types/auth.types';
 
 export class AuthApi {
@@ -31,6 +33,13 @@ export class AuthApi {
 
   resetPassword(dto: ResetPasswordDto): Promise<ResetPasswordResponse> {
     return this.client.post<ResetPasswordResponse>('/auth/reset-password', dto, {
+      skipAuth: true,
+      skipOrganization: true
+    });
+  }
+
+  validateResetPasswordToken(dto: ValidateResetPasswordTokenDto): Promise<ValidateResetPasswordTokenResponse> {
+    return this.client.post<ValidateResetPasswordTokenResponse>('/auth/reset-password/validate', dto, {
       skipAuth: true,
       skipOrganization: true
     });

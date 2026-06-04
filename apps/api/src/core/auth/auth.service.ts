@@ -22,6 +22,8 @@ import { AuthResponseDto } from "./dto/auth-response.dto";
 import { ForgotPasswordDto } from "./dto/forgot-password.dto";
 import { LoginDto } from "./dto/login.dto";
 import { ResetPasswordDto } from "./dto/reset-password.dto";
+import { ValidateResetPasswordTokenDto } from "./dto/validate-reset-password-token.dto";
+import { ValidateResetPasswordTokenResponseDto } from "./dto/validate-reset-password-token-response.dto";
 import { CurrentUser } from "./types/current-user.type";
 import { JwtPayload } from "./types/jwt-payload.type";
 import { CurrentOrganization } from "../organization-context/types/current-organization.type";
@@ -32,6 +34,20 @@ const PASSWORD_RESET_RESPONSE_MESSAGE =
 const PASSWORD_RESET_INVALID_TOKEN_MESSAGE =
   "Password reset token is invalid or expired";
 const DEFAULT_PASSWORD_RESET_TOKEN_TTL_MINUTES = 30;
+type PasswordResetTokenValidationReason =
+  | "invalid"
+  | "expired"
+  | "used"
+  | "user_inactive";
+type PasswordResetTokenRecord = {
+  id: string;
+  userId: string;
+  expiresAt: Date;
+  usedAt: Date | null;
+  user: {
+    status: UserStatus;
+  };
+};
 
 @Injectable()
 export class AuthService {
@@ -175,30 +191,14 @@ export class AuthService {
     dto: ResetPasswordDto,
     requestMetadata?: RequestMetadata,
   ): Promise<AuthMessageResponseDto> {
-    const tokenHash = this.hashPasswordResetToken(dto.token);
-    const passwordResetToken = await this.prisma.passwordResetToken.findUnique({
-      where: { tokenHash },
-      select: {
-        id: true,
-        userId: true,
-        expiresAt: true,
-        usedAt: true,
-        user: {
-          select: {
-            id: true,
-            status: true,
-          },
-        },
-      },
-    });
-
+    const passwordResetToken = await this.findPasswordResetToken(dto.token);
     const now = new Date();
-    if (
-      !passwordResetToken ||
-      passwordResetToken.usedAt !== null ||
-      passwordResetToken.expiresAt <= now ||
-      passwordResetToken.user.status !== UserStatus.ACTIVE
-    ) {
+    const validationReason = this.resolvePasswordResetValidationReason(
+      passwordResetToken,
+      now,
+    );
+
+    if (validationReason) {
       await this.auditLogsService.write({
         action: AUDIT_ACTIONS.AUTH_PASSWORD_RESET_FAILED,
         entityType: AUDIT_ENTITY_TYPES.AUTH,
@@ -206,9 +206,8 @@ export class AuthService {
         userId: passwordResetToken?.userId ?? null,
         organizationId: null,
         metadata: {
-          reason: this.resolvePasswordResetFailureReason(
-            passwordResetToken,
-            now,
+          reason: this.mapPasswordResetValidationReasonToAuditReason(
+            validationReason,
           ),
         },
         ip: requestMetadata?.ip,
@@ -217,14 +216,15 @@ export class AuthService {
       throw new BadRequestException(PASSWORD_RESET_INVALID_TOKEN_MESSAGE);
     }
 
+    const activePasswordResetToken = passwordResetToken!;
     const passwordHash = await argon2.hash(dto.password);
 
     try {
       await this.prisma.$transaction(async (tx) => {
         const useResult = await tx.passwordResetToken.updateMany({
           where: {
-            id: passwordResetToken.id,
-            userId: passwordResetToken.userId,
+            id: activePasswordResetToken.id,
+            userId: activePasswordResetToken.userId,
             usedAt: null,
             expiresAt: { gt: now },
           },
@@ -241,7 +241,7 @@ export class AuthService {
 
         const passwordUpdateResult = await tx.user.updateMany({
           where: {
-            id: passwordResetToken.userId,
+            id: activePasswordResetToken.userId,
             status: UserStatus.ACTIVE,
           },
           data: {
@@ -255,7 +255,7 @@ export class AuthService {
 
         await tx.passwordResetToken.updateMany({
           where: {
-            userId: passwordResetToken.userId,
+            userId: activePasswordResetToken.userId,
             usedAt: null,
           },
           data: {
@@ -268,8 +268,8 @@ export class AuthService {
         await this.auditLogsService.write({
           action: AUDIT_ACTIONS.AUTH_PASSWORD_RESET_FAILED,
           entityType: AUDIT_ENTITY_TYPES.AUTH,
-          entityId: passwordResetToken.userId,
-          userId: passwordResetToken.userId,
+          entityId: activePasswordResetToken.userId,
+          userId: activePasswordResetToken.userId,
           organizationId: null,
           metadata: {
             reason: "token_rejected_during_reset",
@@ -284,8 +284,8 @@ export class AuthService {
     await this.auditLogsService.write({
       action: AUDIT_ACTIONS.AUTH_PASSWORD_RESET_COMPLETED,
       entityType: AUDIT_ENTITY_TYPES.AUTH,
-      entityId: passwordResetToken.userId,
-      userId: passwordResetToken.userId,
+      entityId: activePasswordResetToken.userId,
+      userId: activePasswordResetToken.userId,
       organizationId: null,
       metadata: {
         completedAt: now.toISOString(),
@@ -297,6 +297,21 @@ export class AuthService {
     return {
       message: "Password has been reset successfully.",
     };
+  }
+
+  async validateResetPasswordToken(
+    dto: ValidateResetPasswordTokenDto,
+  ): Promise<ValidateResetPasswordTokenResponseDto> {
+    const token = dto.token.trim();
+    if (!token) {
+      throw new BadRequestException("Password reset token is required");
+    }
+
+    const passwordResetToken = await this.findPasswordResetToken(token);
+    return this.validatePasswordResetTokenRecord(
+      passwordResetToken,
+      new Date(),
+    );
   }
 
   async getEffectivePermissions(
@@ -427,24 +442,81 @@ export class AuthService {
     return createHash("sha256").update(token, "utf8").digest("hex");
   }
 
-  private resolvePasswordResetFailureReason(
-    passwordResetToken: {
-      usedAt: Date | null;
-      expiresAt: Date;
-      user: { status: UserStatus };
-    } | null,
+  private async findPasswordResetToken(
+    token: string,
+  ): Promise<PasswordResetTokenRecord | null> {
+    return this.prisma.passwordResetToken.findUnique({
+      where: {
+        tokenHash: this.hashPasswordResetToken(token),
+      },
+      select: {
+        id: true,
+        userId: true,
+        expiresAt: true,
+        usedAt: true,
+        user: {
+          select: {
+            status: true,
+          },
+        },
+      },
+    });
+  }
+
+  private validatePasswordResetTokenRecord(
+    passwordResetToken: PasswordResetTokenRecord | null,
     now: Date,
-  ): string {
+  ): ValidateResetPasswordTokenResponseDto {
+    const reason = this.resolvePasswordResetValidationReason(
+      passwordResetToken,
+      now,
+    );
+
+    if (reason) {
+      return {
+        valid: false,
+        reason,
+      };
+    }
+
+    return {
+      valid: true,
+      expiresAt: passwordResetToken!.expiresAt.toISOString(),
+    };
+  }
+
+  private resolvePasswordResetValidationReason(
+    passwordResetToken: PasswordResetTokenRecord | null,
+    now: Date,
+  ): PasswordResetTokenValidationReason | null {
     if (!passwordResetToken) {
-      return "token_not_found";
+      return "invalid";
     }
     if (passwordResetToken.usedAt) {
-      return "token_already_used";
+      return "used";
     }
     if (passwordResetToken.expiresAt <= now) {
-      return "token_expired";
+      return "expired";
     }
     if (passwordResetToken.user.status !== UserStatus.ACTIVE) {
+      return "user_inactive";
+    }
+    return null;
+  }
+
+  private mapPasswordResetValidationReasonToAuditReason(
+    reason: PasswordResetTokenValidationReason,
+  ): string {
+    if (reason === "invalid") {
+      return "token_not_found";
+    }
+    if (reason === "used") {
+      return "token_already_used";
+    }
+    if (reason === "expired") {
+      return "token_expired";
+    }
+    if (reason === "user_inactive") {
       return "user_not_active";
     }
     return "token_invalid";

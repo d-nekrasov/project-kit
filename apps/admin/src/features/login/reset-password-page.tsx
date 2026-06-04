@@ -1,5 +1,6 @@
+import { ApiError } from '@project-kit/sdk';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 
@@ -14,12 +15,31 @@ import { getRecoveryErrorMessage } from '@/features/login/recovery-error-message
 import { type ResetPasswordForm, resetPasswordSchema } from '@/features/login/schemas/reset-password.schema';
 import { sdk } from '@/lib/sdk';
 
+function getResetPasswordTokenErrorMessage(reason: 'invalid' | 'expired' | 'used' | 'user_inactive'): string {
+  if (reason === 'expired') {
+    return 'This password reset link has expired. Request a new reset link and try again.';
+  }
+
+  if (reason === 'used') {
+    return 'This password reset link has already been used. Request a new reset link and try again.';
+  }
+
+  if (reason === 'user_inactive') {
+    return 'This password reset link is no longer active. Contact an administrator or request a new reset link.';
+  }
+
+  return 'This password reset link is invalid. Request a new reset link and try again.';
+}
+
 export function ResetPasswordPage() {
   const auth = useAuth();
   const [searchParams] = useSearchParams();
   const token = useMemo(() => searchParams.get('token')?.trim() ?? '', [searchParams]);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isValidatingToken, setIsValidatingToken] = useState(true);
+  const [tokenValidationError, setTokenValidationError] = useState<string | null>(null);
+  const [isTokenValid, setIsTokenValid] = useState(false);
 
   const form = useForm<ResetPasswordForm>({
     resolver: zodResolver(resetPasswordSchema),
@@ -28,6 +48,62 @@ export function ResetPasswordPage() {
       passwordConfirmation: ''
     }
   });
+
+  useEffect(() => {
+    if (!token) {
+      setIsValidatingToken(false);
+      setIsTokenValid(false);
+      setTokenValidationError(null);
+      return;
+    }
+
+    let isActive = true;
+
+    setIsValidatingToken(true);
+    setIsTokenValid(false);
+    setTokenValidationError(null);
+
+    void sdk.auth
+      .validateResetPasswordToken({ token })
+      .then((response) => {
+        if (!isActive) {
+          return;
+        }
+
+        if (!response.valid) {
+          setIsTokenValid(false);
+          setTokenValidationError(getResetPasswordTokenErrorMessage(response.reason ?? 'invalid'));
+          return;
+        }
+
+        setIsTokenValid(true);
+      })
+      .catch((nextError) => {
+        if (!isActive) {
+          return;
+        }
+
+        setIsTokenValid(false);
+
+        if (nextError instanceof ApiError && nextError.status === 0) {
+          setTokenValidationError(
+            import.meta.env.DEV ? nextError.message : 'Unable to connect to API. Check that backend is running.'
+          );
+          return;
+        }
+
+        setTokenValidationError(getRecoveryErrorMessage(nextError));
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsValidatingToken(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [token]);
 
   if (auth.isAuthenticated) {
     return <Navigate to="/" replace />;
@@ -44,6 +120,37 @@ export function ResetPasswordPage() {
           >
             Go to login
           </Link>
+        </div>
+      </AuthCard>
+    );
+  }
+
+  if (isValidatingToken) {
+    return (
+      <AuthCard title="Reset password" description="Checking your password reset link.">
+        <div className="rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">Validating reset link...</div>
+      </AuthCard>
+    );
+  }
+
+  if (!isTokenValid) {
+    return (
+      <AuthCard title="Reset password" description="This password reset link cannot be used.">
+        <div className="space-y-4">
+          <ErrorState
+            message={tokenValidationError ?? 'This password reset link is invalid. Request a new reset link and try again.'}
+          />
+          <Link
+            className="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            to="/forgot-password"
+          >
+            Request a new reset link
+          </Link>
+          <div className="text-center text-sm text-muted-foreground">
+            <Link className="transition-colors hover:text-foreground" to="/login">
+              Back to login
+            </Link>
+          </div>
         </div>
       </AuthCard>
     );
