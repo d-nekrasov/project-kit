@@ -75,37 +75,56 @@ enum NotificationConnectorStatus {
 }
 
 model User {
-  id            String             @id @default(cuid())
-  email         String             @unique
-  passwordHash  String
-  name          String?
-  status        UserStatus         @default(ACTIVE)
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
-  memberships   UserOrganization[]
-  systemRoles   UserSystemRole[]
-  auditLogs     AuditLog[]
-  systemLogs    SystemLog[]
-  createdDocuments Document[]      @relation("DocumentCreatedBy")
-  updatedDocuments Document[]      @relation("DocumentUpdatedBy")
-  notifications Notification[]
+  id                  String               @id @default(cuid())
+  email               String               @unique
+  passwordHash        String
+  name                String?
+  status              UserStatus           @default(ACTIVE)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  memberships         UserOrganization[]
+  systemRoles         UserSystemRole[]
+  passwordResetTokens PasswordResetToken[]
+  auditLogs           AuditLog[]
+  systemLogs          SystemLog[]
+  createdDocuments    Document[]           @relation("DocumentCreatedBy")
+  updatedDocuments    Document[]           @relation("DocumentUpdatedBy")
+  notifications       Notification[]
+}
+
+model PasswordResetToken {
+  id               String    @id @default(cuid())
+  userId           String
+  tokenHash        String    @unique
+  expiresAt        DateTime
+  usedAt           DateTime?
+  createdAt        DateTime  @default(now())
+  requestIp        String?
+  requestUserAgent String?
+  usedIp           String?
+  usedUserAgent    String?
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([usedAt])
 }
 
 model Organization {
-  id            String             @id @default(cuid())
-  name          String
-  slug          String             @unique
-  status        OrganizationStatus @default(ACTIVE)
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
-  users         UserOrganization[]
-  settings      Setting[]
+  id             String             @id @default(cuid())
+  name           String
+  slug           String             @unique
+  status         OrganizationStatus @default(ACTIVE)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  users          UserOrganization[]
+  settings       Setting[]
   moduleSettings ModuleSetting[]
-  documents     Document[]
-  roles         Role[]
-  auditLogs     AuditLog[]
-  systemLogs    SystemLog[]
-  notifications Notification[]
+  documents      Document[]
+  roles          Role[]
+  auditLogs      AuditLog[]
+  systemLogs     SystemLog[]
+  notifications  Notification[]
 }
 
 model UserOrganization {
@@ -123,17 +142,17 @@ model UserOrganization {
 }
 
 model Role {
-  id             String           @id @default(cuid())
-  name           String
-  code           String
-  type           RoleType
-  organizationId String?
-  organization   Organization?    @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  id                String             @id @default(cuid())
+  name              String
+  code              String
+  type              RoleType
+  organizationId    String?
+  organization      Organization?      @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   userOrganizations UserOrganization[]
-  userSystemRoles UserSystemRole[]
-  permissions    RolePermission[]
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  userSystemRoles   UserSystemRole[]
+  permissions       RolePermission[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 
   @@unique([organizationId, code])
 }
@@ -161,11 +180,11 @@ model UserSystemRole {
 }
 
 model RolePermission {
-  id           String      @id @default(cuid())
+  id           String     @id @default(cuid())
   roleId       String
   permissionId String
-  role         Role        @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  permission   Permission  @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
   @@unique([roleId, permissionId])
 }
@@ -185,7 +204,7 @@ model Setting {
 }
 
 model AuditLog {
-  id             String   @id @default(uuid())
+  id             String        @id @default(uuid())
   userId         String?
   organizationId String?
   action         String
@@ -194,8 +213,8 @@ model AuditLog {
   metadata       Json?
   ip             String?
   userAgent      String?
-  createdAt      DateTime @default(now())
-  user           User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt      DateTime      @default(now())
+  user           User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
 
   @@index([userId])
@@ -241,26 +260,26 @@ model ModuleRegistry {
 
 model ModuleSetting {
   id             String         @id @default(cuid())
-  moduleId        String
-  organizationId  String?
-  key             String
-  value           Json
-  module          ModuleRegistry @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  organization    Organization?  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  moduleId       String
+  organizationId String?
+  key            String
+  value          Json
+  module         ModuleRegistry @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  organization   Organization?  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
   @@index([moduleId, organizationId])
 }
 
 model Installation {
-  id            String   @id @default(cuid())
-  installed     Boolean  @default(false)
-  appName       String?
-  version       String?
-  installedAt   DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id          String    @id @default(cuid())
+  installed   Boolean   @default(false)
+  appName     String?
+  version     String?
+  installedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Document {
@@ -285,19 +304,19 @@ model Document {
 }
 
 model Notification {
-  id              String             @id @default(uuid())
+  id              String                 @id @default(uuid())
   organizationId  String?
   recipientUserId String
   event           String
   title           String
   message         String
   payload         Json?
-  status          NotificationStatus @default(UNREAD)
+  status          NotificationStatus     @default(UNREAD)
   readAt          DateTime?
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-  organization    Organization?      @relation(fields: [organizationId], references: [id], onDelete: SetNull)
-  recipientUser   User               @relation(fields: [recipientUserId], references: [id], onDelete: Cascade)
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  organization    Organization?          @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  recipientUser   User                   @relation(fields: [recipientUserId], references: [id], onDelete: Cascade)
   deliveries      NotificationDelivery[]
 
   @@index([recipientUserId])
