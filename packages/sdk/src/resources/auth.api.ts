@@ -4,8 +4,12 @@ import type {
   AuthPermissionsResponse,
   AuthResponse,
   CurrentUser,
+  ForgotPasswordDto,
+  ForgotPasswordResponse,
   LoginDto,
-  PermissionsCheckResponse
+  PermissionsCheckResponse,
+  ResetPasswordDto,
+  ResetPasswordResponse
 } from '../types/auth.types';
 
 export class AuthApi {
@@ -13,6 +17,20 @@ export class AuthApi {
 
   login(dto: LoginDto): Promise<AuthResponse> {
     return this.client.post<AuthResponse>('/auth/login', dto, {
+      skipAuth: true,
+      skipOrganization: true
+    });
+  }
+
+  forgotPassword(dto: ForgotPasswordDto): Promise<ForgotPasswordResponse> {
+    return this.client.post<ForgotPasswordResponse>('/auth/forgot-password', dto, {
+      skipAuth: true,
+      skipOrganization: true
+    });
+  }
+
+  resetPassword(dto: ResetPasswordDto): Promise<ResetPasswordResponse> {
+    return this.client.post<ResetPasswordResponse>('/auth/reset-password', dto, {
       skipAuth: true,
       skipOrganization: true
     });

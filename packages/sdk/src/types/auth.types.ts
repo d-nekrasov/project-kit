@@ -3,6 +3,24 @@ export type LoginDto = {
   password: string;
 };
 
+export type ForgotPasswordDto = {
+  email: string;
+};
+
+export type ForgotPasswordResponse = {
+  message: string;
+};
+
+export type ResetPasswordDto = {
+  token: string;
+  password: string;
+  passwordConfirmation: string;
+};
+
+export type ResetPasswordResponse = {
+  message: string;
+};
+
 export type CurrentUserOrganization = {
   id: string;
   name: string;
