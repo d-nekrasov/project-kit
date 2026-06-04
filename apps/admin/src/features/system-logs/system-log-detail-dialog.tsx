@@ -19,7 +19,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 export function SystemLogDetailDialog({ open, log, isLoading, error, onOpenChange }: SystemLogDetailDialogProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="fixed inset-y-0 right-0 z-50 w-full max-w-4xl overflow-y-auto border-l bg-card p-6 shadow-xl">
+      <SheetContent className="fixed inset-y-0 right-0 z-[var(--z-sheet)] w-full max-w-4xl overflow-y-auto border-l bg-card p-6 shadow-xl">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div className="space-y-1">
             <h3 className="text-lg font-semibold">System log details</h3>

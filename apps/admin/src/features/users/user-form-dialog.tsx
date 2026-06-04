@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertCircle } from 'lucide-react';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -59,6 +59,7 @@ export function UserFormDialog({
 }: UserFormDialogProps) {
   const defaultRoleId = useMemo(() => findDefaultRoleId(user, activeOrganizationId), [activeOrganizationId, user]);
   const schema = mode === 'create' ? createSchema : editSchema;
+  const initKeyRef = useRef<string>('');
 
   const form = useForm<UserFormValues>({
     resolver: zodResolver(schema),
@@ -73,11 +74,18 @@ export function UserFormDialog({
 
   useEffect(() => {
     if (!open) {
+      initKeyRef.current = '';
       return;
     }
 
     if (mode === 'create') {
       const organizationId = isSuperAdmin ? organizations[0]?.id ?? activeOrganizationId ?? '' : activeOrganizationId ?? '';
+      const nextInitKey = `create:${organizationId}:${roles[0]?.id ?? ''}:${organizations.length}`;
+      if (initKeyRef.current === nextInitKey) {
+        return;
+      }
+      initKeyRef.current = nextInitKey;
+
       form.reset({
         email: '',
         name: '',
@@ -85,11 +93,17 @@ export function UserFormDialog({
         roleId: roles[0]?.id ?? '',
         organizationId
       });
-      if (organizationId) {
+      if (organizationId && organizationId !== activeOrganizationId) {
         onOrganizationChange?.(organizationId);
       }
       return;
     }
+
+    const nextInitKey = `edit:${user?.id ?? ''}:${defaultRoleId}`;
+    if (initKeyRef.current === nextInitKey) {
+      return;
+    }
+    initKeyRef.current = nextInitKey;
 
     form.reset({
       name: user?.name ?? '',
