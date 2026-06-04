@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import { NotificationChannel, NotificationTemplate, Prisma } from '@prisma/client';
 import { RequestMetadata } from '../../common/utils/request-metadata.util';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
@@ -6,6 +6,7 @@ import { AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } from '../audit-logs/constants/audit
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { CurrentUser } from '../auth/types/current-user.type';
 import { CurrentOrganization } from '../organization-context/types/current-organization.type';
+import { getAllowedNotificationChannelsForEvent } from './constants/notification-events.constants';
 import { NotificationTemplateResponseDto } from './dto/notification-template-response.dto';
 import { UpdateNotificationTemplateDto } from './dto/update-notification-template.dto';
 
@@ -42,6 +43,7 @@ export class NotificationTemplatesService {
     requestMetadata?: RequestMetadata
   ): Promise<NotificationTemplateResponseDto> {
     this.ensureSuperAdmin(currentUser);
+    const channels = this.normalizeChannelsForEvent(event, dto.channels);
     const template = await this.prisma.notificationTemplate.upsert({
       where: { event },
       create: {
@@ -50,14 +52,14 @@ export class NotificationTemplatesService {
         message: dto.message,
         emailSubject: dto.emailSubject ?? null,
         emailBody: dto.emailBody ?? null,
-        channels: dto.channels as Prisma.InputJsonValue
+        channels: channels as Prisma.InputJsonValue
       },
       update: {
         title: dto.title,
         message: dto.message,
         emailSubject: dto.emailSubject ?? null,
         emailBody: dto.emailBody ?? null,
-        channels: dto.channels as Prisma.InputJsonValue
+        channels: channels as Prisma.InputJsonValue
       }
     });
 
@@ -67,7 +69,7 @@ export class NotificationTemplatesService {
       action: AUDIT_ACTIONS.NOTIFICATION_TEMPLATE_UPDATE,
       entityType: AUDIT_ENTITY_TYPES.NOTIFICATION_TEMPLATE,
       entityId: template.id,
-      metadata: { event: template.event, channels: dto.channels },
+      metadata: { event: template.event, channels },
       ip: requestMetadata?.ip,
       userAgent: requestMetadata?.userAgent
     });
@@ -79,6 +81,25 @@ export class NotificationTemplatesService {
     if (!currentUser.systemRoles.includes('super_admin')) {
       throw new ForbiddenException('Only super admin can manage notification templates');
     }
+  }
+
+  private normalizeChannelsForEvent(
+    event: string,
+    channels: NotificationChannel[]
+  ): NotificationChannel[] {
+    const allowedChannels = getAllowedNotificationChannelsForEvent(event);
+    if (!allowedChannels) {
+      return channels;
+    }
+
+    const unexpectedChannels = channels.filter((channel) => !allowedChannels.includes(channel));
+    if (unexpectedChannels.length > 0) {
+      throw new BadRequestException(
+        `Notification template "${event}" supports only these channels: ${allowedChannels.join(', ')}`
+      );
+    }
+
+    return [...allowedChannels];
   }
 
   private toResponse(template: NotificationTemplate): NotificationTemplateResponseDto {

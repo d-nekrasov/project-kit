@@ -7,7 +7,11 @@ import {
 } from "@prisma/client";
 import { PrismaService } from "../../infrastructure/prisma/prisma.service";
 import { EmailSmtpNotificationConnector } from "../notifications/connectors/email-smtp-notification.connector";
-import { NOTIFICATION_CONNECTOR_CODES } from "../notifications/constants/notification-events.constants";
+import {
+  NOTIFICATION_CONNECTOR_CODES,
+  NOTIFICATION_EVENTS,
+} from "../notifications/constants/notification-events.constants";
+import { renderNotificationTemplate } from "../notifications/utils/render-notification-template";
 import { SYSTEM_LOG_EVENTS } from "../system-logs/constants/system-log-events.constants";
 import { SYSTEM_LOG_SOURCES } from "../system-logs/constants/system-log-sources.constants";
 import { SystemLogsService } from "../system-logs/system-logs.service";
@@ -84,20 +88,32 @@ export class AuthPasswordResetMailService {
       Math.ceil((input.expiresAt.getTime() - Date.now()) / (60 * 1000)),
     );
 
+    const template = await this.prisma.notificationTemplate.findUnique({
+      where: { event: NOTIFICATION_EVENTS.AUTH_PASSWORD_RESET_REQUESTED },
+      select: {
+        emailSubject: true,
+        emailBody: true,
+      },
+    });
+
+    const payload = {
+      email: input.email,
+      expiresInMinutes: ttlMinutes,
+      resetLink: link,
+    } satisfies Record<string, string | number>;
+
+    const rendered = await this.renderPasswordResetTemplate(
+      input.userId,
+      template,
+      payload,
+    );
+
     try {
       const result = await this.emailConnector.send({
         channel: NotificationChannel.EMAIL,
         to: input.email,
-        subject: "Password reset instructions",
-        body: [
-          "We received a request to reset the password for your account.",
-          "",
-          `Use this link to choose a new password: ${link}`,
-          "",
-          `This link expires in ${ttlMinutes} minute(s).`,
-          "",
-          "If you did not request a password reset, you can ignore this email.",
-        ].join("\n"),
+        subject: rendered.subject,
+        body: rendered.body,
         config: connector.config as Record<string, unknown> | null,
       });
 
@@ -130,6 +146,48 @@ export class AuthPasswordResetMailService {
     const url = new URL(resetUrl);
     url.searchParams.set("token", token);
     return url.toString();
+  }
+
+  private async renderPasswordResetTemplate(
+    userId: string,
+    template: { emailSubject: string | null; emailBody: string | null } | null,
+    payload: Record<string, unknown>,
+  ): Promise<{ subject: string; body: string }> {
+    const fallbackSubject = "Reset your password";
+    const fallbackBody = [
+      "We received a request to reset the password for {{email}}.",
+      "",
+      "Use this link to choose a new password:",
+      "{{resetLink}}",
+      "",
+      "This link expires in {{expiresInMinutes}} minute(s).",
+      "",
+      "If you did not request a password reset, you can ignore this email.",
+    ].join("\n");
+
+    try {
+      return {
+        subject: renderNotificationTemplate(
+          template?.emailSubject ?? fallbackSubject,
+          payload,
+        ),
+        body: renderNotificationTemplate(template?.emailBody ?? fallbackBody, payload),
+      };
+    } catch (error) {
+      await this.writeFailureLog("Password reset email template render failed", {
+        event: SYSTEM_LOG_EVENTS.NOTIFICATION_TEMPLATE_RENDER_FAILED,
+        userId,
+        errorStack:
+          error instanceof Error
+            ? (error.stack ?? error.message)
+            : String(error),
+      });
+
+      return {
+        subject: renderNotificationTemplate(fallbackSubject, payload),
+        body: renderNotificationTemplate(fallbackBody, payload),
+      };
+    }
   }
 
   private async writeFailureLog(

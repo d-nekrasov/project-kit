@@ -19,6 +19,7 @@ import { InAppNotificationConnector } from './connectors/in-app-notification.con
 import {
   DEFAULT_NOTIFICATION_CONNECTORS,
   DEFAULT_NOTIFICATION_TEMPLATES,
+  getAllowedNotificationChannelsForEvent,
   NOTIFICATION_CONNECTOR_CODES
 } from './constants/notification-events.constants';
 import { MyNotificationsQueryDto } from './dto/my-notifications-query.dto';
@@ -282,6 +283,7 @@ export class NotificationsService implements OnModuleInit {
     }
 
     for (const template of DEFAULT_NOTIFICATION_TEMPLATES) {
+      const restrictedChannels = getAllowedNotificationChannelsForEvent(template.event);
       await this.prisma.notificationTemplate.upsert({
         where: { event: template.event },
         create: {
@@ -292,7 +294,11 @@ export class NotificationsService implements OnModuleInit {
           emailBody: template.emailBody,
           channels: [...template.channels] as Prisma.InputJsonValue
         },
-        update: {}
+        update: restrictedChannels
+          ? {
+              channels: [...restrictedChannels] as Prisma.InputJsonValue
+            }
+          : {}
       });
     }
   }
