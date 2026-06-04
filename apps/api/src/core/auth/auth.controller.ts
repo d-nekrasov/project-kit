@@ -9,13 +9,27 @@ import { ForgotPasswordDto } from "./dto/forgot-password.dto";
 import { LoginDto } from "./dto/login.dto";
 import { MeResponseDto } from "./dto/me-response.dto";
 import { ResetPasswordDto } from "./dto/reset-password.dto";
+import { AuthRateLimit } from "./decorators/auth-rate-limit.decorator";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
+import { AuthRateLimitGuard } from "./guards/auth-rate-limit.guard";
 import { CurrentUser as CurrentUserType } from "./types/current-user.type";
 import { CurrentOrganization } from "../organization-context/decorators/current-organization.decorator";
 import { OrganizationGuard } from "../organization-context/guards/organization.guard";
 import { CurrentOrganization as CurrentOrganizationType } from "../organization-context/types/current-organization.type";
 import { Permissions } from "../permissions/decorators/permissions.decorator";
 import { PermissionsGuard } from "../permissions/guards/permissions.guard";
+
+const FIFTEEN_MINUTES_IN_MS = 15 * 60 * 1000;
+const FORGOT_PASSWORD_RATE_LIMIT = {
+  key: "forgot-password",
+  limit: 5,
+  ttlMs: FIFTEEN_MINUTES_IN_MS,
+};
+const RESET_PASSWORD_RATE_LIMIT = {
+  key: "reset-password",
+  limit: 10,
+  ttlMs: FIFTEEN_MINUTES_IN_MS,
+};
 
 @Controller("auth")
 export class AuthController {
@@ -34,6 +48,8 @@ export class AuthController {
   }
 
   @Post("forgot-password")
+  @UseGuards(AuthRateLimitGuard)
+  @AuthRateLimit(FORGOT_PASSWORD_RATE_LIMIT)
   forgotPassword(
     @Body() dto: ForgotPasswordDto,
     @Req()
@@ -46,6 +62,8 @@ export class AuthController {
   }
 
   @Post("reset-password")
+  @UseGuards(AuthRateLimitGuard)
+  @AuthRateLimit(RESET_PASSWORD_RATE_LIMIT)
   resetPassword(
     @Body() dto: ResetPasswordDto,
     @Req()

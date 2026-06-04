@@ -8,9 +8,11 @@ import { PermissionsModule } from "../permissions/permissions.module";
 import { AuditLogsModule } from "../audit-logs/audit-logs.module";
 import { SystemLogsModule } from "../system-logs/system-logs.module";
 import { EmailSmtpNotificationConnector } from "../notifications/connectors/email-smtp-notification.connector";
+import { AuthRateLimitStore } from "./auth-rate-limit.store";
 import { AuthPasswordResetMailService } from "./auth-password-reset-mail.service";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
+import { AuthRateLimitGuard } from "./guards/auth-rate-limit.guard";
 import { JwtStrategy } from "./strategies/jwt.strategy";
 
 @Module({
@@ -56,6 +58,8 @@ import { JwtStrategy } from "./strategies/jwt.strategy";
   providers: [
     AuthService,
     JwtStrategy,
+    AuthRateLimitGuard,
+    AuthRateLimitStore,
     AuthPasswordResetMailService,
     EmailSmtpNotificationConnector,
   ],
