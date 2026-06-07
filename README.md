@@ -38,6 +38,8 @@ pnpm --filter admin build
 Routes:
 - `/install`
 - `/login`
+- `/forgot-password`
+- `/reset-password?token=...`
 - `/`
 - `/users`
 - `/roles`
@@ -307,6 +309,20 @@ The SDK does not store tokens itself. The application decides where to store acc
 4. `pnpm --filter api prisma:migrate dev`
 5. `pnpm --filter api start:dev`
 
+To start the API from the project root via `pnpm`, run:
+
+`pnpm --filter api start:dev`
+
+### API environment
+
+Create `apps/api/.env` or copy `apps/api/.env.example`.
+
+Recovery flow uses:
+- `AUTH_PASSWORD_RESET_URL`: public admin URL that receives the reset token, for example `http://localhost:3001/reset-password`
+- `AUTH_PASSWORD_RESET_TOKEN_TTL_MINUTES`: reset token lifetime in minutes
+
+Password reset email delivery also depends on the global `smtp_email` notification connector being enabled and configured.
+
 ## Installer
 
 Check installation status:
@@ -335,6 +351,18 @@ Example body:
 Login:
 
 `POST /api/auth/login`
+
+Forgot password:
+
+`POST /api/auth/forgot-password`
+
+Reset password:
+
+`POST /api/auth/reset-password`
+
+Validate reset token:
+
+`POST /api/auth/reset-password/validate`
 
 Me:
 
@@ -365,6 +393,26 @@ curl http://localhost:3000/api/auth/permissions \
   -H "Authorization: Bearer <accessToken>" \
   -H "x-organization-id: <organizationId>"
 ```
+
+### Password recovery flow
+
+The admin UI exposes password recovery on:
+- `/forgot-password`
+- `/reset-password?token=<resetToken>`
+
+Backend behavior:
+- `POST /api/auth/forgot-password` always returns the same neutral success message, even when the email does not exist or the user is inactive
+- reset tokens are one-time, expire after `AUTH_PASSWORD_RESET_TOKEN_TTL_MINUTES`, and are stored only as hashes in `PasswordResetToken`
+- requesting a new reset link invalidates any previous active reset tokens for that user
+- `POST /api/auth/reset-password/validate` is a read-only prevalidation endpoint used by the admin reset page before password submission
+- successful password reset invalidates any remaining active reset tokens for that user
+- audit logs record reset request, success, and failure events without storing the raw token in metadata
+- recovery endpoints are rate-limited per IP in memory in the current MVP implementation
+
+Email/template behavior:
+- password reset email is rendered from the `auth.password_reset_requested` notification template using `emailSubject` and `emailBody`
+- this template is restricted to the `EMAIL` channel only; `IN_APP` is rejected for this event
+- password reset email does not create a normal inbox notification and does not go through the standard in-app notification flow
 
 ## Organization Context
 

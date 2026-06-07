@@ -4,6 +4,7 @@ import {
 } from '@prisma/client';
 
 export const NOTIFICATION_EVENTS = {
+  AUTH_PASSWORD_RESET_REQUESTED: 'auth.password_reset_requested',
   DOCUMENT_CREATED: 'document.created',
   DOCUMENT_STATUS_CHANGED: 'document.status_changed',
   USER_CREATED: 'user.created',
@@ -11,6 +12,9 @@ export const NOTIFICATION_EVENTS = {
   USER_ORGANIZATIONS_CHANGED: 'user.organizations_changed',
   USER_PROFILE_UPDATED: 'user.profile_updated'
 } as const;
+
+type NotificationEvent =
+  (typeof NOTIFICATION_EVENTS)[keyof typeof NOTIFICATION_EVENTS];
 
 export const DEFAULT_NOTIFICATION_CONNECTORS = [
   {
@@ -35,6 +39,23 @@ export const DEFAULT_NOTIFICATION_CONNECTORS = [
 ] as const;
 
 export const DEFAULT_NOTIFICATION_TEMPLATES = [
+  {
+    event: NOTIFICATION_EVENTS.AUTH_PASSWORD_RESET_REQUESTED,
+    title: 'Password reset requested',
+    message: 'Password reset requested for {{email}}.',
+    emailSubject: 'Reset your password',
+    emailBody: [
+      'We received a request to reset the password for {{email}}.',
+      '',
+      'Use this link to choose a new password:',
+      '{{resetLink}}',
+      '',
+      'This link expires in {{expiresInMinutes}} minute(s).',
+      '',
+      'If you did not request a password reset, you can ignore this email.'
+    ].join('\n'),
+    channels: [NotificationChannel.EMAIL]
+  },
   {
     event: NOTIFICATION_EVENTS.DOCUMENT_CREATED,
     title: 'New document: {{title}}',
@@ -90,3 +111,19 @@ export const NOTIFICATION_CONNECTOR_CODES = {
   IN_APP: 'in_app',
   SMTP_EMAIL: 'smtp_email'
 } as const;
+
+export const NOTIFICATION_EVENT_CHANNEL_RESTRICTIONS: Partial<
+  Record<NotificationEvent, readonly NotificationChannel[]>
+> = {
+  [NOTIFICATION_EVENTS.AUTH_PASSWORD_RESET_REQUESTED]: [
+    NotificationChannel.EMAIL
+  ]
+};
+
+export function getAllowedNotificationChannelsForEvent(
+  event: string
+): readonly NotificationChannel[] | undefined {
+  return NOTIFICATION_EVENT_CHANNEL_RESTRICTIONS[
+    event as NotificationEvent
+  ];
+}
