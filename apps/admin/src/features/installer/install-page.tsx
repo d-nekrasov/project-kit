@@ -10,7 +10,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 import { sdk } from '@/lib/sdk';
+
+type ProjectLocale = 'ru' | 'en';
+
+const localeOptions = [
+  { value: 'ru', label: 'Русский' },
+  { value: 'en', label: 'English' }
+] as const satisfies ReadonlyArray<{ value: ProjectLocale; label: string }>;
 
 const installSchema = z.object({
   appName: z.string().min(2),
@@ -18,10 +26,16 @@ const installSchema = z.object({
   organizationSlug: z.string().regex(/^[a-z0-9-]+$/),
   adminEmail: z.string().email(),
   adminPassword: z.string().min(8),
-  adminName: z.string().min(2)
+  adminName: z.string().min(2),
+  locale: z.enum(['ru', 'en'])
 });
 
 type InstallForm = z.infer<typeof installSchema>;
+type I18nCatalogResponse = {
+  locale: ProjectLocale;
+  fallbackLocale: string;
+  messages: Record<string, string>;
+};
 
 export function InstallPage() {
   const navigate = useNavigate();
@@ -39,7 +53,8 @@ export function InstallPage() {
       organizationSlug: 'default',
       adminEmail: 'admin@example.com',
       adminPassword: 'password123',
-      adminName: 'Admin'
+      adminName: 'Admin',
+      locale: 'ru'
     }
   });
 
@@ -64,6 +79,10 @@ export function InstallPage() {
               className="grid gap-4"
               onSubmit={form.handleSubmit(async (values) => {
                 await sdk.installer.setup(values);
+                await sdk.client.get<I18nCatalogResponse>('/i18n/catalog', {
+                  skipAuth: true,
+                  skipOrganization: true
+                });
                 navigate('/login');
               })}
             >
@@ -109,6 +128,25 @@ export function InstallPage() {
                 />
               </div>
               <div className="grid gap-4 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="locale"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Language</FormLabel>
+                      <FormControl>
+                        <Select {...field}>
+                          {localeOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={form.control}
                   name="adminName"

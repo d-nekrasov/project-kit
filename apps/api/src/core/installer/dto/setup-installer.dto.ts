@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, Matches, MinLength } from 'class-validator';
+import { IsEmail, IsIn, IsNotEmpty, IsOptional, Matches, MinLength } from 'class-validator';
 
 export class SetupInstallerDto {
   @IsNotEmpty()
@@ -24,4 +24,8 @@ export class SetupInstallerDto {
   @IsNotEmpty()
   @MinLength(2)
   adminName!: string;
+
+  @IsOptional()
+  @IsIn(['ru', 'en'])
+  locale?: 'ru' | 'en';
 }
