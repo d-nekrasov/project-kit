@@ -73,9 +73,21 @@ export class I18nService {
   private async loadMergedMessages(locale: string, moduleNames: string[]): Promise<I18nMessages> {
     const coreMessages = await this.i18nLoaderService.loadCoreMessages(locale);
     const moduleMessages = await Promise.all(
-      moduleNames.map((moduleName) => this.i18nLoaderService.loadModuleMessages(moduleName, locale))
+      moduleNames.map(async (moduleName) =>
+        this.limitModuleMessagesToNamespace(
+          moduleName,
+          await this.i18nLoaderService.loadModuleMessages(moduleName, locale)
+        )
+      )
     );
 
     return this.i18nLoaderService.mergeCatalogs(coreMessages, ...moduleMessages);
+  }
+
+  private limitModuleMessagesToNamespace(moduleName: string, messages: I18nMessages): I18nMessages {
+    const namespacePrefix = `${moduleName}.`;
+    return Object.fromEntries(
+      Object.entries(messages).filter(([key]) => key.startsWith(namespacePrefix))
+    );
   }
 }

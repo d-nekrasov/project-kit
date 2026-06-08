@@ -1,47 +1,55 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { ModuleStatus, SettingScope } from '@prisma/client';
-import { I18nLoaderService } from '../src/core/i18n/i18n-loader.service';
+import { I18nLoaderService, type I18nMessages } from '../src/core/i18n/i18n-loader.service';
 import { I18nService } from '../src/core/i18n/i18n.service';
 
-test('I18nService merges fallback locale with primary locale and active modules only', async () => {
-  const prisma = {
+function createLoader(
+  coreByLocale: Record<string, I18nMessages>,
+  modulesByLocale: Record<string, Record<string, I18nMessages>>
+) {
+  return {
+    loadCoreMessages: async (locale: string) => coreByLocale[locale] ?? {},
+    loadModuleMessages: async (moduleName: string, locale: string) =>
+      modulesByLocale[moduleName]?.[locale] ?? {},
+    mergeCatalogs: (...catalogs: I18nMessages[]) => Object.assign({}, ...catalogs)
+  } satisfies Pick<I18nLoaderService, 'loadCoreMessages' | 'loadModuleMessages' | 'mergeCatalogs'>;
+}
+
+function createPrisma(locale: string | null, moduleNames: string[] = ['documents']) {
+  return {
     setting: {
       findFirst: async (query: { where: { key: string; scope: SettingScope } }) => {
         assert.equal(query.where.key, 'system.locale');
         assert.equal(query.where.scope, SettingScope.GLOBAL);
-        return { value: 'ru' };
+        return locale == null ? null : { value: locale };
       }
     },
     moduleRegistry: {
-      findMany: async () => [
-        { name: 'documents', status: ModuleStatus.ENABLED },
-        { name: 'disabled-module', status: ModuleStatus.ENABLED }
-      ]
+      findMany: async () =>
+        moduleNames.map((name) => ({
+          name,
+          status: ModuleStatus.ENABLED
+        }))
     }
   };
+}
 
-  const loader = {
-    loadCoreMessages: async (locale: string) =>
-      locale === 'en'
-        ? { 'common.save': 'Save', 'auth.login': 'Login' }
-        : { 'common.save': 'Сохранить' },
-    loadModuleMessages: async (moduleName: string, locale: string) => {
-      if (moduleName === 'documents' && locale === 'en') {
-        return { 'documents.title': 'Documents' };
-      }
-      if (moduleName === 'documents' && locale === 'ru') {
-        return { 'documents.title': 'Документы' };
-      }
-      return {};
+test('I18nService returns catalog for current system.locale with en fallback', async () => {
+  const loader = createLoader(
+    {
+      en: { 'common.save': 'Save', 'auth.login': 'Login' },
+      ru: { 'common.save': 'Сохранить' }
     },
-    mergeCatalogs: (...catalogs: Array<Record<string, string>>) => Object.assign({}, ...catalogs)
-  } satisfies Pick<
-    I18nLoaderService,
-    'loadCoreMessages' | 'loadModuleMessages' | 'mergeCatalogs'
-  >;
+    {
+      documents: {
+        en: { 'documents.title': 'Documents' },
+        ru: { 'documents.title': 'Документы' }
+      }
+    }
+  );
 
-  const service = new I18nService(prisma as any, loader as I18nLoaderService);
+  const service = new I18nService(createPrisma('ru') as any, loader as I18nLoaderService);
   const catalog = await service.getCatalog();
 
   assert.deepEqual(catalog, {
@@ -53,29 +61,43 @@ test('I18nService merges fallback locale with primary locale and active modules 
       'documents.title': 'Документы'
     }
   });
-  assert.equal(service.translate(catalog.messages, 'missing.key'), 'missing.key');
+});
+
+test('I18nService returns en catalog when system.locale is en', async () => {
+  const loader = createLoader(
+    {
+      en: { 'common.save': 'Save', 'auth.login': 'Login' }
+    },
+    {
+      documents: {
+        en: { 'documents.title': 'Documents' }
+      }
+    }
+  );
+
+  const service = new I18nService(createPrisma('en') as any, loader as I18nLoaderService);
+  const catalog = await service.getCatalog();
+
+  assert.deepEqual(catalog, {
+    locale: 'en',
+    fallbackLocale: 'en',
+    messages: {
+      'common.save': 'Save',
+      'auth.login': 'Login',
+      'documents.title': 'Documents'
+    }
+  });
 });
 
 test('I18nService falls back to en when system.locale is absent', async () => {
-  const prisma = {
-    setting: {
-      findFirst: async () => null
+  const loader = createLoader(
+    {
+      en: { 'common.save': 'Save' }
     },
-    moduleRegistry: {
-      findMany: async () => []
-    }
-  };
+    {}
+  );
 
-  const loader = {
-    loadCoreMessages: async () => ({ 'common.save': 'Save' }),
-    loadModuleMessages: async () => ({}),
-    mergeCatalogs: (...catalogs: Array<Record<string, string>>) => Object.assign({}, ...catalogs)
-  } satisfies Pick<
-    I18nLoaderService,
-    'loadCoreMessages' | 'loadModuleMessages' | 'mergeCatalogs'
-  >;
-
-  const service = new I18nService(prisma as any, loader as I18nLoaderService);
+  const service = new I18nService(createPrisma(null, []) as any, loader as I18nLoaderService);
   const catalog = await service.getCatalog();
 
   assert.deepEqual(catalog, {
@@ -85,4 +107,40 @@ test('I18nService falls back to en when system.locale is absent', async () => {
       'common.save': 'Save'
     }
   });
+});
+
+test('I18nService.translate returns key when translation is missing', () => {
+  const loader = createLoader({}, {});
+  const service = new I18nService(createPrisma('en', []) as any, loader as I18nLoaderService);
+
+  assert.equal(service.translate({ 'common.save': 'Save' }, 'missing.key'), 'missing.key');
+});
+
+test('I18nService limits module translations to their namespace without breaking core keys', async () => {
+  const loader = createLoader(
+    {
+      en: { 'common.save': 'Save', 'common.cancel': 'Cancel' },
+      ru: { 'common.save': 'Сохранить' }
+    },
+    {
+      documents: {
+        en: {
+          'documents.title': 'Documents',
+          'common.save': 'Module override should be ignored'
+        },
+        ru: {
+          'documents.title': 'Документы',
+          'common.save': 'Перезапись, которую надо игнорировать'
+        }
+      }
+    }
+  );
+
+  const service = new I18nService(createPrisma('ru') as any, loader as I18nLoaderService);
+  const catalog = await service.getCatalog();
+
+  assert.equal(catalog.messages['common.save'], 'Сохранить');
+  assert.equal(catalog.messages['common.cancel'], 'Cancel');
+  assert.equal(catalog.messages['documents.title'], 'Документы');
+  assert.equal(catalog.messages['common.save'], 'Сохранить');
 });

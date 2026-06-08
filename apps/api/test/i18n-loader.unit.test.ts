@@ -41,7 +41,54 @@ test('I18nLoaderService loads and flattens core and module translations', async 
   });
 });
 
-test('I18nLoaderService ignores missing directories and invalid JSON files', async () => {
+test('I18nLoaderService merges flattened keys from multiple JSON files', async () => {
+  const rootDir = mkdtempSync(join(tmpdir(), 'api-i18n-loader-'));
+  tempDirectories.push(rootDir);
+
+  mkdirSync(join(rootDir, 'core', 'lang', 'en'), { recursive: true });
+
+  writeFileSync(
+    join(rootDir, 'core', 'lang', 'en', 'auth.json'),
+    JSON.stringify({ auth: { login: 'Login' } })
+  );
+  writeFileSync(
+    join(rootDir, 'core', 'lang', 'en', 'common.json'),
+    JSON.stringify({ common: { save: 'Save' } })
+  );
+
+  const loader = new I18nLoaderService(rootDir);
+
+  assert.deepEqual(await loader.loadCoreMessages('en'), {
+    'auth.login': 'Login',
+    'common.save': 'Save'
+  });
+});
+
+test('I18nLoaderService ignores missing directories', async () => {
+  const rootDir = mkdtempSync(join(tmpdir(), 'api-i18n-loader-'));
+  tempDirectories.push(rootDir);
+
+  const loader = new I18nLoaderService(rootDir);
+
+  assert.deepEqual(await loader.loadCoreMessages('en'), {});
+  assert.deepEqual(await loader.loadModuleMessages('missing-module', 'en'), {});
+});
+
+test('I18nLoaderService ignores missing locale directories', async () => {
+  const rootDir = mkdtempSync(join(tmpdir(), 'api-i18n-loader-'));
+  tempDirectories.push(rootDir);
+
+  mkdirSync(join(rootDir, 'core', 'lang', 'en'), { recursive: true });
+  mkdirSync(join(rootDir, 'modules', 'documents', 'lang', 'en'), { recursive: true });
+  writeFileSync(join(rootDir, 'core', 'lang', 'en', 'common.json'), JSON.stringify({ common: { save: 'Save' } }));
+
+  const loader = new I18nLoaderService(rootDir);
+
+  assert.deepEqual(await loader.loadCoreMessages('ru'), {});
+  assert.deepEqual(await loader.loadModuleMessages('documents', 'ru'), {});
+});
+
+test('I18nLoaderService ignores invalid JSON files', async () => {
   const rootDir = mkdtempSync(join(tmpdir(), 'api-i18n-loader-'));
   tempDirectories.push(rootDir);
 
@@ -51,5 +98,4 @@ test('I18nLoaderService ignores missing directories and invalid JSON files', asy
   const loader = new I18nLoaderService(rootDir);
 
   assert.deepEqual(await loader.loadCoreMessages('en'), {});
-  assert.deepEqual(await loader.loadModuleMessages('missing-module', 'en'), {});
 });
