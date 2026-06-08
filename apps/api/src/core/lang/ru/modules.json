@@ -1,7 +1,84 @@
 {
   "modules": {
     "title": "Модули",
+    "description": "Подключенные платформенные и бизнес-модули.",
+    "searchPlaceholder": "Поиск по имени или заголовку модуля",
     "enabled": "Включен",
-    "disabled": "Выключен"
+    "disabled": "Выключен",
+    "table": {
+      "name": "Имя",
+      "title": "Заголовок",
+      "version": "Версия",
+      "status": "Статус",
+      "description": "Описание",
+      "permissions": "Права",
+      "settings": "Настройки",
+      "actions": "Действия"
+    },
+    "status": {
+      "enabled": "Включен",
+      "disabled": "Выключен",
+      "installed": "Установлен",
+      "notInstalled": "Не установлен"
+    },
+    "pagination": {
+      "page": "Страница {{page}} из {{totalPages}}",
+      "total": "Всего: {{total}}",
+      "previous": "Назад",
+      "next": "Далее"
+    },
+    "empty": {
+      "title": "Модули не найдены",
+      "description": "Попробуйте изменить поиск или фильтр статуса."
+    },
+    "settings": {
+      "available": "Доступно",
+      "fields": "Полей: {{count}}"
+    },
+    "actions": {
+      "open": "Открыть действия для {{name}}",
+      "viewManifest": "Открыть manifest",
+      "enable": "Включить модуль",
+      "disable": "Выключить модуль"
+    },
+    "manifest": {
+      "title": "Manifest модуля",
+      "description": "Просмотр метаданных модуля {{name}}.",
+      "emptyAdminMenu": "В manifest нет пунктов админ-меню.",
+      "noPermissions": "В manifest нет прав.",
+      "noSettingsSchema": "В manifest нет схемы настроек.",
+      "emptyManifest": "Manifest пуст.",
+      "moduleNotSelected": "Модуль не выбран.",
+      "sections": {
+        "overview": "Обзор",
+        "permissions": "Права",
+        "adminMenu": "Админ-меню",
+        "settingsSchema": "Схема настроек",
+        "rawManifest": "Исходный manifest"
+      },
+      "fields": {
+        "label": "Label",
+        "path": "Path",
+        "permission": "Permission",
+        "icon": "Icon",
+        "order": "Order"
+      },
+      "overview": {
+        "name": "name",
+        "title": "title",
+        "version": "version",
+        "status": "status",
+        "description": "description"
+      }
+    },
+    "statusDialog": {
+      "title": "Изменить статус модуля",
+      "description": "Обновить статус для {{name}}.",
+      "impactTitle": "Влияние",
+      "impactDescription": "Отключение модуля не удаляет данные. Права и настройки сохраняются. Эндпоинты под ModuleEnabledGuard будут возвращать 403, а связанные пункты меню должны скрываться в UI.",
+      "coreProtectionTitle": "Защита core",
+      "coreProtectionDescription": "Модуль core нельзя отключить.",
+      "submit": "Обновить статус"
+    }
   }
 }

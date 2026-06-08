@@ -99,3 +99,15 @@ test('I18nLoaderService ignores invalid JSON files', async () => {
 
   assert.deepEqual(await loader.loadCoreMessages('en'), {});
 });
+
+test('I18nLoaderService tolerates empty JSON objects', async () => {
+  const rootDir = mkdtempSync(join(tmpdir(), 'api-i18n-loader-'));
+  tempDirectories.push(rootDir);
+
+  mkdirSync(join(rootDir, 'core', 'lang', 'en'), { recursive: true });
+  writeFileSync(join(rootDir, 'core', 'lang', 'en', 'empty.json'), '{}');
+
+  const loader = new I18nLoaderService(rootDir);
+
+  assert.deepEqual(await loader.loadCoreMessages('en'), {});
+});

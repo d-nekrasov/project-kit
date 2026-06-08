@@ -42,9 +42,9 @@ export function ModuleStatusDialog({
     <Dialog open={open}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t('modulesPage.statusDialog.title')}</DialogTitle>
+          <DialogTitle>{t('modules.statusDialog.title')}</DialogTitle>
           <DialogDescription>
-            {t('modulesPage.statusDialog.description', { name: moduleTitle || module?.name || '-' })}
+            {t('modules.statusDialog.description', { name: moduleTitle || module?.name || '-' })}
           </DialogDescription>
         </DialogHeader>
 
@@ -65,14 +65,14 @@ export function ModuleStatusDialog({
           ) : null}
 
           <Alert className="border-amber-200 bg-amber-50 text-amber-800">
-            <AlertTitle>{t('modulesPage.statusDialog.impactTitle')}</AlertTitle>
-            <AlertDescription>{t('modulesPage.statusDialog.impactDescription')}</AlertDescription>
+            <AlertTitle>{t('modules.statusDialog.impactTitle')}</AlertTitle>
+            <AlertDescription>{t('modules.statusDialog.impactDescription')}</AlertDescription>
           </Alert>
 
           {isCoreModule ? (
             <Alert className="border-blue-200 bg-blue-50 text-blue-800">
-              <AlertTitle>{t('modulesPage.statusDialog.coreProtectionTitle')}</AlertTitle>
-              <AlertDescription>{t('modulesPage.statusDialog.coreProtectionDescription')}</AlertDescription>
+              <AlertTitle>{t('modules.statusDialog.coreProtectionTitle')}</AlertTitle>
+              <AlertDescription>{t('modules.statusDialog.coreProtectionDescription')}</AlertDescription>
             </Alert>
           ) : null}
 
@@ -84,8 +84,8 @@ export function ModuleStatusDialog({
               onChange={(event) => setStatus(event.target.value as ModuleStatus)}
               disabled={isCoreModule}
             >
-              <option value="ENABLED">{t('modulesPage.status.enabled')}</option>
-              <option value="DISABLED">{t('modulesPage.status.disabled')}</option>
+              <option value="ENABLED">{t('modules.status.enabled')}</option>
+              <option value="DISABLED">{t('modules.status.disabled')}</option>
             </Select>
           </div>
 
@@ -94,7 +94,7 @@ export function ModuleStatusDialog({
               {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={submitDisabled}>
-              {isSubmitting ? t('common.updating') : t('modulesPage.statusDialog.submit')}
+              {isSubmitting ? t('common.updating') : t('modules.statusDialog.submit')}
             </Button>
           </DialogFooter>
         </form>

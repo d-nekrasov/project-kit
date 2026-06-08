@@ -13,7 +13,7 @@ export function ModulesToolbar({ search, onSearchChange, status, onStatusChange 
         <Label htmlFor="modules-search">{t('common.search')}</Label>
         <Input
           id="modules-search"
-          placeholder={t('modulesPage.searchPlaceholder')}
+          placeholder={t('modules.searchPlaceholder')}
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
         />
@@ -23,8 +23,8 @@ export function ModulesToolbar({ search, onSearchChange, status, onStatusChange 
         <Label htmlFor="modules-status">{t('common.status')}</Label>
         <Select id="modules-status" value={status} onChange={(event) => onStatusChange(event.target.value as typeof status)}>
           <option value="ALL">{t('common.all')}</option>
-          <option value="ENABLED">{t('modulesPage.status.enabled')}</option>
-          <option value="DISABLED">{t('modulesPage.status.disabled')}</option>
+          <option value="ENABLED">{t('modules.status.enabled')}</option>
+          <option value="DISABLED">{t('modules.status.disabled')}</option>
         </Select>
       </div>
     </div>

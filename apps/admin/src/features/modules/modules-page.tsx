@@ -97,8 +97,8 @@ export function ModulesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold text-foreground">{t('modulesPage.title')}</h2>
-        <p className="text-sm text-muted-foreground">{t('modulesPage.description')}</p>
+        <h2 className="text-2xl font-semibold text-foreground">{t('modules.title')}</h2>
+        <p className="text-sm text-muted-foreground">{t('modules.description')}</p>
       </div>
 
       <ModulesToolbar
@@ -117,7 +117,7 @@ export function ModulesPage() {
       {pageError ? <ErrorState message={pageError} /> : null}
 
       {!modulesQuery.isLoading && !modules.length && !pageError ? (
-        <EmptyState title={t('modulesPage.emptyTitle')} description={t('modulesPage.emptyDescription')} />
+        <EmptyState title={t('modules.empty.title')} description={t('modules.empty.description')} />
       ) : (
         <ModulesTable
           modules={modules}
@@ -135,12 +135,15 @@ export function ModulesPage() {
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4 text-sm">
         <div className="text-muted-foreground">
-          Page {modulesMeta?.page ?? page} of {modulesMeta?.totalPages ?? 1} • Total: {modulesMeta?.total ?? 0}
+          {`${t('modules.pagination.page', {
+            page: modulesMeta?.page ?? page,
+            totalPages: modulesMeta?.totalPages ?? 1
+          })} • ${t('modules.pagination.total', { total: modulesMeta?.total ?? 0 })}`}
         </div>
 
         <div className="flex items-center gap-2">
           <Button type="button" variant="outline" size="sm" onClick={() => setPage((value) => value - 1)} disabled={page <= 1}>
-            Previous
+            {t('modules.pagination.previous')}
           </Button>
           <Button
             type="button"
@@ -149,7 +152,7 @@ export function ModulesPage() {
             onClick={() => setPage((value) => value + 1)}
             disabled={page >= (modulesMeta?.totalPages ?? 1)}
           >
-            Next
+            {t('modules.pagination.next')}
           </Button>
         </div>
 
