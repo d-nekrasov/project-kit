@@ -38,9 +38,9 @@ export function OrganizationStatusDialog({
     <AlertDialog open={open}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Change organization status</AlertDialogTitle>
+          <AlertDialogTitle>{t('organizations.statusDialog.title')}</AlertDialogTitle>
           <AlertDialogDescription>
-            Update status for <span className="font-medium">{organization?.name ?? '-'}</span> ({organization?.slug ?? '-'})
+            {t('organizations.statusDialog.description', { name: organization?.name ?? '-', slug: organization?.slug ?? '-' })}
           </AlertDialogDescription>
         </AlertDialogHeader>
 
@@ -53,27 +53,25 @@ export function OrganizationStatusDialog({
         >
           {error ? (
             <Alert className="border-red-200 bg-red-50 text-red-700">
-              <AlertTitle>Request failed</AlertTitle>
+              <AlertTitle>{t('common.requestFailed')}</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           ) : null}
 
           <Alert className="border-amber-200 bg-amber-50 text-amber-800">
-            <AlertTitle>Impact notice</AlertTitle>
-            <AlertDescription>
-              Inactive organization cannot be used as active context. Users may lose access to this organization.
-            </AlertDescription>
+            <AlertTitle>{t('organizations.statusDialog.impactTitle')}</AlertTitle>
+            <AlertDescription>{t('organizations.statusDialog.impactDescription')}</AlertDescription>
           </Alert>
 
           <div className="space-y-2">
-            <Label htmlFor="organization-status">Status</Label>
+            <Label htmlFor="organization-status">{t('common.status')}</Label>
             <Select
               id="organization-status"
               value={status}
               onChange={(event) => setStatus(event.target.value as OrganizationStatus)}
             >
-              <option value="ACTIVE">ACTIVE</option>
-              <option value="INACTIVE">INACTIVE</option>
+              <option value="ACTIVE">{t('organizations.status.active')}</option>
+              <option value="INACTIVE">{t('organizations.status.inactive')}</option>
             </Select>
           </div>
 
@@ -82,7 +80,7 @@ export function OrganizationStatusDialog({
               {t('common.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Updating...' : 'Update status'}
+              {isSubmitting ? t('common.updating') : t('organizations.statusDialog.submit')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </form>

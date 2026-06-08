@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { ModuleStatusBadge } from '@/features/modules/module-status-badge';
 import type { ModuleManifestDialogProps } from '@/features/modules/modules-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 function renderJsonBlock(value: unknown) {
   return (
@@ -55,22 +56,23 @@ function renderAdminMenu(items: ModuleAdminMenuItem[] | undefined) {
 }
 
 export function ModuleManifestDialog({ open, module, onOpenChange }: ModuleManifestDialogProps) {
+  const { t } = useI18n();
   const manifest = module?.manifest;
 
   return (
     <Dialog open={open}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Module manifest</DialogTitle>
+          <DialogTitle>{t('modulesPage.manifestDialog.title')}</DialogTitle>
           <DialogDescription>
-            Inspect module metadata for <span className="font-medium">{module?.title ?? module?.name ?? '-'}</span>.
+            {t('modulesPage.manifestDialog.description', { name: module?.title ?? module?.name ?? '-' })}
           </DialogDescription>
         </DialogHeader>
 
         {module ? (
           <div className="max-h-[70vh] space-y-4 overflow-auto pr-1">
             <section className="space-y-2 rounded-md border p-3">
-              <h3 className="text-sm font-semibold">Overview</h3>
+              <h3 className="text-sm font-semibold">{t('modulesPage.manifestDialog.overview')}</h3>
               <div className="grid gap-1 text-sm text-foreground/80 md:grid-cols-2">
                 <div>
                   <span className="font-medium">name:</span> <span className="font-mono text-xs">{module.name}</span>
@@ -91,7 +93,7 @@ export function ModuleManifestDialog({ open, module, onOpenChange }: ModuleManif
             </section>
 
             <section className="space-y-2 rounded-md border p-3">
-              <h3 className="text-sm font-semibold">Permissions</h3>
+              <h3 className="text-sm font-semibold">{t('modulesPage.manifestDialog.permissions')}</h3>
               {manifest?.permissions?.length ? (
                 <ul className="space-y-1 text-sm">
                   {manifest.permissions.map((code) => (
@@ -101,32 +103,32 @@ export function ModuleManifestDialog({ open, module, onOpenChange }: ModuleManif
                   ))}
                 </ul>
               ) : (
-                renderEmpty('No permissions in manifest.')
+                renderEmpty(t('modulesPage.manifestDialog.noPermissions'))
               )}
             </section>
 
             <section className="space-y-2 rounded-md border p-3">
-              <h3 className="text-sm font-semibold">Admin menu</h3>
+              <h3 className="text-sm font-semibold">{t('modulesPage.manifestDialog.adminMenu')}</h3>
               {renderAdminMenu(manifest?.adminMenu)}
             </section>
 
             <section className="space-y-2 rounded-md border p-3">
-              <h3 className="text-sm font-semibold">Settings schema</h3>
-              {manifest?.settingsSchema ? renderJsonBlock(manifest.settingsSchema) : renderEmpty('No settings schema in manifest.')}
+              <h3 className="text-sm font-semibold">{t('modulesPage.manifestDialog.settingsSchema')}</h3>
+              {manifest?.settingsSchema ? renderJsonBlock(manifest.settingsSchema) : renderEmpty(t('modulesPage.manifestDialog.noSettingsSchema'))}
             </section>
 
             <section className="space-y-2 rounded-md border p-3">
-              <h3 className="text-sm font-semibold">Raw manifest</h3>
-              {manifest ? renderJsonBlock(manifest) : renderEmpty('Manifest is empty.')}
+              <h3 className="text-sm font-semibold">{t('modulesPage.manifestDialog.rawManifest')}</h3>
+              {manifest ? renderJsonBlock(manifest) : renderEmpty(t('modulesPage.manifestDialog.emptyManifest'))}
             </section>
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">Module is not selected.</p>
+          <p className="text-sm text-muted-foreground">{t('modulesPage.manifestDialog.moduleNotSelected')}</p>
         )}
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Close
+            {t('common.close')}
           </Button>
         </DialogFooter>
       </DialogContent>

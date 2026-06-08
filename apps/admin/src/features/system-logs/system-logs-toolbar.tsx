@@ -36,14 +36,14 @@ export function SystemLogsToolbar({
         <Label htmlFor="system-logs-search">{t('common.search')}</Label>
         <Input
           id="system-logs-search"
-          placeholder="Search message, source, user, organization, context"
+          placeholder={t('logs.system.searchPlaceholder')}
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
         />
       </div>
 
       <div className="space-y-1">
-        <Label htmlFor="system-logs-level">Level</Label>
+        <Label htmlFor="system-logs-level">{t('logs.system.fields.level')}</Label>
         <Select
           id="system-logs-level"
           value={level}
@@ -58,9 +58,9 @@ export function SystemLogsToolbar({
       </div>
 
       <div className="space-y-1">
-        <Label htmlFor="system-logs-source">Source</Label>
+        <Label htmlFor="system-logs-source">{t('logs.system.fields.source')}</Label>
         <Select id="system-logs-source" value={source} onChange={(event) => onSourceChange(event.target.value)}>
-          <option value="">All</option>
+          <option value="">{t('common.all')}</option>
           {SYSTEM_LOG_SOURCES.map((item) => (
             <option key={item} value={item}>
               {item}
@@ -70,22 +70,22 @@ export function SystemLogsToolbar({
       </div>
 
       <div className="space-y-1">
-        <Label htmlFor="system-logs-user-id">User ID</Label>
+        <Label htmlFor="system-logs-user-id">{t('logs.system.fields.userId')}</Label>
         <Input id="system-logs-user-id" value={userId} onChange={(event) => onUserIdChange(event.target.value)} />
       </div>
 
       <div className="space-y-1">
-        <Label htmlFor="system-logs-organization-id">Organization ID</Label>
+        <Label htmlFor="system-logs-organization-id">{t('logs.system.fields.organizationId')}</Label>
         <Input id="system-logs-organization-id" value={organizationId} onChange={(event) => onOrganizationIdChange(event.target.value)} />
       </div>
 
       <div className="space-y-1">
-        <Label htmlFor="system-logs-date-from">Date from</Label>
+        <Label htmlFor="system-logs-date-from">{t('logs.system.fields.dateFrom')}</Label>
         <Calendar id="system-logs-date-from" value={dateFrom} onChange={(event) => onDateFromChange(event.target.value)} />
       </div>
 
       <div className="space-y-1">
-        <Label htmlFor="system-logs-date-to">Date to</Label>
+        <Label htmlFor="system-logs-date-to">{t('logs.system.fields.dateTo')}</Label>
         <Calendar id="system-logs-date-to" value={dateTo} onChange={(event) => onDateToChange(event.target.value)} />
       </div>
 
@@ -95,7 +95,7 @@ export function SystemLogsToolbar({
         </Label>
         <div className="flex justify-end">
           <Button type="button" variant="outline" size="sm" className="w-full md:w-auto" onClick={onReset}>
-            Reset filters
+            {t('common.resetFilters')}
           </Button>
         </div>
       </div>

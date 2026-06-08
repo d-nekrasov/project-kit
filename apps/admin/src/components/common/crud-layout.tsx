@@ -51,9 +51,7 @@ export function CrudPagination({ page, totalPages, total, limit, onPageChange, o
   return (
     <Card>
       <CardHeader className="flex flex-col gap-3 p-4 text-sm md:flex-row md:items-center md:justify-between">
-        <div className="text-muted-foreground">
-          Page {page} of {totalPages} • Total: {total}
-        </div>
+        <div className="text-muted-foreground">{`${t('common.pageOfTotal', { page, totalPages })} • ${t('common.totalCount', { total })}`}</div>
 
         <div className="flex items-center gap-2">
           <Button type="button" variant="outline" size="sm" onClick={() => onPageChange(page - 1)} disabled={page <= 1}>

@@ -24,26 +24,26 @@ export function SettingsToolbar({
         <Label htmlFor="settings-search">{t('common.search')}</Label>
         <Input
           id="settings-search"
-          placeholder="Search by key or module"
+          placeholder={t('settings.searchPlaceholder')}
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
         />
       </div>
 
       <div className="space-y-2 lg:col-span-2">
-        <Label htmlFor="settings-scope">Scope</Label>
+        <Label htmlFor="settings-scope">{t('common.scope')}</Label>
         <Select id="settings-scope" value={scope} onChange={(event) => onScopeChange(event.target.value as 'ALL' | 'GLOBAL' | 'ORGANIZATION' | 'MODULE')}>
-          <option value="ALL">All scopes</option>
-          <option value="GLOBAL">GLOBAL</option>
-          <option value="ORGANIZATION">ORGANIZATION</option>
-          <option value="MODULE">MODULE</option>
+          <option value="ALL">{t('settings.toolbar.allScopes')}</option>
+          <option value="GLOBAL">{t('settings.scope.global')}</option>
+          <option value="ORGANIZATION">{t('settings.scope.organization')}</option>
+          <option value="MODULE">{t('settings.scope.module')}</option>
         </Select>
       </div>
 
       <div className="space-y-2 lg:col-span-2">
-        <Label htmlFor="settings-module">Module</Label>
+        <Label htmlFor="settings-module">{t('common.module')}</Label>
         <Select id="settings-module" value={module} onChange={(event) => onModuleChange(event.target.value)}>
-          <option value="ALL">All modules</option>
+          <option value="ALL">{t('settings.toolbar.allModules')}</option>
           {modules.map((item) => (
             <option key={item.name} value={item.name}>
               {item.title}
@@ -54,10 +54,10 @@ export function SettingsToolbar({
 
       <div className="flex flex-wrap items-end gap-2 lg:col-span-3 lg:justify-end">
         <Button type="button" onClick={onCreate}>
-          New
+          {t('settings.toolbar.new')}
         </Button>
         <Button type="button" variant="outline" onClick={onOpenSchema}>
-          Schema
+          {t('settings.toolbar.schema')}
         </Button>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PermissionModuleBadge } from '@/features/permissions/permission-module-badge';
 import type { PermissionsGroupedViewProps } from '@/features/permissions/permissions-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 function GroupedViewSkeleton() {
   return (
@@ -25,12 +26,13 @@ function GroupedViewSkeleton() {
 }
 
 export function PermissionsGroupedView({ groups, isLoading }: PermissionsGroupedViewProps) {
+  const { t } = useI18n();
   if (isLoading) {
     return <GroupedViewSkeleton />;
   }
 
   if (!groups.length) {
-    return <EmptyState title="No permission groups found" description="Try changing search query or module filter." />;
+    return <EmptyState title={t('permissions.emptyGroupsTitle')} description={t('permissions.emptyGroupsDescription')} />;
   }
 
   return (
@@ -41,12 +43,12 @@ export function PermissionsGroupedView({ groups, isLoading }: PermissionsGrouped
             <CardTitle className="text-base">
               <PermissionModuleBadge module={group.module} />
             </CardTitle>
-            <div className="text-sm text-muted-foreground">{group.permissions.length} permissions</div>
+            <div className="text-sm text-muted-foreground">{t('permissions.groupedPermissions', { count: group.permissions.length })}</div>
           </CardHeader>
           <CardContent className="space-y-3">
             {Object.entries(
               group.permissions.reduce<Record<string, typeof group.permissions>>((acc, permission) => {
-                const key = permission.resource || 'Other';
+                const key = permission.resource || t('permissions.resourceOther');
                 if (!acc[key]) {
                   acc[key] = [];
                 }

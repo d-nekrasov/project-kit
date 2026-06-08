@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 type UserOrganizationsCardProps = {
   user: UserResponse;
@@ -13,13 +14,15 @@ type UserOrganizationsCardProps = {
 };
 
 export function UserOrganizationsCard({ user, canManage, onManage }: UserOrganizationsCardProps) {
+  const { t } = useI18n();
+
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between">
-        <CardTitle>Organization memberships</CardTitle>
+        <CardTitle>{t('users.detail.membershipsTitle')}</CardTitle>
         {canManage ? (
           <Button type="button" size="sm" onClick={onManage}>
-            Manage organizations
+            {t('users.detail.manageOrganizations')}
           </Button>
         ) : null}
       </CardHeader>
@@ -29,11 +32,11 @@ export function UserOrganizationsCard({ user, canManage, onManage }: UserOrganiz
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Organization</TableHead>
+                  <TableHead>{t('common.organization')}</TableHead>
                   <TableHead>Slug</TableHead>
-                  <TableHead>Org status</TableHead>
-                  <TableHead>Membership</TableHead>
-                  <TableHead>Role</TableHead>
+                  <TableHead>{t('users.detail.orgStatus')}</TableHead>
+                  <TableHead>{t('users.detail.membership')}</TableHead>
+                  <TableHead>{t('common.role')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -56,7 +59,7 @@ export function UserOrganizationsCard({ user, canManage, onManage }: UserOrganiz
             </Table>
           </DataTableShell>
         ) : (
-          <DataTableEmpty title="No organization memberships" description="This user is not assigned to any organization yet." />
+          <DataTableEmpty title={t('users.detail.emptyMembershipsTitle')} description={t('users.detail.emptyMembershipsDescription')} />
         )}
       </CardContent>
     </Card>

@@ -13,18 +13,18 @@ export function ModulesToolbar({ search, onSearchChange, status, onStatusChange 
         <Label htmlFor="modules-search">{t('common.search')}</Label>
         <Input
           id="modules-search"
-          placeholder="Search by module name or title"
+          placeholder={t('modulesPage.searchPlaceholder')}
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
         />
       </div>
 
       <div className="w-56 space-y-2">
-        <Label htmlFor="modules-status">Status</Label>
+        <Label htmlFor="modules-status">{t('common.status')}</Label>
         <Select id="modules-status" value={status} onChange={(event) => onStatusChange(event.target.value as typeof status)}>
-          <option value="ALL">All</option>
-          <option value="ENABLED">Enabled</option>
-          <option value="DISABLED">Disabled</option>
+          <option value="ALL">{t('common.all')}</option>
+          <option value="ENABLED">{t('modulesPage.status.enabled')}</option>
+          <option value="DISABLED">{t('modulesPage.status.disabled')}</option>
         </Select>
       </div>
     </div>

@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AuditActionBadge } from '@/features/audit-logs/audit-action-badge';
 import type { AuditLogsTableProps } from '@/features/audit-logs/audit-logs-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 function AuditLogsTableSkeleton() {
   return (
@@ -28,12 +29,13 @@ function truncate(value: string | null, max = 24) {
 }
 
 export function AuditLogsTable({ logs, isLoading, onViewDetails }: AuditLogsTableProps) {
+  const { t } = useI18n();
   if (isLoading) {
     return <AuditLogsTableSkeleton />;
   }
 
   if (!logs.length) {
-    return <EmptyState title="No audit logs found" description="Try changing search query or filters." />;
+    return <EmptyState title={t('logs.audit.emptyTitle')} description={t('logs.audit.emptyDescription')} />;
   }
 
   return (
@@ -42,13 +44,13 @@ export function AuditLogsTable({ logs, isLoading, onViewDetails }: AuditLogsTabl
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Created at</TableHead>
-              <TableHead>Action</TableHead>
-              <TableHead>Entity</TableHead>
-              <TableHead>User</TableHead>
-              <TableHead>Organization</TableHead>
-              <TableHead>IP</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>{t('common.createdAt')}</TableHead>
+              <TableHead>{t('logs.audit.fields.action')}</TableHead>
+              <TableHead>{t('logs.audit.fields.entity')}</TableHead>
+              <TableHead>{t('logs.audit.fields.user')}</TableHead>
+              <TableHead>{t('logs.audit.fields.organization')}</TableHead>
+              <TableHead>{t('logs.audit.fields.ip')}</TableHead>
+              <TableHead className="text-right">{t('common.actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -92,18 +94,18 @@ export function AuditLogsTable({ logs, isLoading, onViewDetails }: AuditLogsTabl
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger>
-                      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="Open actions">
+                      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label={t('logs.audit.openActions')}>
                         <Ellipsis className="size-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
                       <DropdownMenuItem onClick={() => onViewDetails(log)}>
                         <Eye className="mr-2 size-4" />
-                        View details
+                        {t('logs.audit.viewDetails')}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigator.clipboard.writeText(log.id)}>
                         <IdCard className="mr-2 size-4" />
-                        Copy log ID
+                        {t('logs.audit.copyLogId')}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

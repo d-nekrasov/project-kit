@@ -26,7 +26,7 @@ export function PermissionsToolbar({
         <div className="min-h-10">
           <Input
             id="permissions-search"
-            placeholder="Search by code, module, resource or action"
+            placeholder={t('permissions.searchPlaceholder')}
             value={search}
             onChange={(event) => onSearchChange(event.target.value)}
           />
@@ -35,7 +35,7 @@ export function PermissionsToolbar({
 
       <div className="grid gap-2">
         <Label htmlFor="permissions-module" className="h-5">
-          Module
+          {t('permissions.moduleFilter')}
         </Label>
         <div className="min-h-10">
           <Select
@@ -44,7 +44,7 @@ export function PermissionsToolbar({
             onChange={(event) => onModuleChange(event.target.value)}
             disabled={isModulesLoading}
           >
-            <option value="ALL">All modules</option>
+            <option value="ALL">{t('permissions.allModules')}</option>
             {modules.map((item) => (
               <option key={item.module} value={item.module}>
                 {item.module} ({item.permissionsCount})
@@ -55,7 +55,7 @@ export function PermissionsToolbar({
       </div>
 
       <div className="grid gap-2">
-        <Label className="h-5">View</Label>
+        <Label className="h-5">{t('common.view')}</Label>
         <div className="flex min-h-10 items-center gap-2">
           <Button
             type="button"
@@ -64,7 +64,7 @@ export function PermissionsToolbar({
             className="h-10"
             onClick={() => onViewModeChange('table')}
           >
-            Table
+            {t('common.table')}
           </Button>
           <Button
             type="button"
@@ -73,7 +73,7 @@ export function PermissionsToolbar({
             className="h-10"
             onClick={() => onViewModeChange('grouped')}
           >
-            Grouped
+            {t('common.grouped')}
           </Button>
         </div>
       </div>

@@ -139,8 +139,8 @@ export function UsersPage() {
   return (
     <div className="space-y-6">
       <CrudPageHeader
-        title="Users"
-        description="Manage organization users, roles and statuses."
+        title={t('users.title')}
+        description={t('users.description')}
         action={
           <Button type="button" onClick={() => setCreateDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />

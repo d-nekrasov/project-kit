@@ -20,19 +20,6 @@ import { Select } from '@/components/ui/select';
 import type { UserFormDialogProps, UserFormValues } from '@/features/users/users-page.types';
 import { useI18n } from '@/lib/i18n/use-i18n';
 
-const createSchema = z.object({
-  email: z.string().email('Enter a valid email'),
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  roleId: z.string().min(1, 'Role is required'),
-  organizationId: z.string().optional()
-});
-
-const editSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  roleId: z.string().min(1, 'Role is required')
-});
-
 function findDefaultRoleId(user: UserFormDialogProps['user'], activeOrganizationId: string | null | undefined): string {
   if (!user) {
     return '';
@@ -60,6 +47,25 @@ export function UserFormDialog({
 }: UserFormDialogProps) {
   const { t } = useI18n();
   const defaultRoleId = useMemo(() => findDefaultRoleId(user, activeOrganizationId), [activeOrganizationId, user]);
+  const createSchema = useMemo(
+    () =>
+      z.object({
+        email: z.string().email(t('users.form.validation.email')),
+        name: z.string().min(2, t('users.form.validation.nameMin')),
+        password: z.string().min(8, t('users.form.validation.passwordMin')),
+        roleId: z.string().min(1, t('users.form.validation.roleRequired')),
+        organizationId: z.string().optional()
+      }),
+    [t]
+  );
+  const editSchema = useMemo(
+    () =>
+      z.object({
+        name: z.string().min(2, t('users.form.validation.nameMin')),
+        roleId: z.string().min(1, t('users.form.validation.roleRequired'))
+      }),
+    [t]
+  );
   const schema = mode === 'create' ? createSchema : editSchema;
   const initKeyRef = useRef<string>('');
 
@@ -119,11 +125,9 @@ export function UserFormDialog({
     <Dialog open={open}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{mode === 'create' ? 'Create user' : 'Edit user'}</DialogTitle>
+          <DialogTitle>{mode === 'create' ? t('users.form.createTitle') : t('users.form.editTitle')}</DialogTitle>
           <DialogDescription>
-            {mode === 'create'
-              ? 'Create a new user in the active organization.'
-              : 'Update user profile and organization role.'}
+            {mode === 'create' ? t('users.form.createDescription') : t('users.form.editDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -132,15 +136,15 @@ export function UserFormDialog({
           {errorMessage ? (
             <Alert className="border-red-200 bg-red-50 text-red-700">
               <AlertCircle className="mb-1 h-4 w-4" />
-              <AlertTitle>Request failed</AlertTitle>
+              <AlertTitle>{t('common.requestFailed')}</AlertTitle>
               <AlertDescription>{errorMessage}</AlertDescription>
             </Alert>
           ) : null}
 
           {roleWarning ? (
             <Alert className="border-amber-200 bg-amber-50 text-amber-800">
-              <AlertTitle>Role is not resolved</AlertTitle>
-              <AlertDescription>Select a role for this user in the active organization.</AlertDescription>
+              <AlertTitle>{t('users.form.roleUnresolvedTitle')}</AlertTitle>
+              <AlertDescription>{t('users.form.roleUnresolvedDescription')}</AlertDescription>
             </Alert>
           ) : null}
 
@@ -150,7 +154,7 @@ export function UserFormDialog({
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>{t('users.fields.email')}</FormLabel>
                     <FormControl>
                       <Input type="email" {...field} />
                     </FormControl>
@@ -166,7 +170,7 @@ export function UserFormDialog({
                 name="organizationId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Organization</FormLabel>
+                    <FormLabel>{t('users.fields.organization')}</FormLabel>
                     <FormControl>
                       <Select
                         {...field}
@@ -176,7 +180,7 @@ export function UserFormDialog({
                           form.setValue('roleId', '');
                         }}
                       >
-                        <option value="">Select organization</option>
+                        <option value="">{t('users.form.selectOrganization')}</option>
                         {organizations.map((organization) => (
                           <option key={organization.id} value={organization.id}>
                             {organization.name}
@@ -195,7 +199,7 @@ export function UserFormDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>{t('users.fields.name')}</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -210,7 +214,7 @@ export function UserFormDialog({
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>{t('users.fields.password')}</FormLabel>
                     <FormControl>
                       <Input type="password" {...field} />
                     </FormControl>
@@ -225,10 +229,10 @@ export function UserFormDialog({
               name="roleId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Role</FormLabel>
+                  <FormLabel>{t('users.fields.role')}</FormLabel>
                   <FormControl>
                     <Select {...field}>
-                      <option value="">Select role</option>
+                      <option value="">{t('users.form.selectRole')}</option>
                       {roles.map((role) => (
                         <option key={role.id} value={role.id}>
                           {role.name}

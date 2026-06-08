@@ -51,7 +51,7 @@ export function SettingsTable({ settings, isLoading, onEdit }: SettingsTableProp
   }
 
   if (!settings.length) {
-    return <EmptyState title="No settings found" description="Try changing search or filters." />;
+    return <EmptyState title={t('settings.emptyTitle')} description={t('settings.emptyDescription')} />;
   }
 
   return (
@@ -60,13 +60,13 @@ export function SettingsTable({ settings, isLoading, onEdit }: SettingsTableProp
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Key</TableHead>
-              <TableHead>Value</TableHead>
-              <TableHead>Scope</TableHead>
-              <TableHead>Module</TableHead>
-              <TableHead>Organization</TableHead>
-              <TableHead>Updated at</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>{t('common.key')}</TableHead>
+              <TableHead>{t('common.value')}</TableHead>
+              <TableHead>{t('common.scope')}</TableHead>
+              <TableHead>{t('common.module')}</TableHead>
+              <TableHead>{t('common.organization')}</TableHead>
+              <TableHead>{t('common.updatedAt')}</TableHead>
+              <TableHead className="text-right">{t('common.actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

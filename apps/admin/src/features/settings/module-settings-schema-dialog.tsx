@@ -8,22 +8,24 @@ import {
   DialogTitle
 } from '@/components/ui/dialog';
 import type { ModuleSettingsSchemaDialogProps } from '@/features/settings/settings-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 export function ModuleSettingsSchemaDialog({ open, module, onOpenChange }: ModuleSettingsSchemaDialogProps) {
+  const { t } = useI18n();
   const schema = module?.manifest?.settingsSchema;
 
   return (
     <Dialog open={open}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Module settings schema</DialogTitle>
+          <DialogTitle>{t('settings.schemaDialog.title')}</DialogTitle>
           <DialogDescription>
             {module ? (
               <>
                 <span className="font-medium">{module.title}</span> (<span className="font-mono text-xs">{module.name}</span>)
               </>
             ) : (
-              'Select a module to inspect settings schema.'
+              t('settings.schemaDialog.selectModule')
             )}
           </DialogDescription>
         </DialogHeader>
@@ -34,15 +36,15 @@ export function ModuleSettingsSchemaDialog({ open, module, onOpenChange }: Modul
               {JSON.stringify(schema, null, 2)}
             </pre>
           ) : (
-            <div className="rounded-md border p-4 text-sm text-muted-foreground">This module manifest has no settings schema.</div>
+            <div className="rounded-md border p-4 text-sm text-muted-foreground">{t('settings.schemaDialog.noSchema')}</div>
           )
         ) : (
-          <div className="rounded-md border p-4 text-sm text-muted-foreground">Module is not selected.</div>
+          <div className="rounded-md border p-4 text-sm text-muted-foreground">{t('settings.schemaDialog.moduleNotSelected')}</div>
         )}
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Close
+            {t('common.close')}
           </Button>
         </DialogFooter>
       </DialogContent>

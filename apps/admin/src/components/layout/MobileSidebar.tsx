@@ -23,7 +23,7 @@ export function MobileSidebar() {
         variant="ghost"
         size="sm"
         className="size-9 px-0 md:hidden"
-        aria-label="Open navigation"
+        aria-label={t('layout.openNavigation')}
         onClick={() => setOpen(true)}
       >
         <Menu className="size-5" aria-hidden="true" />

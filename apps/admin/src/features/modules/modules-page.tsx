@@ -15,10 +15,12 @@ import type { ModuleStatusFilter } from '@/features/modules/modules-page.types';
 import { ModulesTable } from '@/features/modules/modules-table';
 import { ModulesToolbar } from '@/features/modules/modules-toolbar';
 import { getApiErrorMessage } from '@/lib/api-error-message';
+import { useI18n } from '@/lib/i18n/use-i18n';
 import { sdk } from '@/lib/sdk';
 
 export function ModulesPage() {
   const auth = useAuth();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const { user } = auth;
   const isSuperAdmin = user?.systemRoles.includes('super_admin') ?? false;
@@ -95,8 +97,8 @@ export function ModulesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold text-foreground">Modules</h2>
-        <p className="text-sm text-muted-foreground">Connected platform and business modules.</p>
+        <h2 className="text-2xl font-semibold text-foreground">{t('modulesPage.title')}</h2>
+        <p className="text-sm text-muted-foreground">{t('modulesPage.description')}</p>
       </div>
 
       <ModulesToolbar
@@ -115,7 +117,7 @@ export function ModulesPage() {
       {pageError ? <ErrorState message={pageError} /> : null}
 
       {!modulesQuery.isLoading && !modules.length && !pageError ? (
-        <EmptyState title="No modules found" description="Try changing search or status filters." />
+        <EmptyState title={t('modulesPage.emptyTitle')} description={t('modulesPage.emptyDescription')} />
       ) : (
         <ModulesTable
           modules={modules}
@@ -152,7 +154,7 @@ export function ModulesPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">Rows per page</span>
+          <span className="text-muted-foreground">{t('common.rowsPerPage')}</span>
           <Select
             value={String(limit)}
             onChange={(event) => {

@@ -43,7 +43,7 @@ type AdminNavigationItemConfig = Omit<AdminNavigationItem, 'isActive'> & {
 };
 
 type AdminNavigationGroupConfig = {
-  label: string;
+  label: keyof typeof navigationLabelKeys;
   items: AdminNavigationItemConfig[];
 };
 
@@ -179,10 +179,11 @@ function appendModuleItems(
   groups: AdminNavigationGroup[],
   moduleItems: AdminNavigationItemConfig[],
   pathname: string,
-  auth: AuthContextValue
+  auth: AuthContextValue,
+  t: (key: string) => string
 ) {
   const groupsByLabel = new Map(groups.map((group) => [group.label, group]));
-  const moduleGroup = groupsByLabel.get('Modules');
+  const moduleGroup = groupsByLabel.get(t('navigation.modules'));
 
   if (!moduleGroup) {
     return groups;
@@ -193,7 +194,7 @@ function appendModuleItems(
   for (const item of filterAllowedItems(moduleItems, auth)) {
     const targetGroupLabel = coreModuleMenuGroupByPath.get(item.path);
     const targetGroup: AdminNavigationGroup | undefined = targetGroupLabel
-      ? groupsByLabel.get(targetGroupLabel)
+      ? groupsByLabel.get(translateNavigationLabel(targetGroupLabel, t))
       : moduleGroup;
 
     if (!targetGroup || targetGroup.items.some((currentItem) => currentItem.path === item.path)) {
@@ -243,7 +244,10 @@ export function useAdminNavigation(): AdminNavigationGroup[] {
   }, [modulesQuery.data]);
 
   return useMemo(
-    () => appendModuleItems(buildCoreGroups(location.pathname, auth, t), moduleMenu, location.pathname, auth).filter((group) => group.items.length > 0),
+    () =>
+      appendModuleItems(buildCoreGroups(location.pathname, auth, t), moduleMenu, location.pathname, auth, t).filter(
+        (group) => group.items.length > 0
+      ),
     [auth, location.pathname, moduleMenu, t]
   );
 }

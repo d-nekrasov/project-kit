@@ -23,35 +23,13 @@ import { JsonValueEditor } from '@/features/settings/json-value-editor';
 import type { SettingFormDialogProps, SettingFormDialogSubmitValues } from '@/features/settings/settings-page.types';
 import { useI18n } from '@/lib/i18n/use-i18n';
 
-const settingFormSchema = z
-  .object({
-    key: z.string().min(2, 'Key must be at least 2 characters'),
-    scope: z.enum(['GLOBAL', 'ORGANIZATION', 'MODULE']),
-    module: z.string().optional(),
-    organizationSpecific: z.boolean(),
-    valueRaw: z.string().min(1, 'Value is required')
-  })
-  .superRefine((values, ctx) => {
-    if (values.scope === 'MODULE' && !values.module) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['module'],
-        message: 'Module is required for MODULE scope'
-      });
-    }
-
-    try {
-      JSON.parse(values.valueRaw);
-    } catch {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['valueRaw'],
-        message: 'Value must be valid JSON'
-      });
-    }
-  });
-
-type SettingFormState = z.infer<typeof settingFormSchema>;
+type SettingFormState = {
+  key: string;
+  scope: SettingScope;
+  module?: string;
+  organizationSpecific: boolean;
+  valueRaw: string;
+};
 
 function scopeFromSetting(settingScope?: SettingScope) {
   return settingScope ?? 'ORGANIZATION';
@@ -69,6 +47,33 @@ export function SettingFormDialog({
   onSubmit
 }: SettingFormDialogProps) {
   const { t } = useI18n();
+  const settingFormSchema = z
+    .object({
+      key: z.string().min(2, t('settings.form.validation.keyMin')),
+      scope: z.enum(['GLOBAL', 'ORGANIZATION', 'MODULE']),
+      module: z.string().optional(),
+      organizationSpecific: z.boolean(),
+      valueRaw: z.string().min(1, t('settings.form.validation.valueRequired'))
+    })
+    .superRefine((values, ctx) => {
+      if (values.scope === 'MODULE' && !values.module) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['module'],
+          message: t('settings.form.validation.moduleRequired')
+        });
+      }
+
+      try {
+        JSON.parse(values.valueRaw);
+      } catch {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['valueRaw'],
+          message: t('settings.form.validation.invalidJson')
+        });
+      }
+    });
   const form = useForm<SettingFormState>({
     resolver: zodResolver(settingFormSchema),
     defaultValues: {
@@ -134,18 +139,16 @@ export function SettingFormDialog({
   })();
   const isSubmitDisabled = createSubmitBlocked || editSubmitBlocked;
   const submitWarning = createSubmitBlocked || editSubmitBlocked
-    ? 'Only super_admin can update GLOBAL settings and global MODULE settings.'
+    ? t('settings.form.restrictedDescription')
     : null;
 
   return (
     <Dialog open={open}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{isEdit ? 'Edit setting' : 'Create setting'}</DialogTitle>
+          <DialogTitle>{isEdit ? t('settings.form.editTitle') : t('settings.form.createTitle')}</DialogTitle>
           <DialogDescription>
-            {isEdit
-              ? 'Update setting value. Key and scope metadata are read-only in edit mode.'
-              : 'Create a new setting for global, organization or module scope.'}
+            {isEdit ? t('settings.form.editDescription') : t('settings.form.createDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -154,7 +157,7 @@ export function SettingFormDialog({
           {error ? (
             <Alert className="border-red-200 bg-red-50 text-red-700">
               <AlertCircle className="mb-1 h-4 w-4" />
-              <AlertTitle>Request failed</AlertTitle>
+              <AlertTitle>{t('common.requestFailed')}</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           ) : null}
@@ -162,7 +165,7 @@ export function SettingFormDialog({
           {submitWarning ? (
             <Alert className="border-amber-200 bg-amber-50 text-amber-700">
               <AlertCircle className="mb-1 h-4 w-4" />
-              <AlertTitle>Restricted action</AlertTitle>
+              <AlertTitle>{t('settings.form.restrictedTitle')}</AlertTitle>
               <AlertDescription>{submitWarning}</AlertDescription>
             </Alert>
           ) : null}
@@ -172,9 +175,9 @@ export function SettingFormDialog({
               name="key"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Key</FormLabel>
+                  <FormLabel>{t('common.key')}</FormLabel>
                   <FormControl>
-                    <Input {...field} disabled={isEdit} placeholder="app.demo" />
+                    <Input {...field} disabled={isEdit} placeholder={t('settings.form.keyPlaceholder')} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -186,12 +189,12 @@ export function SettingFormDialog({
               name="scope"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Scope</FormLabel>
+                  <FormLabel>{t('common.scope')}</FormLabel>
                   <FormControl>
                     <Select {...field} disabled={isEdit}>
-                      <option value="GLOBAL">GLOBAL</option>
-                      <option value="ORGANIZATION">ORGANIZATION</option>
-                      <option value="MODULE">MODULE</option>
+                      <option value="GLOBAL">{t('settings.scope.global')}</option>
+                      <option value="ORGANIZATION">{t('settings.scope.organization')}</option>
+                      <option value="MODULE">{t('settings.scope.module')}</option>
                     </Select>
                   </FormControl>
                   <FormMessage />
@@ -205,10 +208,10 @@ export function SettingFormDialog({
                 name="module"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Module</FormLabel>
+                    <FormLabel>{t('common.module')}</FormLabel>
                     <FormControl>
                       <Select {...field} disabled={isEdit}>
-                        <option value="">Select module</option>
+                        <option value="">{t('settings.form.selectModule')}</option>
                         {modules.map((module) => (
                           <option key={module.name} value={module.name}>
                             {module.title}
@@ -237,7 +240,7 @@ export function SettingFormDialog({
                         ref={field.ref}
                       />
                     </FormControl>
-                    <FormLabel>organizationSpecific</FormLabel>
+                    <FormLabel>{t('settings.form.organizationSpecific')}</FormLabel>
                   </FormItem>
                 )}
               />

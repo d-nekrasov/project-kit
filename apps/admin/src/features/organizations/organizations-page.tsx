@@ -124,8 +124,8 @@ export function OrganizationsPage() {
   return (
     <div className="space-y-6">
       <CrudPageHeader
-        title="Organizations"
-        description="Manage organizations, their statuses and core counters."
+        title={t('organizations.title')}
+        description={t('organizations.description')}
         action={
           isSuperAdmin ? (
             <Button type="button" onClick={() => setCreateDialogOpen(true)}>
@@ -154,7 +154,7 @@ export function OrganizationsPage() {
       {pageError ? <ErrorState message={pageError} /> : null}
 
       {!organizationsQuery.isLoading && !organizations.length && !pageError ? (
-        <EmptyState title="No organizations found" description="Try changing search or status filters." />
+        <EmptyState title={t('organizations.emptyTitle')} description={t('organizations.emptyDescription')} />
       ) : (
         <OrganizationsTable
           organizations={organizations}

@@ -11,10 +11,12 @@ import { permissionsQueryKeys } from '@/features/permissions/permissions-query-k
 import { PermissionsTable } from '@/features/permissions/permissions-table';
 import { PermissionsToolbar } from '@/features/permissions/permissions-toolbar';
 import { getApiErrorMessage } from '@/lib/api-error-message';
+import { useI18n } from '@/lib/i18n/use-i18n';
 import { sdk } from '@/lib/sdk';
 
 export function PermissionsPage() {
   const auth = useAuth();
+  const { t } = useI18n();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(50);
   const [search, setSearch] = useState('');
@@ -91,9 +93,9 @@ export function PermissionsPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h2 className="text-2xl font-semibold text-foreground">Permissions</h2>
-        <p className="text-sm text-muted-foreground">Read-only registry of permissions registered by core and modules.</p>
-        <p className="text-xs text-muted-foreground">Permissions are managed by platform core and module manifests. Admin UI cannot create or edit them.</p>
+        <h2 className="text-2xl font-semibold text-foreground">{t('permissions.title')}</h2>
+        <p className="text-sm text-muted-foreground">{t('permissions.description')}</p>
+        <p className="text-xs text-muted-foreground">{t('permissions.helper')}</p>
       </div>
 
       <PermissionsToolbar
@@ -143,7 +145,7 @@ export function PermissionsPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-muted-foreground">Rows per page</span>
+            <span className="text-muted-foreground">{t('common.rowsPerPage')}</span>
             <Select
               value={String(limit)}
               onChange={(event) => {

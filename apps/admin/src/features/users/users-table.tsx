@@ -18,8 +18,9 @@ function formatDate(value: string) {
 }
 
 function renderOrganizationRoles(user: UserResponse) {
+  const { t } = useI18n();
   if (!user.organizations.length) {
-    return <span className="text-muted-foreground">No organizations</span>;
+    return <span className="text-muted-foreground">{t('users.table.noOrganizations')}</span>;
   }
 
   return (
@@ -53,7 +54,7 @@ export function UsersTable({ users, isLoading, onEdit, onChangeStatus, onViewDet
   }
 
   if (!users.length) {
-    return <EmptyState title="No users found" description="Try changing search or status filters." />;
+    return <EmptyState title={t('users.emptyTitle')} description={t('users.emptyDescription')} />;
   }
 
   return (
@@ -62,13 +63,13 @@ export function UsersTable({ users, isLoading, onEdit, onChangeStatus, onViewDet
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Organizations / Roles</TableHead>
-              <TableHead>System roles</TableHead>
-              <TableHead>Created at</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>{t('common.name')}</TableHead>
+              <TableHead>{t('common.email')}</TableHead>
+              <TableHead>{t('common.status')}</TableHead>
+              <TableHead>{t('users.table.organizationsRoles')}</TableHead>
+              <TableHead>{t('users.table.systemRoles')}</TableHead>
+              <TableHead>{t('common.createdAt')}</TableHead>
+              <TableHead className="text-right">{t('common.actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -90,21 +91,21 @@ export function UsersTable({ users, isLoading, onEdit, onChangeStatus, onViewDet
                       ))}
                     </div>
                   ) : (
-                    <span className="text-muted-foreground">None</span>
+                    <span className="text-muted-foreground">{t('common.none')}</span>
                   )}
                 </TableCell>
                 <TableCell>{formatDate(user.createdAt)}</TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger>
-                      <Button type="button" variant="ghost" size="sm" aria-label={`Open actions for ${user.name}`}>
+                      <Button type="button" variant="ghost" size="sm" aria-label={t('users.table.openActions', { name: user.name })}>
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
                       <DropdownMenuItem onClick={() => onViewDetails(user)}>
                         <Eye className="mr-2 inline h-4 w-4" />
-                        View details
+                        {t('users.table.viewDetails')}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onEdit(user)}>
                         <Pencil className="mr-2 inline h-4 w-4" />
@@ -112,7 +113,7 @@ export function UsersTable({ users, isLoading, onEdit, onChangeStatus, onViewDet
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onChangeStatus(user)}>
                         <ShieldAlert className="mr-2 inline h-4 w-4" />
-                        Change status
+                        {t('users.table.changeStatus')}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

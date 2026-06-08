@@ -140,7 +140,7 @@ export function UserOrganizationsDialog({
     const organizationName = existingMembership.name;
     if (
       window.confirm(
-        `Remove organization membership?\n\n${user.email} will lose access to ${organizationName}.`
+        t('users.organizationsDialog.confirmRemove', { email: user.email, organization: organizationName })
       )
     ) {
       onRemove(row.organizationId);
@@ -151,15 +151,15 @@ export function UserOrganizationsDialog({
     <Dialog open={open}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Manage organizations</DialogTitle>
-          <DialogDescription>Update organization roles and membership status for {user.email}.</DialogDescription>
+          <DialogTitle>{t('users.organizationsDialog.title')}</DialogTitle>
+          <DialogDescription>{t('users.organizationsDialog.description', { email: user.email })}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           {errorMessage ? (
             <Alert className="border-red-200 bg-red-50 text-red-700">
               <AlertCircle className="mb-1 h-4 w-4" />
-              <AlertTitle>Request failed</AlertTitle>
+              <AlertTitle>{t('common.requestFailed')}</AlertTitle>
               <AlertDescription>{errorMessage}</AlertDescription>
             </Alert>
           ) : null}
@@ -181,19 +181,19 @@ export function UserOrganizationsDialog({
               return (
                 <div key={row.organizationId} className="grid gap-3 rounded-md border p-3 md:grid-cols-[1fr_1fr_150px_auto]">
                   <div>
-                    <Label>Organization</Label>
+                    <Label>{t('common.organization')}</Label>
                     <div className="mt-2 text-sm font-medium text-foreground">
                       {organization?.name ?? listedOrganization?.name ?? row.organizationId}
                     </div>
                   </div>
                   <div>
-                    <Label htmlFor={`role-${row.organizationId}`}>Role</Label>
+                    <Label htmlFor={`role-${row.organizationId}`}>{t('common.role')}</Label>
                     <Select
                       id={`role-${row.organizationId}`}
                       value={row.roleId}
                       onChange={(event) => updateRow(row.organizationId, { roleId: event.target.value })}
                     >
-                      <option value="">Select role</option>
+                      <option value="">{t('users.organizationsDialog.selectRole')}</option>
                       {roles.map((role) => (
                         <option key={role.id} value={role.id}>
                           {role.name}
@@ -202,7 +202,7 @@ export function UserOrganizationsDialog({
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor={`status-${row.organizationId}`}>Status</Label>
+                    <Label htmlFor={`status-${row.organizationId}`}>{t('common.status')}</Label>
                     <Select
                       id={`status-${row.organizationId}`}
                       value={row.status}
@@ -210,9 +210,9 @@ export function UserOrganizationsDialog({
                         updateRow(row.organizationId, { status: event.target.value as UserStatus })
                       }
                     >
-                      <option value="ACTIVE">Active</option>
-                      <option value="INACTIVE">Inactive</option>
-                      <option value="BLOCKED">Blocked</option>
+                      <option value="ACTIVE">{t('users.status.active')}</option>
+                      <option value="INACTIVE">{t('users.status.inactive')}</option>
+                      <option value="BLOCKED">{t('users.status.blocked')}</option>
                     </Select>
                   </div>
                   {isSuperAdmin ? (
@@ -223,7 +223,7 @@ export function UserOrganizationsDialog({
                         onClick={() => updateRow(row.organizationId, { status: 'INACTIVE' })}
                         disabled={isSubmitting}
                       >
-                        Mark inactive
+                        {t('users.organizationsDialog.markInactive')}
                       </Button>
                       <Button
                         type="button"
@@ -232,14 +232,14 @@ export function UserOrganizationsDialog({
                         disabled={removeDisabled}
                         title={
                           isCurrentUserActiveOrganization
-                            ? 'You cannot remove yourself from the active organization'
+                            ? t('users.organizationsDialog.cannotRemoveSelf')
                             : removeDisabled
-                              ? 'Active user must keep at least one active membership'
-                              : 'Remove membership'
+                              ? t('users.organizationsDialog.mustKeepOneActive')
+                              : t('users.organizationsDialog.removeMembership')
                         }
                       >
                         <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Remove membership</span>
+                        <span className="sr-only">{t('users.organizationsDialog.removeMembershipTitle')}</span>
                       </Button>
                     </div>
                   ) : null}
@@ -251,13 +251,13 @@ export function UserOrganizationsDialog({
           {isSuperAdmin ? (
             <div className="flex flex-wrap items-end gap-3 rounded-md border bg-muted/40 p-3">
               <div className="min-w-64 flex-1">
-                <Label htmlFor="add-organization">Add organization</Label>
+                <Label htmlFor="add-organization">{t('users.organizationsDialog.addOrganization')}</Label>
                 <Select
                   id="add-organization"
                   value={newOrganizationId}
                   onChange={(event) => setNewOrganizationId(event.target.value)}
                 >
-                  <option value="">Select organization</option>
+                  <option value="">{t('users.organizationsDialog.selectOrganization')}</option>
                   {availableOrganizations.map((organization) => (
                     <option key={organization.id} value={organization.id}>
                       {organization.name}
@@ -266,7 +266,7 @@ export function UserOrganizationsDialog({
                 </Select>
               </div>
               <Button type="button" variant="outline" onClick={addMembership} disabled={!newOrganizationId}>
-                Add membership
+                {t('users.organizationsDialog.addMembership')}
               </Button>
             </div>
           ) : null}

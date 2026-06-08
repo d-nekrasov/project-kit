@@ -19,6 +19,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/features/auth/use-auth';
 import { getApiErrorMessage } from '@/lib/api-error-message';
+import { useI18n } from '@/lib/i18n/use-i18n';
 import { ROUTE_PERMISSIONS } from '@/lib/route-permissions';
 import { sdk } from '@/lib/sdk';
 import { cn } from '@/lib/utils';
@@ -46,29 +47,29 @@ const queryKeys = {
 
 const quickActions = [
   {
-    title: 'Users',
-    description: 'Manage access and membership.',
+    titleKey: 'navigation.users',
+    descriptionKey: 'dashboard.quickActionUsersDescription',
     href: '/users',
     permission: ROUTE_PERMISSIONS['/users'],
     icon: Users
   },
   {
-    title: 'Roles',
-    description: 'Review permissions and scopes.',
+    titleKey: 'navigation.roles',
+    descriptionKey: 'dashboard.quickActionRolesDescription',
     href: '/roles',
     permission: ROUTE_PERMISSIONS['/roles'],
     icon: ShieldCheck
   },
   {
-    title: 'Modules',
-    description: 'Check installed capabilities.',
+    titleKey: 'navigation.modules',
+    descriptionKey: 'dashboard.quickActionModulesDescription',
     href: '/modules',
     permission: ROUTE_PERMISSIONS['/modules'],
     icon: Layers3
   },
   {
-    title: 'Documents',
-    description: 'Open managed content.',
+    titleKey: 'navigation.documents',
+    descriptionKey: 'dashboard.quickActionDocumentsDescription',
     href: '/documents',
     permission: ROUTE_PERMISSIONS['/documents'],
     icon: FileText
@@ -99,10 +100,11 @@ function getLevelClass(level: string) {
 }
 
 function DashboardAlert({ message }: { message: string }) {
+  const { t } = useI18n();
   return (
     <Alert className="border-red-200 bg-red-50 text-red-700">
       <AlertCircle className="mb-1 h-4 w-4" />
-      <AlertTitle>Dashboard data is incomplete</AlertTitle>
+      <AlertTitle>{t('dashboard.dataIncomplete')}</AlertTitle>
       <AlertDescription className="text-red-700">{message}</AlertDescription>
     </Alert>
   );
@@ -157,6 +159,7 @@ function SectionSkeleton() {
 
 export function DashboardPage() {
   const auth = useAuth();
+  const { t } = useI18n();
   const activeOrg = auth.user?.organizations.find((item) => item.id === auth.activeOrganizationId);
   const canReadUsers = auth.hasPermission('users.read');
   const canReadRoles = auth.hasPermission('roles.read');
@@ -206,12 +209,12 @@ export function DashboardPage() {
   });
 
   const queryErrors = [
-    ['Users', usersQuery],
-    ['Roles', rolesQuery],
-    ['Modules', modulesQuery],
-    ['Documents', documentsQuery],
-    ['System logs', systemLogsQuery],
-    ['System status', criticalLogsQuery],
+    [t('navigation.users'), usersQuery],
+    [t('navigation.roles'), rolesQuery],
+    [t('navigation.modules'), modulesQuery],
+    [t('navigation.documents'), documentsQuery],
+    [t('navigation.systemLogs'), systemLogsQuery],
+    [t('layout.systemStatus'), criticalLogsQuery],
     ['Notifications', unreadNotificationsQuery]
   ] satisfies Array<[string, { isError: boolean; error: unknown }]>;
 
@@ -234,7 +237,7 @@ export function DashboardPage() {
   const hasCriticalLogs = Boolean(criticalLogsCount && criticalLogsCount > 0);
 
   const stats: Array<{
-    title: string;
+      title: string;
     description: string;
     value: number | undefined;
     icon: IconComponent;
@@ -242,32 +245,32 @@ export function DashboardPage() {
     unavailable?: boolean;
   }> = [
     {
-      title: 'Users',
-      description: 'Registered accounts',
+      title: t('dashboard.statUsersTitle'),
+      description: t('dashboard.statUsersDescription'),
       value: usersQuery.data?.meta.total,
       icon: Users,
       query: 'users',
       unavailable: !canReadUsers
     },
     {
-      title: 'Roles',
-      description: activeOrg ? activeOrg.name : 'Current scope',
+      title: t('dashboard.statRolesTitle'),
+      description: activeOrg ? activeOrg.name : t('dashboard.currentOrganization'),
       value: rolesQuery.data?.meta.total,
       icon: ShieldCheck,
       query: 'roles',
       unavailable: !canReadRoles
     },
     {
-      title: 'Modules',
-      description: `${enabledModules} enabled`,
+      title: t('dashboard.statModulesTitle'),
+      description: `${formatNumber(enabledModules)} ${t('modulesPage.status.enabled').toLowerCase()}`,
       value: modulesQuery.data?.meta.total,
       icon: Layers3,
       query: 'modules',
       unavailable: !canReadModules
     },
     {
-      title: 'Documents',
-      description: 'Managed content',
+      title: t('dashboard.statDocumentsTitle'),
+      description: t('dashboard.statDocumentsDescription'),
       value: documentsQuery.data?.meta.total,
       icon: FileText,
       query: 'documents',
@@ -281,12 +284,12 @@ export function DashboardPage() {
         <div className="space-y-1">
           <h2 className="text-2xl font-semibold text-foreground">{import.meta.env.VITE_APP_NAME || 'Project Kit'}</h2>
           <p className="text-sm text-muted-foreground">
-            {activeOrg ? `${activeOrg.name} admin overview` : 'Admin overview without an active organization'}
+            {activeOrg ? `${activeOrg.name} ${t('dashboard.description').toLowerCase()}` : t('dashboard.description')}
           </p>
         </div>
         <div className="flex items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm text-muted-foreground">
           <Building2 className="h-4 w-4" />
-          <span>{auth.user?.name ?? auth.user?.email ?? 'Current user'}</span>
+          <span>{auth.user?.name ?? auth.user?.email ?? t('common.notSet')}</span>
         </div>
       </div>
 
@@ -297,7 +300,7 @@ export function DashboardPage() {
           <StatCard
             key={stat.title}
             title={stat.title}
-            description={stat.unavailable ? 'No permission' : stat.description}
+            description={stat.unavailable ? t('common.accessDenied') : stat.description}
             value={stat.value}
             icon={stat.icon}
             isLoading={isStatsLoading}
@@ -309,18 +312,18 @@ export function DashboardPage() {
       <div className="grid gap-4 xl:grid-cols-7">
         <Card className="xl:col-span-4">
           <CardHeader>
-            <CardTitle>Recent events</CardTitle>
-            <CardDescription>Latest system log entries visible to your account.</CardDescription>
+            <CardTitle>{t('dashboard.recentSystemLogs')}</CardTitle>
+            <CardDescription>{t('dashboard.recentSystemLogsDescription')}</CardDescription>
           </CardHeader>
           <CardContent>
             {systemLogsQuery.isLoading ? <SectionSkeleton /> : null}
 
             {!systemLogsQuery.isLoading && !canReadSystemLogs ? (
-              <div className="rounded-md border border-dashed p-6 text-sm text-muted-foreground">System logs are not available for your role.</div>
+              <div className="rounded-md border border-dashed p-6 text-sm text-muted-foreground">{t('common.noPermissionToViewPage')}</div>
             ) : null}
 
             {!systemLogsQuery.isLoading && canReadSystemLogs && !recentLogs.length && !systemLogsQuery.isError ? (
-              <div className="rounded-md border border-dashed p-6 text-sm text-muted-foreground">No system events yet.</div>
+              <div className="rounded-md border border-dashed p-6 text-sm text-muted-foreground">{t('common.noDataAvailableYet')}</div>
             ) : null}
 
             {!systemLogsQuery.isLoading && recentLogs.length ? (
@@ -348,8 +351,8 @@ export function DashboardPage() {
         <div className="grid gap-4 xl:col-span-3">
           <Card>
             <CardHeader>
-              <CardTitle>System status</CardTitle>
-              <CardDescription>Operational signals from available admin data.</CardDescription>
+              <CardTitle>{t('dashboard.criticalStatus')}</CardTitle>
+              <CardDescription>{t('dashboard.criticalStatusDescription')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {criticalLogsQuery.isLoading || modulesQuery.isLoading ? (
@@ -368,12 +371,12 @@ export function DashboardPage() {
                       </div>
                       <div>
                         <div className="font-medium text-foreground">
-                          {!canReadSystemLogs ? 'Limited visibility' : hasCriticalLogs ? 'Needs attention' : 'Operational'}
+                          {!canReadSystemLogs ? t('common.accessDenied') : hasCriticalLogs ? 'Needs attention' : 'Operational'}
                         </div>
                         <div className="text-sm text-muted-foreground">
                           {!canReadSystemLogs
-                            ? 'System log status is hidden.'
-                            : `${formatNumber(criticalLogsCount)} recent error-level events`}
+                            ? t('common.noPermissionToViewPage')
+                            : `${formatNumber(criticalLogsCount)} ${t('dashboard.statCriticalLogsDescription').toLowerCase()}`}
                         </div>
                       </div>
                     </div>
@@ -381,16 +384,16 @@ export function DashboardPage() {
 
                   <div className="grid gap-3 text-sm">
                     <div className="flex items-center justify-between rounded-md bg-muted/40 px-3 py-2">
-                      <span className="text-muted-foreground">Enabled modules</span>
+                      <span className="text-muted-foreground">{t('modulesPage.status.enabled')}</span>
                       <span className="font-medium">{canReadModules ? formatNumber(enabledModules) : '—'}</span>
                     </div>
                     <div className="flex items-center justify-between rounded-md bg-muted/40 px-3 py-2">
-                      <span className="text-muted-foreground">Unread notifications</span>
+                      <span className="text-muted-foreground">{t('dashboard.statNotificationsTitle')}</span>
                       <span className="font-medium">{formatNumber(unreadNotificationsQuery.data?.count)}</span>
                     </div>
                     <div className="flex items-center justify-between rounded-md bg-muted/40 px-3 py-2">
-                      <span className="text-muted-foreground">Active organization</span>
-                      <span className="max-w-44 truncate font-medium">{activeOrg?.name ?? 'None'}</span>
+                      <span className="text-muted-foreground">{t('dashboard.activeOrganization')}</span>
+                      <span className="max-w-44 truncate font-medium">{activeOrg?.name ?? t('common.none')}</span>
                     </div>
                   </div>
                 </>
@@ -400,8 +403,8 @@ export function DashboardPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Quick actions</CardTitle>
-              <CardDescription>Open the main admin workspaces.</CardDescription>
+              <CardTitle>{t('dashboard.quickActions')}</CardTitle>
+              <CardDescription>{t('dashboard.quickActionsDescription')}</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-2">
               {visibleQuickActions.length ? (
@@ -418,14 +421,14 @@ export function DashboardPage() {
                         <Icon className="h-4 w-4" />
                       </div>
                       <div className="min-w-0">
-                        <div className="font-medium text-foreground">{action.title}</div>
-                        <div className="truncate text-xs text-muted-foreground">{action.description}</div>
+                        <div className="font-medium text-foreground">{t(action.titleKey)}</div>
+                        <div className="truncate text-xs text-muted-foreground">{t(action.descriptionKey)}</div>
                       </div>
                     </Link>
                   );
                 })
               ) : (
-                <div className="rounded-md border border-dashed p-6 text-sm text-muted-foreground">No quick actions are available for your role.</div>
+                <div className="rounded-md border border-dashed p-6 text-sm text-muted-foreground">{t('common.noPermissionToViewPage')}</div>
               )}
               <Link
                 to="/notifications"
@@ -435,8 +438,8 @@ export function DashboardPage() {
                   <Bell className="h-4 w-4" />
                 </div>
                 <div className="min-w-0">
-                  <div className="font-medium text-foreground">Notifications</div>
-                  <div className="truncate text-xs text-muted-foreground">Review inbox updates.</div>
+                  <div className="font-medium text-foreground">{t('dashboard.statNotificationsTitle')}</div>
+                  <div className="truncate text-xs text-muted-foreground">{t('dashboard.viewAllNotifications')}</div>
                 </div>
               </Link>
             </CardContent>

@@ -167,17 +167,15 @@ export function RolesPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-foreground">Roles</h2>
-          <p className="text-sm text-muted-foreground">Manage organization roles and permissions.</p>
+          <h2 className="text-2xl font-semibold text-foreground">{t('roles.title')}</h2>
+          <p className="text-sm text-muted-foreground">{t('roles.description')}</p>
         </div>
         <Button type="button" onClick={() => setCreateDialogOpen(true)} disabled={shouldSelectOrganization}>
           {t('common.createItem', { item: t('entities.role') })}
         </Button>
       </div>
 
-      <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-900">
-        Roles are scoped by organization. Select organization before editing role permissions.
-      </div>
+      <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-900">{t('roles.scopeNotice')}</div>
 
       <RolesToolbar
         search={search}
@@ -206,13 +204,13 @@ export function RolesPage() {
       />
 
       {selectedOrganizationName ? (
-        <div className="text-sm text-muted-foreground">Managing roles for: {selectedOrganizationName}</div>
+        <div className="text-sm text-muted-foreground">{t('roles.managingFor', { organization: selectedOrganizationName })}</div>
       ) : null}
 
       {pageError ? <ErrorState message={pageError} /> : null}
 
       {shouldSelectOrganization ? (
-        <EmptyState title="Select organization to manage roles" description="Roles are scoped to a single organization." />
+        <EmptyState title={t('roles.selectOrganizationTitle')} description={t('roles.selectOrganizationDescription')} />
       ) : (
         <RolesTable
           roles={roles}

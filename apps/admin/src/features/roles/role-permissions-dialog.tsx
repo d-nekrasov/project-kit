@@ -78,10 +78,10 @@ export function RolePermissionsDialog({
     <Dialog open={open}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Edit permissions: {role?.name ?? '-'}</DialogTitle>
+          <DialogTitle>{t('roles.permissionsDialog.title', { name: role?.name ?? '-' })}</DialogTitle>
           <DialogDescription>
-            Configure role permissions grouped by module.
-            {organizationName ? ` Organization: ${organizationName}.` : ''}
+            {t('roles.permissionsDialog.description')}
+            {organizationName ? ` ${t('roles.permissionsDialog.organization', { organization: organizationName })}` : ''}
           </DialogDescription>
         </DialogHeader>
 
@@ -89,27 +89,27 @@ export function RolePermissionsDialog({
           {errorMessage ? (
             <Alert className="border-red-200 bg-red-50 text-red-700">
               <AlertCircle className="mb-1 h-4 w-4" />
-              <AlertTitle>Request failed</AlertTitle>
+              <AlertTitle>{t('common.requestFailed')}</AlertTitle>
               <AlertDescription>{errorMessage}</AlertDescription>
             </Alert>
           ) : null}
 
           {isSystem ? (
             <Alert className="border-input bg-muted/40 text-foreground/80">
-              <AlertTitle>Read-only role</AlertTitle>
-              <AlertDescription>System roles are read-only.</AlertDescription>
+              <AlertTitle>{t('roles.permissionsDialog.readOnlyTitle')}</AlertTitle>
+              <AlertDescription>{t('roles.permissionsDialog.readOnlyDescription')}</AlertDescription>
             </Alert>
           ) : null}
 
           {isProtected ? (
             <Alert className="border-amber-200 bg-amber-50 text-amber-800">
-              <AlertTitle>Protected role</AlertTitle>
-              <AlertDescription>Permissions of organization_admin are protected.</AlertDescription>
+              <AlertTitle>{t('roles.permissionsDialog.protectedTitle')}</AlertTitle>
+              <AlertDescription>{t('roles.permissionsDialog.protectedDescription')}</AlertDescription>
             </Alert>
           ) : null}
 
           <div className="rounded-md border bg-muted/40 px-3 py-2 text-sm text-foreground/80">
-            {selectedPermissions.length} permissions selected
+            {t('roles.permissionsDialog.selectedCount', { count: selectedPermissions.length })}
           </div>
 
           <div className="max-h-[420px] space-y-4 overflow-auto pr-1">
@@ -119,7 +119,7 @@ export function RolePermissionsDialog({
               permissionGroups.map((group) => {
                 const moduleCodes = group.permissions.map((permission) => permission.code);
                 const byResource = group.permissions.reduce<Record<string, typeof group.permissions>>((acc, permission) => {
-                  const key = permission.resource || 'Other';
+                  const key = permission.resource || t('roles.permissionsDialog.resourceOther');
                   if (!acc[key]) {
                     acc[key] = [];
                   }
@@ -132,7 +132,7 @@ export function RolePermissionsDialog({
                     <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                       <div>
                         <h4 className="text-sm font-semibold text-foreground">{group.module}</h4>
-                        <p className="text-xs text-muted-foreground">{group.permissions.length} permissions</p>
+                        <p className="text-xs text-muted-foreground">{t('roles.permissionsDialog.permissionsCount', { count: group.permissions.length })}</p>
                       </div>
                       <div className="flex gap-2">
                         <Button
@@ -142,7 +142,7 @@ export function RolePermissionsDialog({
                           disabled={isReadonly}
                           onClick={() => applyModuleSelection(moduleCodes, 'all')}
                         >
-                          Select all
+                          {t('roles.permissionsDialog.selectAll')}
                         </Button>
                         <Button
                           type="button"
@@ -151,7 +151,7 @@ export function RolePermissionsDialog({
                           disabled={isReadonly}
                           onClick={() => applyModuleSelection(moduleCodes, 'clear')}
                         >
-                          Clear
+                          {t('roles.permissionsDialog.clear')}
                         </Button>
                       </div>
                     </div>
@@ -171,7 +171,7 @@ export function RolePermissionsDialog({
                                 />
                                 <span className="space-y-1">
                                   <Badge className="font-mono">{permission.code}</Badge>
-                                  <span className="block text-xs text-muted-foreground">{permission.description || 'No description'}</span>
+                                  <span className="block text-xs text-muted-foreground">{permission.description || t('roles.permissionsDialog.noDescription')}</span>
                                 </span>
                               </label>
                             ))}
@@ -186,7 +186,7 @@ export function RolePermissionsDialog({
           </div>
           {!isLoading && !permissionGroups.length ? (
             <Card>
-              <CardContent className="py-6 text-sm text-muted-foreground">No permissions available for this organization.</CardContent>
+              <CardContent className="py-6 text-sm text-muted-foreground">{t('roles.permissionsDialog.empty')}</CardContent>
             </Card>
           ) : null}
         </div>

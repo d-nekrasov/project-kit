@@ -8,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { ModulesTableProps } from '@/features/modules/modules-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 function ModulesTableSkeleton() {
   return (
@@ -25,12 +26,13 @@ function isCoreModule(module: ModuleRegistryResponse) {
   return module.name === 'core';
 }
 
-function renderStatusBadge(status: ModuleRegistryResponse['status']) {
+function ModuleStatusCell({ status }: { status: ModuleRegistryResponse['status'] }) {
+  const { t } = useI18n();
   if (status === 'ENABLED') {
-    return <Badge className="bg-emerald-100 text-emerald-800">Enabled</Badge>;
+    return <Badge className="bg-emerald-100 text-emerald-800">{t('modulesPage.status.enabled')}</Badge>;
   }
 
-  return <Badge className="bg-slate-200 text-foreground/80">Disabled</Badge>;
+  return <Badge className="bg-slate-200 text-foreground/80">{t('modulesPage.status.disabled')}</Badge>;
 }
 
 function previewPermissions(module: ModuleRegistryResponse) {
@@ -61,16 +63,22 @@ function previewSettings(module: ModuleRegistryResponse) {
   }
 
   const fieldsCount = Object.keys(schema).length;
-  return <Badge className="bg-blue-100 text-blue-700">{fieldsCount > 0 ? `${fieldsCount} fields` : 'Available'}</Badge>;
+  return <ModuleSettingsPreview fieldsCount={fieldsCount} />;
+}
+
+function ModuleSettingsPreview({ fieldsCount }: { fieldsCount: number }) {
+  const { t } = useI18n();
+  return <Badge className="bg-blue-100 text-blue-700">{fieldsCount > 0 ? t('modulesPage.settingsFields', { count: fieldsCount }) : t('modulesPage.settingsAvailable')}</Badge>;
 }
 
 export function ModulesTable({ modules, isLoading, isSuperAdmin, onViewManifest, onChangeStatus }: ModulesTableProps) {
+  const { t } = useI18n();
   if (isLoading) {
     return <ModulesTableSkeleton />;
   }
 
   if (!modules.length) {
-    return <EmptyState title="No modules found" description="Try changing search or status filters." />;
+    return <EmptyState title={t('modulesPage.emptyTitle')} description={t('modulesPage.emptyDescription')} />;
   }
 
   return (
@@ -79,14 +87,14 @@ export function ModulesTable({ modules, isLoading, isSuperAdmin, onViewManifest,
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead>Version</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Permissions</TableHead>
-              <TableHead>Settings</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>{t('organizations.fields.name')}</TableHead>
+              <TableHead>{t('modulesPage.fields.title')}</TableHead>
+              <TableHead>{t('modulesPage.fields.version')}</TableHead>
+              <TableHead>{t('common.status')}</TableHead>
+              <TableHead>{t('common.description')}</TableHead>
+              <TableHead>{t('modulesPage.fields.permissions')}</TableHead>
+              <TableHead>{t('modulesPage.fields.settings')}</TableHead>
+              <TableHead className="text-right">{t('common.actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -104,7 +112,9 @@ export function ModulesTable({ modules, isLoading, isSuperAdmin, onViewManifest,
                     </div>
                   </TableCell>
                   <TableCell>{module.version}</TableCell>
-                  <TableCell>{renderStatusBadge(module.status)}</TableCell>
+                  <TableCell>
+                    <ModuleStatusCell status={module.status} />
+                  </TableCell>
                   <TableCell>
                     <p className="max-w-[380px] truncate text-sm text-foreground/80" title={description}>
                       {description}
@@ -115,19 +125,19 @@ export function ModulesTable({ modules, isLoading, isSuperAdmin, onViewManifest,
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger>
-                        <Button type="button" variant="ghost" size="sm" aria-label={`Open actions for ${module.name}`}>
+                        <Button type="button" variant="ghost" size="sm" aria-label={t('modulesPage.openActions', { name: module.name })}>
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
                         <DropdownMenuItem onClick={() => onViewManifest(module)}>
                           <Eye className="mr-2 inline h-4 w-4" />
-                          View manifest
+                          {t('modulesPage.viewManifest')}
                         </DropdownMenuItem>
                         {isSuperAdmin ? (
                           <DropdownMenuItem onClick={() => onChangeStatus(module)} disabled={core}>
                             <Power className="mr-2 inline h-4 w-4" />
-                            {module.status === 'ENABLED' ? 'Disable module' : 'Enable module'}
+                            {module.status === 'ENABLED' ? t('modulesPage.disableModule') : t('modulesPage.enableModule')}
                           </DropdownMenuItem>
                         ) : null}
                       </DropdownMenuContent>
