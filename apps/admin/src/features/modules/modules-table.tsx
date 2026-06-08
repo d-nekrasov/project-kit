@@ -30,10 +30,10 @@ function isCoreModule(module: ModuleRegistryResponse) {
 function ModuleStatusCell({ status }: { status: ModuleRegistryResponse['status'] }) {
   const { t } = useI18n();
   if (status === 'ENABLED') {
-    return <Badge className="bg-emerald-100 text-emerald-800">{t('modulesPage.status.enabled')}</Badge>;
+    return <Badge className="bg-emerald-100 text-emerald-800">{t('modules.status.enabled')}</Badge>;
   }
 
-  return <Badge className="bg-slate-200 text-foreground/80">{t('modulesPage.status.disabled')}</Badge>;
+  return <Badge className="bg-slate-200 text-foreground/80">{t('modules.status.disabled')}</Badge>;
 }
 
 function previewPermissions(module: ModuleRegistryResponse) {
@@ -69,7 +69,11 @@ function previewSettings(module: ModuleRegistryResponse) {
 
 function ModuleSettingsPreview({ fieldsCount }: { fieldsCount: number }) {
   const { t } = useI18n();
-  return <Badge className="bg-blue-100 text-blue-700">{fieldsCount > 0 ? t('modulesPage.settingsFields', { count: fieldsCount }) : t('modulesPage.settingsAvailable')}</Badge>;
+  return (
+    <Badge className="bg-blue-100 text-blue-700">
+      {fieldsCount > 0 ? t('modules.settings.fields', { count: fieldsCount }) : t('modules.settings.available')}
+    </Badge>
+  );
 }
 
 export function ModulesTable({ modules, isLoading, isSuperAdmin, onViewManifest, onChangeStatus }: ModulesTableProps) {
@@ -79,7 +83,7 @@ export function ModulesTable({ modules, isLoading, isSuperAdmin, onViewManifest,
   }
 
   if (!modules.length) {
-    return <EmptyState title={t('modulesPage.emptyTitle')} description={t('modulesPage.emptyDescription')} />;
+    return <EmptyState title={t('modules.empty.title')} description={t('modules.empty.description')} />;
   }
 
   return (
@@ -88,14 +92,14 @@ export function ModulesTable({ modules, isLoading, isSuperAdmin, onViewManifest,
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t('organizations.fields.name')}</TableHead>
-              <TableHead>{t('modulesPage.fields.title')}</TableHead>
-              <TableHead>{t('modulesPage.fields.version')}</TableHead>
-              <TableHead>{t('common.status')}</TableHead>
-              <TableHead>{t('common.description')}</TableHead>
-              <TableHead>{t('modulesPage.fields.permissions')}</TableHead>
-              <TableHead>{t('modulesPage.fields.settings')}</TableHead>
-              <TableHead className="text-right">{t('common.actions')}</TableHead>
+              <TableHead>{t('modules.table.name')}</TableHead>
+              <TableHead>{t('modules.table.title')}</TableHead>
+              <TableHead>{t('modules.table.version')}</TableHead>
+              <TableHead>{t('modules.table.status')}</TableHead>
+              <TableHead>{t('modules.table.description')}</TableHead>
+              <TableHead>{t('modules.table.permissions')}</TableHead>
+              <TableHead>{t('modules.table.settings')}</TableHead>
+              <TableHead className="text-right">{t('modules.table.actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -131,19 +135,19 @@ export function ModulesTable({ modules, isLoading, isSuperAdmin, onViewManifest,
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger>
-                        <Button type="button" variant="ghost" size="sm" aria-label={t('modulesPage.openActions', { name: module.name })}>
+                        <Button type="button" variant="ghost" size="sm" aria-label={t('modules.actions.open', { name: module.name })}>
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
                         <DropdownMenuItem onClick={() => onViewManifest(module)}>
                           <Eye className="mr-2 inline h-4 w-4" />
-                          {t('modulesPage.viewManifest')}
+                          {t('modules.actions.viewManifest')}
                         </DropdownMenuItem>
                         {isSuperAdmin ? (
                           <DropdownMenuItem onClick={() => onChangeStatus(module)} disabled={core}>
                             <Power className="mr-2 inline h-4 w-4" />
-                            {module.status === 'ENABLED' ? t('modulesPage.disableModule') : t('modulesPage.enableModule')}
+                            {module.status === 'ENABLED' ? t('modules.actions.disable') : t('modules.actions.enable')}
                           </DropdownMenuItem>
                         ) : null}
                       </DropdownMenuContent>

@@ -9,6 +9,7 @@ export type I18nCatalogResponse = {
   messages: I18nMessages;
 };
 
+const DEFAULT_LOCALE = 'ru';
 const FALLBACK_LOCALE = 'en';
 
 @Injectable()
@@ -55,7 +56,7 @@ export class I18nService {
       return rawValue.trim().toLowerCase();
     }
 
-    return FALLBACK_LOCALE;
+    return DEFAULT_LOCALE;
   }
 
   private async getEnabledModuleNames(): Promise<string[]> {
