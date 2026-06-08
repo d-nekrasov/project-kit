@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import type { ModuleStatusDialogProps } from '@/features/modules/modules-page.types';
 import { useI18n } from '@/lib/i18n/use-i18n';
+import { translateWithFallback } from '@/lib/i18n/translate-with-fallback';
 
 export function ModuleStatusDialog({
   open,
@@ -34,6 +35,7 @@ export function ModuleStatusDialog({
   }, [module]);
 
   const isCoreModule = module?.name === 'core';
+  const moduleTitle = module ? translateWithFallback(t, module.manifest?.titleKey, module.title) : '-';
   const submitDisabled = useMemo(() => isSubmitting || isCoreModule, [isCoreModule, isSubmitting]);
 
   return (
@@ -42,7 +44,7 @@ export function ModuleStatusDialog({
         <DialogHeader>
           <DialogTitle>{t('modulesPage.statusDialog.title')}</DialogTitle>
           <DialogDescription>
-            {t('modulesPage.statusDialog.description', { name: module?.title ?? module?.name ?? '-' })}
+            {t('modulesPage.statusDialog.description', { name: moduleTitle || module?.name || '-' })}
           </DialogDescription>
         </DialogHeader>
 

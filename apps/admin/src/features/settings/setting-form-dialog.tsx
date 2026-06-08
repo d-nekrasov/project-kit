@@ -22,6 +22,7 @@ import { Select } from '@/components/ui/select';
 import { JsonValueEditor } from '@/features/settings/json-value-editor';
 import type { SettingFormDialogProps, SettingFormDialogSubmitValues } from '@/features/settings/settings-page.types';
 import { useI18n } from '@/lib/i18n/use-i18n';
+import { translateWithFallback } from '@/lib/i18n/translate-with-fallback';
 
 type SettingFormState = {
   key: string;
@@ -214,7 +215,7 @@ export function SettingFormDialog({
                         <option value="">{t('settings.form.selectModule')}</option>
                         {modules.map((module) => (
                           <option key={module.name} value={module.name}>
-                            {module.title}
+                            {translateWithFallback(t, module.manifest?.titleKey, module.title)}
                           </option>
                         ))}
                       </Select>

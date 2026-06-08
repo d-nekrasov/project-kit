@@ -144,3 +144,86 @@ test('I18nService limits module translations to their namespace without breaking
   assert.equal(catalog.messages['documents.title'], 'Документы');
   assert.equal(catalog.messages['common.save'], 'Сохранить');
 });
+
+test('I18nService includes enabled module translations in catalog', async () => {
+  const loader = createLoader(
+    {
+      en: { 'common.save': 'Save' },
+      ru: { 'common.save': 'Сохранить' }
+    },
+    {
+      documents: {
+        en: {
+          'documents.title': 'Documents',
+          'documents.menu': 'Documents'
+        },
+        ru: {
+          'documents.title': 'Документы',
+          'documents.menu': 'Документы'
+        }
+      }
+    }
+  );
+
+  const service = new I18nService(createPrisma('ru') as any, loader as I18nLoaderService);
+  const catalog = await service.getCatalog();
+
+  assert.equal(catalog.messages['documents.title'], 'Документы');
+  assert.equal(catalog.messages['documents.menu'], 'Документы');
+});
+
+test('I18nService falls back to en module translation when locale file is missing', async () => {
+  const loader = createLoader(
+    {
+      en: { 'common.save': 'Save' },
+      ru: { 'common.save': 'Сохранить' }
+    },
+    {
+      documents: {
+        en: { 'documents.title': 'Documents' }
+      }
+    }
+  );
+
+  const service = new I18nService(createPrisma('ru') as any, loader as I18nLoaderService);
+  const catalog = await service.getCatalog();
+
+  assert.equal(catalog.messages['documents.title'], 'Documents');
+});
+
+test('I18nService does not include translations for disabled modules', async () => {
+  const loader = createLoader(
+    {
+      en: { 'common.save': 'Save' }
+    },
+    {
+      documents: {
+        en: { 'documents.title': 'Documents' }
+      }
+    }
+  );
+
+  const service = new I18nService(createPrisma('en', []) as any, loader as I18nLoaderService);
+  const catalog = await service.getCatalog();
+
+  assert.equal(catalog.messages['documents.title'], undefined);
+});
+
+test('I18nService tolerates module without lang directory', async () => {
+  const loader = createLoader(
+    {
+      en: { 'common.save': 'Save' }
+    },
+    {
+      documents: {
+        en: { 'documents.title': 'Documents' }
+      }
+    }
+  );
+
+  const service = new I18nService(createPrisma('en', ['documents', 'missing']) as any, loader as I18nLoaderService);
+  const catalog = await service.getCatalog();
+
+  assert.equal(catalog.messages['common.save'], 'Save');
+  assert.equal(catalog.messages['documents.title'], 'Documents');
+});

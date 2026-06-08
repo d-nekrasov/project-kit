@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { z } from 'zod';
 
 import { LoadingScreen } from '@/components/common/loading-screen';
@@ -31,15 +31,8 @@ const installSchema = z.object({
 });
 
 type InstallForm = z.infer<typeof installSchema>;
-type I18nCatalogResponse = {
-  locale: ProjectLocale;
-  fallbackLocale: string;
-  messages: Record<string, string>;
-};
 
 export function InstallPage() {
-  const navigate = useNavigate();
-
   const statusQuery = useQuery({
     queryKey: ['installer-status'],
     queryFn: () => sdk.installer.status()
@@ -79,11 +72,7 @@ export function InstallPage() {
               className="grid gap-4"
               onSubmit={form.handleSubmit(async (values) => {
                 await sdk.installer.setup(values);
-                await sdk.client.get<I18nCatalogResponse>('/i18n/catalog', {
-                  skipAuth: true,
-                  skipOrganization: true
-                });
-                navigate('/login');
+                window.location.assign('/login');
               })}
             >
               <FormField

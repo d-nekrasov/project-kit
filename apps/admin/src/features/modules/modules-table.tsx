@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { ModulesTableProps } from '@/features/modules/modules-page.types';
 import { useI18n } from '@/lib/i18n/use-i18n';
+import { translateWithFallback } from '@/lib/i18n/translate-with-fallback';
 
 function ModulesTableSkeleton() {
   return (
@@ -100,14 +101,19 @@ export function ModulesTable({ modules, isLoading, isSuperAdmin, onViewManifest,
           <TableBody>
             {modules.map((module) => {
               const core = isCoreModule(module);
-              const description = module.description ?? module.manifest?.description ?? '—';
+              const title = translateWithFallback(t, module.manifest?.titleKey, module.title);
+              const description = translateWithFallback(
+                t,
+                module.manifest?.descriptionKey,
+                module.description ?? module.manifest?.description ?? '—'
+              );
 
               return (
                 <TableRow key={module.id}>
                   <TableCell className="font-mono text-xs">{module.name}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <span>{module.title}</span>
+                      <span>{title}</span>
                       {core ? <Badge className="bg-blue-100 text-blue-700">core</Badge> : null}
                     </div>
                   </TableCell>

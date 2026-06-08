@@ -133,11 +133,11 @@ export function DocumentsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-foreground">Documents</h2>
-          <p className="text-sm text-muted-foreground">Manage organization documents and their publication lifecycle.</p>
+          <h2 className="text-2xl font-semibold text-foreground">{t('documents.title')}</h2>
+          <p className="text-sm text-muted-foreground">{t('documents.description')}</p>
         </div>
         <Button type="button" onClick={() => setCreateDialogOpen(true)} disabled={moduleDisabled}>
-          {t('common.createItem', { item: t('entities.document') })}
+          {t('documents.actions.create')}
         </Button>
       </div>
 
@@ -156,15 +156,15 @@ export function DocumentsPage() {
 
       {moduleDisabled ? (
         <EmptyState
-          title="Documents module is disabled"
-          description="Enable the module in Modules page to use documents."
+          title={t('documents.moduleDisabled.title')}
+          description={t('documents.moduleDisabled.description')}
         />
       ) : null}
 
       {moduleDisabled ? (
         <div className="flex justify-center">
           <Button type="button" variant="outline" onClick={() => navigate('/modules')}>
-            Go to Modules
+            {t('documents.actions.goToModules')}
           </Button>
         </div>
       ) : null}
@@ -183,7 +183,10 @@ export function DocumentsPage() {
       {!moduleDisabled ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4 text-sm">
           <div className="text-muted-foreground">
-            Page {documentsMeta?.page ?? page} of {documentsMeta?.totalPages ?? 1} • Total: {documentsMeta?.total ?? 0}
+            {`${t('documents.pagination.page', {
+              page: documentsMeta?.page ?? page,
+              pages: documentsMeta?.totalPages ?? 1
+            })} • ${t('documents.pagination.total', { total: documentsMeta?.total ?? 0 })}`}
           </div>
 
           <div className="flex items-center gap-2">

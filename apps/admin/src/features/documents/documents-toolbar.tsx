@@ -13,19 +13,19 @@ export function DocumentsToolbar({ search, onSearchChange, status, onStatusChang
         <Label htmlFor="documents-search">{t('common.search')}</Label>
         <Input
           id="documents-search"
-          placeholder="Search by title or content"
+          placeholder={t('documents.fields.search')}
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="documents-status">Status</Label>
+        <Label htmlFor="documents-status">{t('common.status')}</Label>
         <Select id="documents-status" value={status} onChange={(event) => onStatusChange(event.target.value as typeof status)}>
-          <option value="ALL">All</option>
-          <option value="DRAFT">DRAFT</option>
-          <option value="PUBLISHED">PUBLISHED</option>
-          <option value="ARCHIVED">ARCHIVED</option>
+          <option value="ALL">{t('common.all')}</option>
+          <option value="DRAFT">{t('documents.status.draft')}</option>
+          <option value="PUBLISHED">{t('documents.status.published')}</option>
+          <option value="ARCHIVED">{t('documents.status.archived')}</option>
         </Select>
       </div>
     </div>

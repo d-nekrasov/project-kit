@@ -37,9 +37,9 @@ export function DocumentStatusDialog({
     <Dialog open={open}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Change document status</DialogTitle>
+          <DialogTitle>{t('documents.dialogs.status.title')}</DialogTitle>
           <DialogDescription>
-            Update status for <span className="font-medium">{document?.title}</span>.
+            {t('documents.dialogs.status.description', { title: document?.title ?? '' })}
           </DialogDescription>
         </DialogHeader>
 
@@ -52,22 +52,22 @@ export function DocumentStatusDialog({
         >
           {error ? (
             <Alert className="border-red-200 bg-red-50 text-red-700">
-              <AlertTitle>Request failed</AlertTitle>
+              <AlertTitle>{t('common.requestFailed')}</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           ) : null}
 
           <Alert className="border-amber-200 bg-amber-50 text-amber-800">
-            <AlertTitle>Archive behavior</AlertTitle>
-            <AlertDescription>ARCHIVED is used instead of hard delete to keep document history.</AlertDescription>
+            <AlertTitle>{t('documents.dialogs.status.archiveTitle')}</AlertTitle>
+            <AlertDescription>{t('documents.dialogs.status.archiveDescription')}</AlertDescription>
           </Alert>
 
           <div className="space-y-2">
-            <Label htmlFor="document-status">Status</Label>
+            <Label htmlFor="document-status">{t('common.status')}</Label>
             <Select id="document-status" value={status} onChange={(event) => setStatus(event.target.value as DocumentStatus)}>
-              <option value="DRAFT">DRAFT</option>
-              <option value="PUBLISHED">PUBLISHED</option>
-              <option value="ARCHIVED">ARCHIVED</option>
+              <option value="DRAFT">{t('documents.status.draft')}</option>
+              <option value="PUBLISHED">{t('documents.status.published')}</option>
+              <option value="ARCHIVED">{t('documents.status.archived')}</option>
             </Select>
           </div>
 
@@ -76,7 +76,7 @@ export function DocumentStatusDialog({
               {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Updating...' : 'Update status'}
+              {isSubmitting ? t('common.updating') : t('documents.dialogs.status.submit')}
             </Button>
           </DialogFooter>
         </form>

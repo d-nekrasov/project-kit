@@ -20,11 +20,6 @@ import { Textarea } from '@/components/ui/textarea';
 import type { DocumentFormDialogProps, DocumentFormValues } from '@/features/documents/documents-page.types';
 import { useI18n } from '@/lib/i18n/use-i18n';
 
-const schema = z.object({
-  title: z.string().min(2, 'Title must be at least 2 characters').max(255, 'Title must be at most 255 characters'),
-  content: z.string().optional()
-});
-
 export function DocumentFormDialog({
   open,
   mode,
@@ -35,6 +30,13 @@ export function DocumentFormDialog({
   onSubmit
 }: DocumentFormDialogProps) {
   const { t } = useI18n();
+  const schema = z.object({
+    title: z
+      .string()
+      .min(2, t('documents.validation.titleMin'))
+      .max(255, t('documents.validation.titleMax')),
+    content: z.string().optional()
+  });
   const form = useForm<DocumentFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -63,28 +65,30 @@ export function DocumentFormDialog({
     <Dialog open={open}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{mode === 'create' ? 'Create document' : 'Edit document'}</DialogTitle>
+          <DialogTitle>{mode === 'create' ? t('documents.dialogs.create.title') : t('documents.dialogs.edit.title')}</DialogTitle>
           <DialogDescription>
-            {mode === 'create' ? 'Create a new document in the active organization.' : 'Update document title and content.'}
+            {mode === 'create'
+              ? t('documents.dialogs.create.description')
+              : t('documents.dialogs.edit.description')}
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
           <form className="space-y-4" onSubmit={form.handleSubmit((values) => onSubmit(values))}>
-          {error ? (
-            <Alert className="border-red-200 bg-red-50 text-red-700">
-              <AlertCircle className="mb-1 h-4 w-4" />
-              <AlertTitle>Request failed</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          ) : null}
+            {error ? (
+              <Alert className="border-red-200 bg-red-50 text-red-700">
+                <AlertCircle className="mb-1 h-4 w-4" />
+                <AlertTitle>{t('common.requestFailed')}</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            ) : null}
 
             <FormField
               control={form.control}
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Title</FormLabel>
+                  <FormLabel>{t('documents.table.title')}</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -98,7 +102,7 @@ export function DocumentFormDialog({
               name="content"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Content</FormLabel>
+                  <FormLabel>{t('documents.fields.content')}</FormLabel>
                   <FormControl>
                     <Textarea rows={8} {...field} />
                   </FormControl>

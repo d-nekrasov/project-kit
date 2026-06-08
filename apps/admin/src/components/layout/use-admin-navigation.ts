@@ -19,6 +19,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/use-auth';
 import type { AuthContextValue } from '@/features/auth/auth-context';
 import { useI18n } from '@/lib/i18n/use-i18n';
+import { translateWithFallback } from '@/lib/i18n/translate-with-fallback';
 import { ROUTE_PERMISSIONS } from '@/lib/route-permissions';
 import { sdk } from '@/lib/sdk';
 
@@ -231,7 +232,7 @@ export function useAdminNavigation(): AdminNavigationGroup[] {
       .filter((item) => item.status === 'ENABLED' && item.manifest?.adminMenu?.length)
       .flatMap((item) =>
         (item.manifest?.adminMenu ?? []).map((menuItem) => ({
-          label: menuItem.label,
+          label: translateWithFallback(t, menuItem.labelKey, menuItem.label),
           path: menuItem.path,
           permission: menuItem.permission,
           moduleName: item.name,
@@ -241,7 +242,7 @@ export function useAdminNavigation(): AdminNavigationGroup[] {
       )
       .filter((item) => !coreMenuPaths.has(item.path) || coreModuleMenuPaths.has(item.path))
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-  }, [modulesQuery.data]);
+  }, [modulesQuery.data, t]);
 
   return useMemo(
     () =>

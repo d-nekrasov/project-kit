@@ -12,6 +12,7 @@ import {
 import { ModuleStatusBadge } from '@/features/modules/module-status-badge';
 import type { ModuleManifestDialogProps } from '@/features/modules/modules-page.types';
 import { useI18n } from '@/lib/i18n/use-i18n';
+import { translateWithFallback } from '@/lib/i18n/translate-with-fallback';
 
 function renderJsonBlock(value: unknown) {
   return (
@@ -25,7 +26,10 @@ function renderEmpty(text: string) {
   return <p className="text-sm text-muted-foreground">{text}</p>;
 }
 
-function renderAdminMenu(items: ModuleAdminMenuItem[] | undefined) {
+function renderAdminMenu(
+  items: ModuleAdminMenuItem[] | undefined,
+  t: (key: string, params?: Record<string, string | number | boolean | null | undefined>) => string
+) {
   if (!items?.length) {
     return renderEmpty('No admin menu items in manifest.');
   }
@@ -35,7 +39,7 @@ function renderAdminMenu(items: ModuleAdminMenuItem[] | undefined) {
       {items.map((item, index) => (
         <div key={`${item.path}-${index}`} className="rounded-md border p-3 text-sm">
           <div>
-            <span className="font-medium">Label:</span> {item.label}
+            <span className="font-medium">Label:</span> {translateWithFallback(t, item.labelKey, item.label)}
           </div>
           <div>
             <span className="font-medium">Path:</span> <span className="font-mono text-xs">{item.path}</span>
@@ -58,6 +62,10 @@ function renderAdminMenu(items: ModuleAdminMenuItem[] | undefined) {
 export function ModuleManifestDialog({ open, module, onOpenChange }: ModuleManifestDialogProps) {
   const { t } = useI18n();
   const manifest = module?.manifest;
+  const moduleTitle = module ? translateWithFallback(t, manifest?.titleKey, module.title) : '-';
+  const moduleDescription = module
+    ? translateWithFallback(t, manifest?.descriptionKey, module.description ?? manifest?.description ?? '—')
+    : '—';
 
   return (
     <Dialog open={open}>
@@ -65,7 +73,7 @@ export function ModuleManifestDialog({ open, module, onOpenChange }: ModuleManif
         <DialogHeader>
           <DialogTitle>{t('modulesPage.manifestDialog.title')}</DialogTitle>
           <DialogDescription>
-            {t('modulesPage.manifestDialog.description', { name: module?.title ?? module?.name ?? '-' })}
+            {t('modulesPage.manifestDialog.description', { name: moduleTitle || module?.name || '-' })}
           </DialogDescription>
         </DialogHeader>
 
@@ -78,7 +86,7 @@ export function ModuleManifestDialog({ open, module, onOpenChange }: ModuleManif
                   <span className="font-medium">name:</span> <span className="font-mono text-xs">{module.name}</span>
                 </div>
                 <div>
-                  <span className="font-medium">title:</span> {manifest?.title ?? module.title}
+                  <span className="font-medium">title:</span> {moduleTitle}
                 </div>
                 <div>
                   <span className="font-medium">version:</span> {manifest?.version ?? module.version}
@@ -87,7 +95,7 @@ export function ModuleManifestDialog({ open, module, onOpenChange }: ModuleManif
                   <span className="font-medium">status:</span> <ModuleStatusBadge status={module.status} />
                 </div>
                 <div className="md:col-span-2">
-                  <span className="font-medium">description:</span> {manifest?.description ?? module.description ?? '—'}
+                  <span className="font-medium">description:</span> {moduleDescription}
                 </div>
               </div>
             </section>
@@ -109,7 +117,7 @@ export function ModuleManifestDialog({ open, module, onOpenChange }: ModuleManif
 
             <section className="space-y-2 rounded-md border p-3">
               <h3 className="text-sm font-semibold">{t('modulesPage.manifestDialog.adminMenu')}</h3>
-              {renderAdminMenu(manifest?.adminMenu)}
+              {renderAdminMenu(manifest?.adminMenu, t)}
             </section>
 
             <section className="space-y-2 rounded-md border p-3">
