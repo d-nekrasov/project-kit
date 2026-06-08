@@ -1,7 +1,84 @@
 {
   "modules": {
     "title": "Modules",
+    "description": "Connected platform and business modules.",
+    "searchPlaceholder": "Search by module name or title",
     "enabled": "Enabled",
-    "disabled": "Disabled"
+    "disabled": "Disabled",
+    "table": {
+      "name": "Name",
+      "title": "Title",
+      "version": "Version",
+      "status": "Status",
+      "description": "Description",
+      "permissions": "Permissions",
+      "settings": "Settings",
+      "actions": "Actions"
+    },
+    "status": {
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "installed": "Installed",
+      "notInstalled": "Not installed"
+    },
+    "pagination": {
+      "page": "Page {{page}} of {{totalPages}}",
+      "total": "Total: {{total}}",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "empty": {
+      "title": "No modules found",
+      "description": "Try changing search or status filters."
+    },
+    "settings": {
+      "available": "Available",
+      "fields": "{{count}} fields"
+    },
+    "actions": {
+      "open": "Open actions for {{name}}",
+      "viewManifest": "View manifest",
+      "enable": "Enable module",
+      "disable": "Disable module"
+    },
+    "manifest": {
+      "title": "Module manifest",
+      "description": "Inspect module metadata for {{name}}.",
+      "emptyAdminMenu": "No admin menu items in manifest.",
+      "noPermissions": "No permissions in manifest.",
+      "noSettingsSchema": "No settings schema in manifest.",
+      "emptyManifest": "Manifest is empty.",
+      "moduleNotSelected": "Module is not selected.",
+      "sections": {
+        "overview": "Overview",
+        "permissions": "Permissions",
+        "adminMenu": "Admin menu",
+        "settingsSchema": "Settings schema",
+        "rawManifest": "Raw manifest"
+      },
+      "fields": {
+        "label": "Label",
+        "path": "Path",
+        "permission": "Permission",
+        "icon": "Icon",
+        "order": "Order"
+      },
+      "overview": {
+        "name": "name",
+        "title": "title",
+        "version": "version",
+        "status": "status",
+        "description": "description"
+      }
+    },
+    "statusDialog": {
+      "title": "Change module status",
+      "description": "Update status for {{name}}.",
+      "impactTitle": "Impact notice",
+      "impactDescription": "Disabling a module does not delete data. Permissions and settings remain. Endpoints protected by ModuleEnabledGuard return 403, and related menu items should be hidden in UI.",
+      "coreProtectionTitle": "Core protection",
+      "coreProtectionDescription": "The core module cannot be disabled.",
+      "submit": "Update status"
+    }
   }
 }

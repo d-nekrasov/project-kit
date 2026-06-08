@@ -17,6 +17,7 @@ export function DocumentStatusBadge({ status }: DocumentStatusBadgeProps) {
   const { t } = useI18n();
   const normalizedStatus = status.toLowerCase();
   const translatedStatus = t(`documents.status.${normalizedStatus}`);
+  const badgeClassName = statusClasses[status] ?? 'bg-slate-100 text-foreground/80';
 
-  return <Badge className={statusClasses[status]}>{translatedStatus === `documents.status.${normalizedStatus}` ? status : translatedStatus}</Badge>;
+  return <Badge className={badgeClassName}>{translatedStatus === `documents.status.${normalizedStatus}` ? status : translatedStatus}</Badge>;
 }
