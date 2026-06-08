@@ -1,5 +1,7 @@
 import type { ISODateString } from './common.types';
 
+export type ProjectLocale = 'ru' | 'en';
+
 export type InstallerStatusResponse = {
   installed: boolean;
   installedAt?: ISODateString;
@@ -14,6 +16,7 @@ export type SetupInstallerDto = {
   adminEmail: string;
   adminPassword: string;
   adminName: string;
+  locale?: ProjectLocale;
 };
 
 export type SetupInstallerResponse = {

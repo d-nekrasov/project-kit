@@ -3,6 +3,7 @@ import type { PropsWithChildren, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Select } from '@/components/ui/select';
+import { useI18n } from '@/lib/i18n/use-i18n';
 import { cn } from '@/lib/utils';
 
 type CrudPageHeaderProps = {
@@ -45,24 +46,24 @@ type CrudPaginationProps = {
 };
 
 export function CrudPagination({ page, totalPages, total, limit, onPageChange, onLimitChange }: CrudPaginationProps) {
+  const { t } = useI18n();
+
   return (
     <Card>
       <CardHeader className="flex flex-col gap-3 p-4 text-sm md:flex-row md:items-center md:justify-between">
-        <div className="text-muted-foreground">
-          Page {page} of {totalPages} • Total: {total}
-        </div>
+        <div className="text-muted-foreground">{`${t('common.pageOfTotal', { page, totalPages })} • ${t('common.totalCount', { total })}`}</div>
 
         <div className="flex items-center gap-2">
           <Button type="button" variant="outline" size="sm" onClick={() => onPageChange(page - 1)} disabled={page <= 1}>
-            Previous
+            {t('common.previous')}
           </Button>
           <Button type="button" variant="outline" size="sm" onClick={() => onPageChange(page + 1)} disabled={page >= totalPages}>
-            Next
+            {t('common.next')}
           </Button>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">Rows per page</span>
+          <span className="text-muted-foreground">{t('common.rowsPerPage')}</span>
           <Select
             value={String(limit)}
             onChange={(event) => {

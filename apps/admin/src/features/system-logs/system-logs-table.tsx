@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { SystemLogLevelBadge } from '@/features/system-logs/system-log-level-badge';
 import { SystemLogSourceBadge } from '@/features/system-logs/system-log-source-badge';
 import type { SystemLogsTableProps } from '@/features/system-logs/system-logs-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 function SystemLogsTableSkeleton() {
   return (
@@ -29,12 +30,13 @@ function truncate(value: string | null, max = 80) {
 }
 
 export function SystemLogsTable({ logs, isLoading, onViewDetails }: SystemLogsTableProps) {
+  const { t } = useI18n();
   if (isLoading) {
     return <SystemLogsTableSkeleton />;
   }
 
   if (!logs.length) {
-    return <EmptyState title="No system logs found" description="Try changing search query or filters." />;
+    return <EmptyState title={t('logs.system.emptyTitle')} description={t('logs.system.emptyDescription')} />;
   }
 
   return (
@@ -43,13 +45,13 @@ export function SystemLogsTable({ logs, isLoading, onViewDetails }: SystemLogsTa
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Created at</TableHead>
-              <TableHead>Level</TableHead>
-              <TableHead>Source</TableHead>
-              <TableHead>Message</TableHead>
-              <TableHead>User</TableHead>
-              <TableHead>Organization</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>{t('common.createdAt')}</TableHead>
+              <TableHead>{t('logs.system.fields.level')}</TableHead>
+              <TableHead>{t('logs.system.fields.source')}</TableHead>
+              <TableHead>{t('logs.system.fields.message')}</TableHead>
+              <TableHead>{t('logs.system.fields.user')}</TableHead>
+              <TableHead>{t('logs.system.fields.organization')}</TableHead>
+              <TableHead className="text-right">{t('common.actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -94,18 +96,18 @@ export function SystemLogsTable({ logs, isLoading, onViewDetails }: SystemLogsTa
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger>
-                      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="Open actions">
+                      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label={t('logs.system.openActions')}>
                         <Ellipsis className="size-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
                       <DropdownMenuItem onClick={() => onViewDetails(log)}>
                         <Eye className="mr-2 size-4" />
-                        View details
+                        {t('logs.system.viewDetails')}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigator.clipboard.writeText(log.id)}>
                         <IdCard className="mr-2 size-4" />
-                        Copy log ID
+                        {t('logs.system.copyLogId')}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

@@ -13,6 +13,7 @@ import { AuditLogsModule } from './core/audit-logs/audit-logs.module';
 import { SystemLogsModule } from './core/system-logs/system-logs.module';
 import { ModuleRegistryModule } from './core/module-registry/module-registry.module';
 import { InstallerModule } from './core/installer/installer.module';
+import { I18nModule } from './core/i18n/i18n.module';
 import { DocumentsModule } from './modules/documents/documents.module';
 import { OrganizationContextModule } from './core/organization-context/organization-context.module';
 import { NotificationsModule } from './core/notifications/notifications.module';
@@ -29,6 +30,7 @@ import { NotificationsModule } from './core/notifications/notifications.module';
     RolesModule,
     PermissionsModule,
     SettingsModule,
+    I18nModule,
     AuditLogsModule,
     SystemLogsModule,
     ModuleRegistryModule,

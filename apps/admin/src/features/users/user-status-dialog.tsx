@@ -15,6 +15,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import type { UserStatusDialogProps } from '@/features/users/users-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 export function UserStatusDialog({
   open,
@@ -24,6 +25,7 @@ export function UserStatusDialog({
   onOpenChange,
   onSubmit
 }: UserStatusDialogProps) {
+  const { t } = useI18n();
   const [status, setStatus] = useState<UserStatus>('ACTIVE');
 
   useEffect(() => {
@@ -36,9 +38,9 @@ export function UserStatusDialog({
     <AlertDialog open={open}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Change user status</AlertDialogTitle>
+          <AlertDialogTitle>{t('users.statusDialog.title')}</AlertDialogTitle>
           <AlertDialogDescription>
-            Update login access for <span className="font-medium">{user?.name ?? user?.email}</span>.
+            {t('users.statusDialog.description', { name: user?.name ?? user?.email ?? '-' })}
           </AlertDialogDescription>
         </AlertDialogHeader>
 
@@ -51,31 +53,31 @@ export function UserStatusDialog({
         >
           {errorMessage ? (
             <Alert className="border-red-200 bg-red-50 text-red-700">
-              <AlertTitle>Request failed</AlertTitle>
+              <AlertTitle>{t('common.requestFailed')}</AlertTitle>
               <AlertDescription>{errorMessage}</AlertDescription>
             </Alert>
           ) : null}
 
           <Alert className="border-amber-200 bg-amber-50 text-amber-800">
-            <AlertTitle>Access impact</AlertTitle>
-            <AlertDescription>Inactive or blocked users will not be able to sign in.</AlertDescription>
+            <AlertTitle>{t('users.statusDialog.impactTitle')}</AlertTitle>
+            <AlertDescription>{t('users.statusDialog.impactDescription')}</AlertDescription>
           </Alert>
 
           <div className="space-y-2">
-            <Label htmlFor="status">Status</Label>
+            <Label htmlFor="status">{t('common.status')}</Label>
             <Select id="status" value={status} onChange={(event) => setStatus(event.target.value as UserStatus)}>
-              <option value="ACTIVE">ACTIVE</option>
-              <option value="INACTIVE">INACTIVE</option>
-              <option value="BLOCKED">BLOCKED</option>
+              <option value="ACTIVE">{t('users.status.active')}</option>
+              <option value="INACTIVE">{t('users.status.inactive')}</option>
+              <option value="BLOCKED">{t('users.status.blocked')}</option>
             </Select>
           </div>
 
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-              Cancel
+              {t('common.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Updating...' : 'Update status'}
+              {isSubmitting ? t('common.updating') : t('users.statusDialog.submit')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </form>

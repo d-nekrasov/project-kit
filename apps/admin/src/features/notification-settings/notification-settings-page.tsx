@@ -14,11 +14,13 @@ import { notificationSettingsQueryKeys } from '@/features/notification-settings/
 import { NotificationTemplateDialog } from '@/features/notification-settings/notification-template-dialog';
 import { NotificationTemplatesTable } from '@/features/notification-settings/notification-templates-table';
 import { getApiErrorMessage } from '@/lib/api-error-message';
+import { useI18n } from '@/lib/i18n/use-i18n';
 import { sdk } from '@/lib/sdk';
 
 export function NotificationSettingsPage() {
   const auth = useAuth();
   const queryClient = useQueryClient();
+  const { t } = useI18n();
   const [activeSection, setActiveSection] = useState<'connectors' | 'templates'>('connectors');
   const [search, setSearch] = useState('');
   const [editingConnector, setEditingConnector] = useState<NotificationConnectorResponse | null>(null);
@@ -118,7 +120,7 @@ export function NotificationSettingsPage() {
               <p className="text-sm text-muted-foreground">Edit event copy and delivery channels.</p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="notification-template-search">Search</Label>
+              <Label htmlFor="notification-template-search">{t('common.search')}</Label>
               <Input
                 id="notification-template-search"
                 placeholder="Search by event"

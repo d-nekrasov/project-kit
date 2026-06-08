@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { NotificationChannelBadge } from '@/features/notification-settings/notification-channel-badge';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 type NotificationTemplatesTableProps = {
   templates: NotificationTemplateResponse[];
@@ -22,6 +23,8 @@ function normalizeChannels(channels: unknown): NotificationChannel[] {
 }
 
 export function NotificationTemplatesTable({ templates, isLoading, onEdit }: NotificationTemplatesTableProps) {
+  const { t } = useI18n();
+
   if (isLoading) {
     return <DataTableSkeleton rows={4} />;
   }
@@ -67,7 +70,7 @@ export function NotificationTemplatesTable({ templates, isLoading, onEdit }: Not
                   <DropdownMenuContent>
                     <DropdownMenuItem onClick={() => onEdit(template)}>
                       <Pencil className="mr-2 inline h-4 w-4" />
-                      Edit
+                      {t('common.edit')}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

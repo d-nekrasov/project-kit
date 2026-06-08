@@ -4,6 +4,7 @@ export type ModuleStatus = 'ENABLED' | 'DISABLED';
 
 export type ModuleAdminMenuItem = {
   label: string;
+  labelKey?: string;
   path: string;
   permission?: string;
   icon?: string;
@@ -13,8 +14,10 @@ export type ModuleAdminMenuItem = {
 export type ModuleManifest = {
   name: string;
   title: string;
+  titleKey?: string;
   version: string;
   description?: string;
+  descriptionKey?: string;
   permissions?: string[];
   settingsSchema?: Record<string, unknown>;
   adminMenu?: ModuleAdminMenuItem[];

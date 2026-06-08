@@ -18,10 +18,12 @@ import type {
   OrganizationStatusFilter
 } from '@/features/organizations/organizations-page.types';
 import { getApiErrorMessage } from '@/lib/api-error-message';
+import { useI18n } from '@/lib/i18n/use-i18n';
 import { sdk } from '@/lib/sdk';
 
 export function OrganizationsPage() {
   const auth = useAuth();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const { user } = auth;
   const isSuperAdmin = user?.systemRoles.includes('super_admin') ?? false;
@@ -122,13 +124,13 @@ export function OrganizationsPage() {
   return (
     <div className="space-y-6">
       <CrudPageHeader
-        title="Organizations"
-        description="Manage organizations, their statuses and core counters."
+        title={t('organizations.title')}
+        description={t('organizations.description')}
         action={
           isSuperAdmin ? (
             <Button type="button" onClick={() => setCreateDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              Create organization
+              {t('common.createItem', { item: t('entities.organization') })}
             </Button>
           ) : null
         }
@@ -152,7 +154,7 @@ export function OrganizationsPage() {
       {pageError ? <ErrorState message={pageError} /> : null}
 
       {!organizationsQuery.isLoading && !organizations.length && !pageError ? (
-        <EmptyState title="No organizations found" description="Try changing search or status filters." />
+        <EmptyState title={t('organizations.emptyTitle')} description={t('organizations.emptyDescription')} />
       ) : (
         <OrganizationsTable
           organizations={organizations}

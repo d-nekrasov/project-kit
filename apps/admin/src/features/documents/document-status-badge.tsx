@@ -1,6 +1,7 @@
 import type { DocumentStatus } from '@project-kit/sdk';
 
 import { Badge } from '@/components/ui/badge';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 type DocumentStatusBadgeProps = {
   status: DocumentStatus;
@@ -13,5 +14,9 @@ const statusClasses: Record<DocumentStatus, string> = {
 };
 
 export function DocumentStatusBadge({ status }: DocumentStatusBadgeProps) {
-  return <Badge className={statusClasses[status]}>{status}</Badge>;
+  const { t } = useI18n();
+  const normalizedStatus = status.toLowerCase();
+  const translatedStatus = t(`documents.status.${normalizedStatus}`);
+
+  return <Badge className={statusClasses[status]}>{translatedStatus === `documents.status.${normalizedStatus}` ? status : translatedStatus}</Badge>;
 }

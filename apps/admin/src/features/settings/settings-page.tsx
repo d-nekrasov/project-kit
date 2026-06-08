@@ -14,10 +14,12 @@ import { settingsQueryKeys } from '@/features/settings/settings-query-keys';
 import { SettingsTable } from '@/features/settings/settings-table';
 import { SettingsToolbar } from '@/features/settings/settings-toolbar';
 import { getApiErrorMessage } from '@/lib/api-error-message';
+import { useI18n } from '@/lib/i18n/use-i18n';
 import { sdk } from '@/lib/sdk';
 
 export function SettingsPage() {
   const auth = useAuth();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const { user } = auth;
   const isSuperAdmin = user?.systemRoles.includes('super_admin') ?? false;
@@ -102,8 +104,8 @@ export function SettingsPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h2 className="text-2xl font-semibold text-foreground">Settings</h2>
-        <p className="text-sm text-muted-foreground">Manage global, organization and module settings.</p>
+        <h2 className="text-2xl font-semibold text-foreground">{t('settings.title')}</h2>
+        <p className="text-sm text-muted-foreground">{t('settings.description')}</p>
       </div>
 
       <SettingsToolbar
@@ -135,7 +137,7 @@ export function SettingsPage() {
 
       {pageError ? (
         <Alert className="border-red-200 bg-red-50 text-red-700">
-          <AlertTitle>Failed to load settings</AlertTitle>
+          <AlertTitle>{t('settings.failedToLoad')}</AlertTitle>
           <AlertDescription>{pageError}</AlertDescription>
         </Alert>
       ) : null}
@@ -170,7 +172,7 @@ export function SettingsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">Rows per page</span>
+          <span className="text-muted-foreground">{t('common.rowsPerPage')}</span>
           <Select
             value={String(limit)}
             onChange={(event) => {

@@ -6,6 +6,8 @@
     "start": "node dist/main",
     "start:dev": "nest start --watch",
     "build": "nest build",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "node --import tsx --test test/**/*.unit.test.ts",
     "test:e2e": "pnpm run build && node --import tsx --test --test-concurrency=1 test/**/*.test.ts",
     "lint": "echo 'lint is not configured yet'",
     "format": "prettier --write \"src/**/*.ts\" \"prisma/**/*.ts\"",

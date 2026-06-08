@@ -7,6 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { NotificationChannelBadge } from '@/features/notification-settings/notification-channel-badge';
 import { NotificationConnectorStatusBadge } from '@/features/notification-settings/notification-connector-status-badge';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 type NotificationConnectorsTableProps = {
   connectors: NotificationConnectorResponse[];
@@ -30,6 +31,8 @@ function summarizeConfig(config: Record<string, unknown> | null) {
 }
 
 export function NotificationConnectorsTable({ connectors, isLoading, onEdit }: NotificationConnectorsTableProps) {
+  const { t } = useI18n();
+
   if (isLoading) {
     return <DataTableSkeleton rows={4} />;
   }
@@ -73,7 +76,7 @@ export function NotificationConnectorsTable({ connectors, isLoading, onEdit }: N
                   <DropdownMenuContent>
                     <DropdownMenuItem onClick={() => onEdit(connector)}>
                       <Pencil className="mr-2 inline h-4 w-4" />
-                      Edit
+                      {t('common.edit')}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
