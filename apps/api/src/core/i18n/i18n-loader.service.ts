@@ -1,15 +1,21 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 import { readdir, readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 
 export type I18nMessages = Record<string, string>;
+export const I18N_ROOT_DIRS = 'I18N_ROOT_DIRS';
 
 @Injectable()
 export class I18nLoaderService {
   private readonly rootDirs: string[];
 
-  constructor(rootDir: string | string[] = [resolve(__dirname, '../../'), resolve(__dirname, '../../../')]) {
-    this.rootDirs = Array.isArray(rootDir) ? rootDir : [rootDir];
+  constructor(
+    @Optional()
+    @Inject(I18N_ROOT_DIRS)
+    rootDir?: string | string[]
+  ) {
+    const resolvedRootDir = rootDir ?? [resolve(__dirname, '../../'), resolve(__dirname, '../../../')];
+    this.rootDirs = Array.isArray(resolvedRootDir) ? resolvedRootDir : [resolvedRootDir];
   }
 
   async loadCoreMessages(locale: string): Promise<I18nMessages> {
