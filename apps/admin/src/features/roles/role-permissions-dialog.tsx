@@ -15,6 +15,7 @@ import {
   DialogTitle
 } from '@/components/ui/dialog';
 import type { RolePermissionsDialogProps } from '@/features/roles/roles-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 function isPermissionsReadonly(roleCode?: string) {
   return roleCode === 'organization_admin';
@@ -31,6 +32,7 @@ export function RolePermissionsDialog({
   onOpenChange,
   onSubmit
 }: RolePermissionsDialogProps) {
+  const { t } = useI18n();
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
 
   useEffect(() => {
@@ -112,7 +114,7 @@ export function RolePermissionsDialog({
 
           <div className="max-h-[420px] space-y-4 overflow-auto pr-1">
             {isLoading ? (
-              <div className="text-sm text-muted-foreground">Loading permissions...</div>
+              <div className="text-sm text-muted-foreground">{t('common.loading')}</div>
             ) : (
               permissionGroups.map((group) => {
                 const moduleCodes = group.permissions.map((permission) => permission.code);
@@ -191,14 +193,14 @@ export function RolePermissionsDialog({
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             type="button"
             disabled={isSubmitting || isReadonly || isLoading}
             onClick={() => onSubmit(selectedPermissions)}
           >
-            {isSubmitting ? 'Saving...' : 'Save'}
+            {isSubmitting ? t('common.saving') : t('common.save')}
           </Button>
         </DialogFooter>
       </DialogContent>

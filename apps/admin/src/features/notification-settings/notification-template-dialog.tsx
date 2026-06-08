@@ -19,6 +19,7 @@ import {
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 const editableChannels = ['IN_APP', 'EMAIL'] as const;
 const futureChannels = ['SMS', 'MESSENGER', 'WEBHOOK'] as const;
@@ -54,6 +55,7 @@ export function NotificationTemplateDialog({
   onOpenChange,
   onSubmit
 }: NotificationTemplateDialogProps) {
+  const { t } = useI18n();
   const form = useForm<TemplateFormState>({
     resolver: zodResolver(templateFormSchema),
     defaultValues: {
@@ -215,10 +217,10 @@ export function NotificationTemplateDialog({
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Saving...' : 'Save changes'}
+                {isSubmitting ? t('common.saving') : t('common.saveChanges')}
               </Button>
             </DialogFooter>
           </form>

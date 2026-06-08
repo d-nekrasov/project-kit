@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { OrganizationStatusBadge } from '@/features/organizations/organization-status-badge';
 import type { OrganizationsTableProps } from '@/features/organizations/organizations-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 function formatDate(value: string) {
   return new Date(value).toLocaleString();
@@ -34,6 +35,8 @@ export function OrganizationsTable({
   onEdit,
   onChangeStatus
 }: OrganizationsTableProps) {
+  const { t } = useI18n();
+
   if (isLoading) {
     return <OrganizationsTableSkeleton />;
   }
@@ -81,7 +84,7 @@ export function OrganizationsTable({
                     <DropdownMenuContent>
                       <DropdownMenuItem onClick={() => onEdit(organization)}>
                         <Pencil className="mr-2 inline h-4 w-4" />
-                        Edit
+                        {t('common.edit')}
                       </DropdownMenuItem>
                       {isSuperAdmin ? (
                         <DropdownMenuItem onClick={() => onChangeStatus(organization)}>

@@ -18,10 +18,12 @@ import type {
   OrganizationStatusFilter
 } from '@/features/organizations/organizations-page.types';
 import { getApiErrorMessage } from '@/lib/api-error-message';
+import { useI18n } from '@/lib/i18n/use-i18n';
 import { sdk } from '@/lib/sdk';
 
 export function OrganizationsPage() {
   const auth = useAuth();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const { user } = auth;
   const isSuperAdmin = user?.systemRoles.includes('super_admin') ?? false;
@@ -128,7 +130,7 @@ export function OrganizationsPage() {
           isSuperAdmin ? (
             <Button type="button" onClick={() => setCreateDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              Create organization
+              {t('common.createItem', { item: t('entities.organization') })}
             </Button>
           ) : null
         }

@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import type { SettingsToolbarProps } from '@/features/settings/settings-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 export function SettingsToolbar({
   search,
@@ -15,10 +16,12 @@ export function SettingsToolbar({
   onCreate,
   onOpenSchema
 }: SettingsToolbarProps) {
+  const { t } = useI18n();
+
   return (
     <div className="grid gap-3 rounded-lg border bg-card p-4 lg:grid-cols-12 lg:items-end">
       <div className="space-y-2 lg:col-span-5">
-        <Label htmlFor="settings-search">Search</Label>
+        <Label htmlFor="settings-search">{t('common.search')}</Label>
         <Input
           id="settings-search"
           placeholder="Search by key or module"

@@ -9,6 +9,7 @@ import {
   type SystemLogLevelFilter,
   type SystemLogsToolbarProps
 } from '@/features/system-logs/system-logs-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 export function SystemLogsToolbar({
   search,
@@ -27,10 +28,12 @@ export function SystemLogsToolbar({
   onDateToChange,
   onReset
 }: SystemLogsToolbarProps) {
+  const { t } = useI18n();
+
   return (
     <div className="grid gap-3 rounded-lg border bg-card p-4 md:grid-cols-2 xl:grid-cols-4">
       <div className="space-y-1 md:col-span-2 xl:col-span-4">
-        <Label htmlFor="system-logs-search">Search</Label>
+        <Label htmlFor="system-logs-search">{t('common.search')}</Label>
         <Input
           id="system-logs-search"
           placeholder="Search message, source, user, organization, context"

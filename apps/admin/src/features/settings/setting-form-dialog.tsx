@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { JsonValueEditor } from '@/features/settings/json-value-editor';
 import type { SettingFormDialogProps, SettingFormDialogSubmitValues } from '@/features/settings/settings-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 const settingFormSchema = z
   .object({
@@ -67,6 +68,7 @@ export function SettingFormDialog({
   onOpenChange,
   onSubmit
 }: SettingFormDialogProps) {
+  const { t } = useI18n();
   const form = useForm<SettingFormState>({
     resolver: zodResolver(settingFormSchema),
     defaultValues: {
@@ -249,10 +251,10 @@ export function SettingFormDialog({
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={isSubmitting || isSubmitDisabled}>
-                {isSubmitting ? 'Saving...' : isEdit ? 'Save changes' : 'Create setting'}
+                {isSubmitting ? t('common.saving') : isEdit ? t('common.saveChanges') : t('common.create')}
               </Button>
             </DialogFooter>
           </form>

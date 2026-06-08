@@ -20,6 +20,7 @@ import type {
   OrganizationFormDialogProps,
   OrganizationFormValues
 } from '@/features/organizations/organizations-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 const schema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -38,6 +39,7 @@ export function OrganizationFormDialog({
   onOpenChange,
   onSubmit
 }: OrganizationFormDialogProps) {
+  const { t } = useI18n();
   const form = useForm<OrganizationFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -112,10 +114,14 @@ export function OrganizationFormDialog({
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Saving...' : mode === 'create' ? 'Create organization' : 'Save changes'}
+                {isSubmitting
+                  ? t('common.saving')
+                  : mode === 'create'
+                    ? t('common.createItem', { item: t('entities.organization') })
+                    : t('common.saveChanges')}
               </Button>
             </DialogFooter>
           </form>

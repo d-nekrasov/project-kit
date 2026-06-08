@@ -16,6 +16,7 @@ import type { DocumentFormValues, DocumentStatusFilter } from '@/features/docume
 import { DocumentsTable } from '@/features/documents/documents-table';
 import { DocumentsToolbar } from '@/features/documents/documents-toolbar';
 import { getApiErrorMessage } from '@/lib/api-error-message';
+import { useI18n } from '@/lib/i18n/use-i18n';
 import { sdk } from '@/lib/sdk';
 
 function isModuleDisabledError(error: unknown) {
@@ -26,6 +27,7 @@ function isModuleDisabledError(error: unknown) {
 
 export function DocumentsPage() {
   const auth = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -135,7 +137,7 @@ export function DocumentsPage() {
           <p className="text-sm text-muted-foreground">Manage organization documents and their publication lifecycle.</p>
         </div>
         <Button type="button" onClick={() => setCreateDialogOpen(true)} disabled={moduleDisabled}>
-          Create document
+          {t('common.createItem', { item: t('entities.document') })}
         </Button>
       </div>
 
@@ -186,7 +188,7 @@ export function DocumentsPage() {
 
           <div className="flex items-center gap-2">
             <Button type="button" variant="outline" size="sm" onClick={() => setPage((value) => value - 1)} disabled={page <= 1}>
-              Previous
+              {t('common.previous')}
             </Button>
             <Button
               type="button"
@@ -195,12 +197,12 @@ export function DocumentsPage() {
               onClick={() => setPage((value) => value + 1)}
               disabled={page >= (documentsMeta?.totalPages ?? 1)}
             >
-              Next
+              {t('common.next')}
             </Button>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-muted-foreground">Rows per page</span>
+            <span className="text-muted-foreground">{t('common.rowsPerPage')}</span>
             <Select
               value={String(limit)}
               onChange={(event) => {

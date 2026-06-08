@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { AUDIT_ACTION_OPTIONS, AUDIT_ENTITY_TYPE_OPTIONS, type AuditLogsToolbarProps } from '@/features/audit-logs/audit-logs-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 export function AuditLogsToolbar({
   search,
@@ -24,10 +25,12 @@ export function AuditLogsToolbar({
   onDateToChange,
   onReset
 }: AuditLogsToolbarProps) {
+  const { t } = useI18n();
+
   return (
     <div className="grid gap-3 rounded-lg border bg-card p-4 md:grid-cols-2 xl:grid-cols-4">
       <div className="space-y-1 md:col-span-2 xl:col-span-4">
-        <Label htmlFor="audit-logs-search">Search</Label>
+        <Label htmlFor="audit-logs-search">{t('common.search')}</Label>
         <Input
           id="audit-logs-search"
           placeholder="Search action, entity, user, organization, metadata"

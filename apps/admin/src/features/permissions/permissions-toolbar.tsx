@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import type { PermissionsToolbarProps } from '@/features/permissions/permissions-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 export function PermissionsToolbar({
   search,
@@ -14,11 +15,13 @@ export function PermissionsToolbar({
   onViewModeChange,
   isModulesLoading
 }: PermissionsToolbarProps) {
+  const { t } = useI18n();
+
   return (
     <div className="grid gap-4 rounded-lg border bg-card p-4 lg:grid-cols-3">
       <div className="grid gap-2">
         <Label htmlFor="permissions-search" className="h-5">
-          Search
+          {t('common.search')}
         </Label>
         <div className="min-h-10">
           <Input

@@ -2,6 +2,19 @@
   "common": {
     "save": "Сохранить",
     "cancel": "Отмена",
-    "delete": "Удалить"
+    "delete": "Удалить",
+    "create": "Создать",
+    "edit": "Редактировать",
+    "search": "Поиск",
+    "loading": "Загрузка...",
+    "saving": "Сохранение...",
+    "saveChanges": "Сохранить изменения",
+    "previous": "Назад",
+    "next": "Далее",
+    "rowsPerPage": "Строк на странице",
+    "actions": "Действия",
+    "createItem": "Создать: {{item}}",
+    "editItem": "Редактировать: {{item}}",
+    "selectedCount": "Выбрано: {{count}}"
   }
 }

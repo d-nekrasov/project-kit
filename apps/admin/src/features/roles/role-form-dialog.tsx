@@ -17,6 +17,7 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import type { RoleFormDialogProps, RoleFormValues } from '@/features/roles/roles-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 const createSchema = z.object({
   code: z
@@ -41,6 +42,7 @@ export function RoleFormDialog({
   onOpenChange,
   onSubmit
 }: RoleFormDialogProps) {
+  const { t } = useI18n();
   const schema = mode === 'create' ? createSchema : editSchema;
 
   const form = useForm<RoleFormValues>({
@@ -130,10 +132,14 @@ export function RoleFormDialog({
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={isSubmitting || isSubmitDisabled}>
-                {isSubmitting ? 'Saving...' : mode === 'create' ? 'Create role' : 'Save changes'}
+                {isSubmitting
+                  ? t('common.saving')
+                  : mode === 'create'
+                    ? t('common.createItem', { item: t('entities.role') })
+                    : t('common.saveChanges')}
               </Button>
             </DialogFooter>
           </form>

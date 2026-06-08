@@ -2,12 +2,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import type { OrganizationsToolbarProps } from '@/features/organizations/organizations-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 export function OrganizationsToolbar({ search, onSearchChange, status, onStatusChange }: OrganizationsToolbarProps) {
+  const { t } = useI18n();
+
   return (
     <div className="grid gap-3 md:grid-cols-2">
       <div className="space-y-2">
-        <Label htmlFor="organizations-search">Search</Label>
+        <Label htmlFor="organizations-search">{t('common.search')}</Label>
         <Input
           id="organizations-search"
           placeholder="Search by organization name or slug"

@@ -18,11 +18,13 @@ import {
   useSidebar
 } from '@/components/ui/sidebar';
 import { useAdminNavigation } from '@/components/layout/use-admin-navigation';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const navigationGroups = useAdminNavigation();
   const appName = import.meta.env.VITE_APP_NAME || 'Project Kit';
+  const { t } = useI18n();
 
   return (
     <Sidebar collapsible="icon" className="hidden md:flex">
@@ -30,7 +32,7 @@ export function AppSidebar() {
         {state === 'expanded' ? (
           <div className="min-w-0">
             <div className="truncate text-sm font-semibold">{appName}</div>
-            <div className="text-xs text-muted-foreground">Admin Console</div>
+            <div className="text-xs text-muted-foreground">{t('layout.adminConsole')}</div>
           </div>
         ) : (
           <div className="flex size-9 items-center justify-center rounded-lg bg-slate-900 text-sm font-semibold text-white">
@@ -83,8 +85,8 @@ export function AppSidebar() {
           <>
             <Separator className="mb-3" />
             <div className="rounded-lg border bg-muted/40 p-3 text-xs text-muted-foreground">
-              <div className="font-medium text-foreground">System status</div>
-              <div className="mt-1">Secure admin workspace</div>
+              <div className="font-medium text-foreground">{t('layout.systemStatus')}</div>
+              <div className="mt-1">{t('layout.secureWorkspace')}</div>
             </div>
           </>
         ) : null}

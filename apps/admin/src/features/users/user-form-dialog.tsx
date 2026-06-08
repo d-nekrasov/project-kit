@@ -18,6 +18,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import type { UserFormDialogProps, UserFormValues } from '@/features/users/users-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 const createSchema = z.object({
   email: z.string().email('Enter a valid email'),
@@ -57,6 +58,7 @@ export function UserFormDialog({
   onOpenChange,
   onSubmit
 }: UserFormDialogProps) {
+  const { t } = useI18n();
   const defaultRoleId = useMemo(() => findDefaultRoleId(user, activeOrganizationId), [activeOrganizationId, user]);
   const schema = mode === 'create' ? createSchema : editSchema;
   const initKeyRef = useRef<string>('');
@@ -241,10 +243,14 @@ export function UserFormDialog({
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Saving...' : mode === 'create' ? 'Create user' : 'Save changes'}
+                {isSubmitting
+                  ? t('common.saving')
+                  : mode === 'create'
+                    ? t('common.createItem', { item: t('entities.user') })
+                    : t('common.saveChanges')}
               </Button>
             </DialogFooter>
           </form>

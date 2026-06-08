@@ -19,6 +19,7 @@ import {
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 const connectorFormSchema = z
   .object({
@@ -74,6 +75,7 @@ export function NotificationConnectorDialog({
   onOpenChange,
   onSubmit
 }: NotificationConnectorDialogProps) {
+  const { t } = useI18n();
   const form = useForm<ConnectorFormState>({
     resolver: zodResolver(connectorFormSchema),
     defaultValues: {
@@ -266,10 +268,10 @@ export function NotificationConnectorDialog({
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Saving...' : 'Save changes'}
+                {isSubmitting ? t('common.saving') : t('common.saveChanges')}
               </Button>
             </DialogFooter>
           </form>

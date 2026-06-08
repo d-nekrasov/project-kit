@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import type { RolesToolbarProps } from '@/features/roles/roles-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 export function RolesToolbar({
   search,
@@ -17,6 +18,8 @@ export function RolesToolbar({
   isOrganizationsLoading,
   organizationsErrorMessage
 }: RolesToolbarProps) {
+  const { t } = useI18n();
+
   return (
     <div className="grid gap-4 rounded-lg border bg-card p-4 lg:grid-cols-3">
       {isSuperAdmin ? (
@@ -54,7 +57,7 @@ export function RolesToolbar({
 
       <div className="grid gap-2">
         <Label htmlFor="roles-search" className="h-5">
-          Search
+          {t('common.search')}
         </Label>
         <div className="min-h-10">
           <Input

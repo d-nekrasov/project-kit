@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/features/auth/use-auth';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 function getInitial(value?: string | null) {
   return (value ?? 'U').slice(0, 1).toUpperCase();
@@ -20,6 +21,7 @@ function getInitial(value?: string | null) {
 export function UserMenu() {
   const auth = useAuth();
   const navigate = useNavigate();
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const displayName = auth.user?.name ?? auth.user?.email ?? 'User';
 
@@ -31,7 +33,7 @@ export function UserMenu() {
           variant="ghost"
           size="sm"
           className="h-10 gap-2 rounded-full px-2"
-          aria-label="Open user menu"
+          aria-label={t('layout.openUserMenu')}
           onClick={() => setOpen((value) => !value)}
         >
           <Avatar>
@@ -54,7 +56,7 @@ export function UserMenu() {
             }}
           >
             <UserRound className="mr-2 size-4" aria-hidden="true" />
-            Profile
+            {t('layout.profile')}
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => {
@@ -64,7 +66,7 @@ export function UserMenu() {
             }}
           >
             <LogOut className="mr-2 size-4" aria-hidden="true" />
-            Logout
+            {t('auth.logout')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       ) : null}

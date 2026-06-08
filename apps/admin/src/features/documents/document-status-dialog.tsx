@@ -14,6 +14,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import type { DocumentStatusDialogProps } from '@/features/documents/documents-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 export function DocumentStatusDialog({
   open,
@@ -23,6 +24,7 @@ export function DocumentStatusDialog({
   onOpenChange,
   onSubmit
 }: DocumentStatusDialogProps) {
+  const { t } = useI18n();
   const [status, setStatus] = useState<DocumentStatus>('DRAFT');
 
   useEffect(() => {
@@ -71,7 +73,7 @@ export function DocumentStatusDialog({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Updating...' : 'Update status'}

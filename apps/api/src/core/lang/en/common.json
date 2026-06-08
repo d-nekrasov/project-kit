@@ -2,6 +2,19 @@
   "common": {
     "save": "Save",
     "cancel": "Cancel",
-    "delete": "Delete"
+    "delete": "Delete",
+    "create": "Create",
+    "edit": "Edit",
+    "search": "Search",
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "saveChanges": "Save changes",
+    "previous": "Previous",
+    "next": "Next",
+    "rowsPerPage": "Rows per page",
+    "actions": "Actions",
+    "createItem": "Create {{item}}",
+    "editItem": "Edit {{item}}",
+    "selectedCount": "{{count}} selected"
   }
 }

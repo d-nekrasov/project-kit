@@ -14,10 +14,12 @@ import type { RoleFormValues } from '@/features/roles/roles-page.types';
 import { RolesTable } from '@/features/roles/roles-table';
 import { RolesToolbar } from '@/features/roles/roles-toolbar';
 import { getApiErrorMessage } from '@/lib/api-error-message';
+import { useI18n } from '@/lib/i18n/use-i18n';
 import { sdk } from '@/lib/sdk';
 
 export function RolesPage() {
   const auth = useAuth();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
@@ -169,7 +171,7 @@ export function RolesPage() {
           <p className="text-sm text-muted-foreground">Manage organization roles and permissions.</p>
         </div>
         <Button type="button" onClick={() => setCreateDialogOpen(true)} disabled={shouldSelectOrganization}>
-          Create role
+          {t('common.createItem', { item: t('entities.role') })}
         </Button>
       </div>
 
@@ -237,7 +239,7 @@ export function RolesPage() {
 
         <div className="flex items-center gap-2">
           <Button type="button" variant="outline" size="sm" onClick={() => setPage((value) => value - 1)} disabled={page <= 1}>
-            Previous
+            {t('common.previous')}
           </Button>
           <Button
             type="button"
@@ -246,12 +248,12 @@ export function RolesPage() {
             onClick={() => setPage((value) => value + 1)}
             disabled={page >= (rolesMeta?.totalPages ?? 1)}
           >
-            Next
+            {t('common.next')}
           </Button>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">Rows per page</span>
+          <span className="text-muted-foreground">{t('common.rowsPerPage')}</span>
           <Select
             value={String(limit)}
             onChange={(event) => {

@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { UserStatusBadge } from '@/features/users/user-status-badge';
 import type { UsersTableProps } from '@/features/users/users-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 function formatDate(value: string) {
   return new Date(value).toLocaleString();
@@ -45,6 +46,8 @@ function UsersTableSkeleton() {
 }
 
 export function UsersTable({ users, isLoading, onEdit, onChangeStatus, onViewDetails }: UsersTableProps) {
+  const { t } = useI18n();
+
   if (isLoading) {
     return <UsersTableSkeleton />;
   }
@@ -105,7 +108,7 @@ export function UsersTable({ users, isLoading, onEdit, onChangeStatus, onViewDet
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onEdit(user)}>
                         <Pencil className="mr-2 inline h-4 w-4" />
-                        Edit
+                        {t('common.edit')}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onChangeStatus(user)}>
                         <ShieldAlert className="mr-2 inline h-4 w-4" />

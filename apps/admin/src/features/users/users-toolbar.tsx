@@ -2,12 +2,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import type { UsersToolbarProps } from '@/features/users/users-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 export function UsersToolbar({ search, onSearchChange, status, onStatusChange }: UsersToolbarProps) {
+  const { t } = useI18n();
+
   return (
     <div className="grid gap-3 md:grid-cols-2">
       <div className="space-y-2">
-        <Label htmlFor="users-search">Search</Label>
+        <Label htmlFor="users-search">{t('common.search')}</Label>
         <Input
           id="users-search"
           placeholder="Search by name or email"

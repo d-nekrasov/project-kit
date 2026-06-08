@@ -15,6 +15,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import type { UserStatusDialogProps } from '@/features/users/users-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 export function UserStatusDialog({
   open,
@@ -24,6 +25,7 @@ export function UserStatusDialog({
   onOpenChange,
   onSubmit
 }: UserStatusDialogProps) {
+  const { t } = useI18n();
   const [status, setStatus] = useState<UserStatus>('ACTIVE');
 
   useEffect(() => {
@@ -72,7 +74,7 @@ export function UserStatusDialog({
 
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-              Cancel
+              {t('common.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Updating...' : 'Update status'}

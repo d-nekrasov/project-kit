@@ -14,6 +14,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import type { ModuleStatusDialogProps } from '@/features/modules/modules-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 export function ModuleStatusDialog({
   open,
@@ -23,6 +24,7 @@ export function ModuleStatusDialog({
   onOpenChange,
   onSubmit
 }: ModuleStatusDialogProps) {
+  const { t } = useI18n();
   const [status, setStatus] = useState<ModuleStatus>('ENABLED');
 
   useEffect(() => {
@@ -90,7 +92,7 @@ export function ModuleStatusDialog({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={submitDisabled}>
               {isSubmitting ? 'Updating...' : 'Update status'}

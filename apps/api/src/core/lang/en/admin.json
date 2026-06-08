@@ -1,0 +1,33 @@
+{
+  "layout": {
+    "adminConsole": "Admin Console",
+    "adminWorkspace": "Administration workspace",
+    "systemStatus": "System status",
+    "secureWorkspace": "Secure admin workspace",
+    "profile": "Profile",
+    "openUserMenu": "Open user menu"
+  },
+  "navigation": {
+    "overview": "Overview",
+    "management": "Management",
+    "security": "Security",
+    "system": "System",
+    "modules": "Modules",
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "organizations": "Organizations",
+    "roles": "Roles",
+    "permissions": "Permissions",
+    "auditLogs": "Audit Logs",
+    "settings": "Settings",
+    "systemLogs": "System Logs",
+    "notificationSettings": "Notification Settings",
+    "documents": "Documents"
+  },
+  "entities": {
+    "user": "user",
+    "organization": "organization",
+    "role": "role",
+    "document": "document"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "layout": {
+    "adminConsole": "Админ-консоль",
+    "adminWorkspace": "Рабочее пространство администрирования",
+    "systemStatus": "Состояние системы",
+    "secureWorkspace": "Защищенное пространство администратора",
+    "profile": "Профиль",
+    "openUserMenu": "Открыть меню пользователя"
+  },
+  "navigation": {
+    "overview": "Обзор",
+    "management": "Управление",
+    "security": "Безопасность",
+    "system": "Система",
+    "modules": "Модули",
+    "dashboard": "Дашборд",
+    "users": "Пользователи",
+    "organizations": "Организации",
+    "roles": "Роли",
+    "permissions": "Права",
+    "auditLogs": "Аудит",
+    "settings": "Настройки",
+    "systemLogs": "Системные логи",
+    "notificationSettings": "Уведомления",
+    "documents": "Документы"
+  },
+  "entities": {
+    "user": "пользователя",
+    "organization": "организацию",
+    "role": "роль",
+    "document": "документ"
+  }
+}

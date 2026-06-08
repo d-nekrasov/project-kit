@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { SettingScopeBadge } from '@/features/settings/setting-scope-badge';
 import type { SettingsTableProps } from '@/features/settings/settings-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 function formatDate(value: string | null) {
   if (!value) {
@@ -43,6 +44,8 @@ function SettingsTableSkeleton() {
 }
 
 export function SettingsTable({ settings, isLoading, onEdit }: SettingsTableProps) {
+  const { t } = useI18n();
+
   if (isLoading) {
     return <SettingsTableSkeleton />;
   }
@@ -89,7 +92,7 @@ export function SettingsTable({ settings, isLoading, onEdit }: SettingsTableProp
                     <DropdownMenuContent>
                       <DropdownMenuItem onClick={() => onEdit(setting)}>
                         <Pencil className="mr-2 inline h-4 w-4" />
-                        Edit
+                        {t('common.edit')}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

@@ -16,6 +16,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { useAuth } from '@/features/auth/use-auth';
+import { useI18n } from '@/lib/i18n/use-i18n';
 import { sdk } from '@/lib/sdk';
 
 type MembershipRow = {
@@ -52,6 +53,7 @@ export function UserOrganizationsDialog({
   onRemove
 }: UserOrganizationsDialogProps) {
   const auth = useAuth();
+  const { t } = useI18n();
   const isSuperAdmin = auth.hasSystemRole('super_admin');
   const [rows, setRows] = useState<MembershipRow[]>([]);
   const [newOrganizationId, setNewOrganizationId] = useState('');
@@ -272,10 +274,10 @@ export function UserOrganizationsDialog({
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button type="button" onClick={() => onSubmit(rows)} disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : 'Save memberships'}
+            {isSubmitting ? t('common.saving') : t('common.save')}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { RolesTableProps } from '@/features/roles/roles-page.types';
 import { RoleTypeBadge } from '@/features/roles/role-type-badge';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 function formatDate(value: string) {
   return new Date(value).toLocaleString();
@@ -56,6 +57,8 @@ function RolesTableSkeleton() {
 }
 
 export function RolesTable({ roles, isLoading, onEdit, onEditPermissions }: RolesTableProps) {
+  const { t } = useI18n();
+
   if (isLoading) {
     return <RolesTableSkeleton />;
   }
@@ -105,9 +108,9 @@ export function RolesTable({ roles, isLoading, onEdit, onEditPermissions }: Role
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
                         <DropdownMenuItem onClick={() => onEdit(role)} disabled={!canEdit}>
-                          <Pencil className="mr-2 inline h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
+                        <Pencil className="mr-2 inline h-4 w-4" />
+                          {t('common.edit')}
+                      </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => onEditPermissions(role)} disabled={!canEditPermissions}>
                           <ShieldAlert className="mr-2 inline h-4 w-4" />
                           Permissions

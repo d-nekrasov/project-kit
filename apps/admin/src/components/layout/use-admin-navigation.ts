@@ -18,6 +18,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { useAuth } from '@/features/auth/use-auth';
 import type { AuthContextValue } from '@/features/auth/auth-context';
+import { useI18n } from '@/lib/i18n/use-i18n';
 import { ROUTE_PERMISSIONS } from '@/lib/route-permissions';
 import { sdk } from '@/lib/sdk';
 
@@ -111,6 +112,29 @@ const coreModuleMenuGroupByPath = new Map<string, string>(
   )
 );
 
+const navigationLabelKeys = {
+  Overview: 'navigation.overview',
+  Management: 'navigation.management',
+  Security: 'navigation.security',
+  System: 'navigation.system',
+  Modules: 'navigation.modules',
+  Dashboard: 'navigation.dashboard',
+  Users: 'navigation.users',
+  Organizations: 'navigation.organizations',
+  Roles: 'navigation.roles',
+  Permissions: 'navigation.permissions',
+  'Audit Logs': 'navigation.auditLogs',
+  Settings: 'navigation.settings',
+  'System Logs': 'navigation.systemLogs',
+  'Notification Settings': 'navigation.notificationSettings',
+  Documents: 'navigation.documents'
+} as const satisfies Record<string, string>;
+
+function translateNavigationLabel(label: string, t: (key: string) => string) {
+  const key = navigationLabelKeys[label as keyof typeof navigationLabelKeys];
+  return key ? t(key) : label;
+}
+
 function resolveModuleIcon(icon?: string): LucideIcon {
   if (icon === 'file-text') {
     return FileText;
@@ -142,10 +166,12 @@ function filterAllowedItems(items: AdminNavigationItemConfig[], auth: AuthContex
   return items.filter((item) => !item.permission || auth.hasPermission(item.permission));
 }
 
-function buildCoreGroups(pathname: string, auth: AuthContextValue): AdminNavigationGroup[] {
+function buildCoreGroups(pathname: string, auth: AuthContextValue, t: (key: string) => string): AdminNavigationGroup[] {
   return coreNavigationGroups.map((group) => ({
-    label: group.label,
-    items: filterAllowedItems([...group.items], auth).map((item) => toNavigationItem(item, pathname))
+    label: translateNavigationLabel(group.label, t),
+    items: filterAllowedItems([...group.items], auth).map((item) =>
+      toNavigationItem({ ...item, label: translateNavigationLabel(item.label, t) }, pathname)
+    )
   }));
 }
 
@@ -188,6 +214,7 @@ function appendModuleItems(
 export function useAdminNavigation(): AdminNavigationGroup[] {
   const auth = useAuth();
   const location = useLocation();
+  const { t } = useI18n();
   const modulesQuery = useQuery({
     queryKey: ['modules', 'enabled-menu'],
     queryFn: () => sdk.modules.list({ page: 1, limit: 100 }),
@@ -216,7 +243,7 @@ export function useAdminNavigation(): AdminNavigationGroup[] {
   }, [modulesQuery.data]);
 
   return useMemo(
-    () => appendModuleItems(buildCoreGroups(location.pathname, auth), moduleMenu, location.pathname, auth).filter((group) => group.items.length > 0),
-    [auth, location.pathname, moduleMenu]
+    () => appendModuleItems(buildCoreGroups(location.pathname, auth, t), moduleMenu, location.pathname, auth).filter((group) => group.items.length > 0),
+    [auth, location.pathname, moduleMenu, t]
   );
 }

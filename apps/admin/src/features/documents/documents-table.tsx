@@ -7,6 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DocumentStatusBadge } from '@/features/documents/document-status-badge';
 import type { DocumentsTableProps } from '@/features/documents/documents-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 function formatDate(value: string) {
   return new Date(value).toLocaleString();
@@ -34,6 +35,8 @@ function formatUser(user: DocumentResponse['createdBy'] | DocumentResponse['upda
 }
 
 export function DocumentsTable({ documents, isLoading, onEdit, onChangeStatus }: DocumentsTableProps) {
+  const { t } = useI18n();
+
   if (isLoading) {
     return <DataTableSkeleton />;
   }
@@ -82,7 +85,7 @@ export function DocumentsTable({ documents, isLoading, onEdit, onChangeStatus }:
                   <DropdownMenuContent>
                     <DropdownMenuItem onClick={() => onEdit(document)}>
                       <Pencil className="mr-2 inline h-4 w-4" />
-                      Edit
+                      {t('common.edit')}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => onChangeStatus(document)}>
                       <ShieldAlert className="mr-2 inline h-4 w-4" />

@@ -12,10 +12,12 @@ import { useAuth } from '@/features/auth/use-auth';
 import { AuthCard } from '@/features/login/components/auth-card';
 import { type LoginForm, loginSchema } from '@/features/login/schemas/login.schema';
 import { getApiErrorMessage } from '@/lib/api-error-message';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 export function LoginPage() {
   const auth = useAuth();
   const navigate = useNavigate();
+  const { t } = useI18n();
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<LoginForm>({
@@ -31,7 +33,7 @@ export function LoginPage() {
   }
 
   return (
-    <AuthCard title="Login" description="Sign in to access admin dashboard.">
+    <AuthCard title={t('auth.loginTitle')} description={t('auth.loginDescription')}>
       <Form {...form}>
         <form
           className="space-y-4"
@@ -42,12 +44,12 @@ export function LoginPage() {
               navigate('/');
             } catch (nextError) {
               if (nextError instanceof ApiError && nextError.status === 401) {
-                setError('Invalid email or password.');
+                setError(t('auth.invalidCredentials'));
                 return;
               }
 
               if (nextError instanceof ApiError && nextError.status === 0) {
-                setError(import.meta.env.DEV ? nextError.message : 'Unable to connect to API. Check that backend is running.');
+                setError(import.meta.env.DEV ? nextError.message : t('auth.apiUnavailable'));
                 return;
               }
 
@@ -60,7 +62,7 @@ export function LoginPage() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>{t('auth.email')}</FormLabel>
                 <FormControl>
                   <Input type="email" {...field} />
                 </FormControl>
@@ -75,9 +77,9 @@ export function LoginPage() {
             render={({ field }) => (
               <FormItem>
                 <div className="flex items-center justify-between gap-3">
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>{t('auth.password')}</FormLabel>
                   <Link className="text-sm text-muted-foreground transition-colors hover:text-foreground" to="/forgot-password">
-                    Forgot password?
+                    {t('auth.forgotPassword')}
                   </Link>
                 </div>
                 <FormControl>
@@ -91,7 +93,7 @@ export function LoginPage() {
           {error ? <ErrorState message={error} /> : null}
 
           <Button className="w-full" type="submit" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? 'Signing in...' : 'Sign in'}
+            {form.formState.isSubmitting ? t('auth.signingIn') : t('auth.signIn')}
           </Button>
         </form>
       </Form>

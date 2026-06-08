@@ -7,12 +7,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { useI18n } from '@/lib/i18n/use-i18n';
 import { cn } from '@/lib/utils';
 
 export function MobileSidebar() {
   const [open, setOpen] = useState(false);
   const navigationGroups = useAdminNavigation();
   const appName = import.meta.env.VITE_APP_NAME || 'Project Kit';
+  const { t } = useI18n();
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -30,7 +32,7 @@ export function MobileSidebar() {
         <div className="flex min-h-16 items-center px-5">
           <div>
             <div className="text-sm font-semibold">{appName}</div>
-            <div className="text-xs text-muted-foreground">Admin Console</div>
+            <div className="text-xs text-muted-foreground">{t('layout.adminConsole')}</div>
           </div>
         </div>
         <Separator />

@@ -15,10 +15,12 @@ import { UsersTable } from '@/features/users/users-table';
 import { UsersToolbar } from '@/features/users/users-toolbar';
 import { useAuth } from '@/features/auth/use-auth';
 import { getApiErrorMessage } from '@/lib/api-error-message';
+import { useI18n } from '@/lib/i18n/use-i18n';
 import { sdk } from '@/lib/sdk';
 
 export function UsersPage() {
   const auth = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
@@ -142,7 +144,7 @@ export function UsersPage() {
         action={
           <Button type="button" onClick={() => setCreateDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
-            Create user
+            {t('common.createItem', { item: t('entities.user') })}
           </Button>
         }
       />

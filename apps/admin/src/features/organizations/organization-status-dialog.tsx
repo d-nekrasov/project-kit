@@ -15,6 +15,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import type { OrganizationStatusDialogProps } from '@/features/organizations/organizations-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 export function OrganizationStatusDialog({
   open,
@@ -24,6 +25,7 @@ export function OrganizationStatusDialog({
   onOpenChange,
   onSubmit
 }: OrganizationStatusDialogProps) {
+  const { t } = useI18n();
   const [status, setStatus] = useState<OrganizationStatus>('ACTIVE');
 
   useEffect(() => {
@@ -77,7 +79,7 @@ export function OrganizationStatusDialog({
 
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-              Cancel
+              {t('common.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Updating...' : 'Update status'}
