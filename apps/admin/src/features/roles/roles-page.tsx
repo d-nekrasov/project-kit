@@ -14,10 +14,12 @@ import type { RoleFormValues } from '@/features/roles/roles-page.types';
 import { RolesTable } from '@/features/roles/roles-table';
 import { RolesToolbar } from '@/features/roles/roles-toolbar';
 import { getApiErrorMessage } from '@/lib/api-error-message';
+import { useI18n } from '@/lib/i18n/use-i18n';
 import { sdk } from '@/lib/sdk';
 
 export function RolesPage() {
   const auth = useAuth();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
@@ -165,17 +167,15 @@ export function RolesPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-foreground">Roles</h2>
-          <p className="text-sm text-muted-foreground">Manage organization roles and permissions.</p>
+          <h2 className="text-2xl font-semibold text-foreground">{t('roles.title')}</h2>
+          <p className="text-sm text-muted-foreground">{t('roles.description')}</p>
         </div>
         <Button type="button" onClick={() => setCreateDialogOpen(true)} disabled={shouldSelectOrganization}>
-          Create role
+          {t('common.createItem', { item: t('entities.role') })}
         </Button>
       </div>
 
-      <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-900">
-        Roles are scoped by organization. Select organization before editing role permissions.
-      </div>
+      <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-900">{t('roles.scopeNotice')}</div>
 
       <RolesToolbar
         search={search}
@@ -204,13 +204,13 @@ export function RolesPage() {
       />
 
       {selectedOrganizationName ? (
-        <div className="text-sm text-muted-foreground">Managing roles for: {selectedOrganizationName}</div>
+        <div className="text-sm text-muted-foreground">{t('roles.managingFor', { organization: selectedOrganizationName })}</div>
       ) : null}
 
       {pageError ? <ErrorState message={pageError} /> : null}
 
       {shouldSelectOrganization ? (
-        <EmptyState title="Select organization to manage roles" description="Roles are scoped to a single organization." />
+        <EmptyState title={t('roles.selectOrganizationTitle')} description={t('roles.selectOrganizationDescription')} />
       ) : (
         <RolesTable
           roles={roles}
@@ -237,7 +237,7 @@ export function RolesPage() {
 
         <div className="flex items-center gap-2">
           <Button type="button" variant="outline" size="sm" onClick={() => setPage((value) => value - 1)} disabled={page <= 1}>
-            Previous
+            {t('common.previous')}
           </Button>
           <Button
             type="button"
@@ -246,12 +246,12 @@ export function RolesPage() {
             onClick={() => setPage((value) => value + 1)}
             disabled={page >= (rolesMeta?.totalPages ?? 1)}
           >
-            Next
+            {t('common.next')}
           </Button>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">Rows per page</span>
+          <span className="text-muted-foreground">{t('common.rowsPerPage')}</span>
           <Select
             value={String(limit)}
             onChange={(event) => {

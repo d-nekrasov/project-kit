@@ -2,8 +2,10 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { JsonValueEditorProps } from '@/features/settings/settings-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 export function JsonValueEditor({ value, onChange, error }: JsonValueEditorProps) {
+  const { t } = useI18n();
   const handleFormat = () => {
     try {
       const parsed = JSON.parse(value);
@@ -16,9 +18,9 @@ export function JsonValueEditor({ value, onChange, error }: JsonValueEditorProps
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
-        <Label htmlFor="setting-value">Value (JSON)</Label>
+        <Label htmlFor="setting-value">{t('settings.jsonEditor.label')}</Label>
         <Button type="button" variant="outline" size="sm" onClick={handleFormat}>
-          Format JSON
+          {t('common.formatJson')}
         </Button>
       </div>
       <Textarea
@@ -28,8 +30,8 @@ export function JsonValueEditor({ value, onChange, error }: JsonValueEditorProps
         onChange={(event) => onChange(event.target.value)}
       />
       {error ? <p className="text-xs font-medium text-red-600">{error}</p> : null}
-      <p className="text-xs text-muted-foreground">Value must be valid JSON. Strings must be wrapped in quotes.</p>
-      <p className="text-xs text-muted-foreground">Examples: "Project Kit", true, 10485760, ["pdf", "docx"], {'{"enabled": true}'}</p>
+      <p className="text-xs text-muted-foreground">{t('settings.jsonEditor.help')}</p>
+      <p className="text-xs text-muted-foreground">{t('settings.jsonEditor.examples')}</p>
     </div>
   );
 }

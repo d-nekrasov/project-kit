@@ -7,6 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DocumentStatusBadge } from '@/features/documents/document-status-badge';
 import type { DocumentsTableProps } from '@/features/documents/documents-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 function formatDate(value: string) {
   return new Date(value).toLocaleString();
@@ -34,12 +35,14 @@ function formatUser(user: DocumentResponse['createdBy'] | DocumentResponse['upda
 }
 
 export function DocumentsTable({ documents, isLoading, onEdit, onChangeStatus }: DocumentsTableProps) {
+  const { t } = useI18n();
+
   if (isLoading) {
     return <DataTableSkeleton />;
   }
 
   if (!documents.length) {
-    return <DataTableEmpty title="No documents found" description="Try changing search or status filters." />;
+    return <DataTableEmpty title={t('documents.empty.title')} description={t('documents.empty.description')} />;
   }
 
   return (
@@ -47,13 +50,13 @@ export function DocumentsTable({ documents, isLoading, onEdit, onChangeStatus }:
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Title</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Created by</TableHead>
-            <TableHead>Updated by</TableHead>
-            <TableHead>Created at</TableHead>
-            <TableHead>Updated at</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead>{t('documents.table.title')}</TableHead>
+            <TableHead>{t('documents.table.status')}</TableHead>
+            <TableHead>{t('documents.table.createdBy')}</TableHead>
+            <TableHead>{t('documents.fields.updatedBy')}</TableHead>
+            <TableHead>{t('documents.table.createdAt')}</TableHead>
+            <TableHead>{t('documents.fields.updatedAt')}</TableHead>
+            <TableHead className="text-right">{t('documents.table.actions')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -75,18 +78,23 @@ export function DocumentsTable({ documents, isLoading, onEdit, onChangeStatus }:
               <TableCell className="text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger>
-                    <Button type="button" variant="ghost" size="sm" aria-label={`Open actions for ${document.title}`}>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      aria-label={t('documents.table.openActions', { title: document.title })}
+                    >
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
                     <DropdownMenuItem onClick={() => onEdit(document)}>
                       <Pencil className="mr-2 inline h-4 w-4" />
-                      Edit
+                      {t('common.edit')}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => onChangeStatus(document)}>
                       <ShieldAlert className="mr-2 inline h-4 w-4" />
-                      Change status
+                      {t('documents.actions.changeStatus')}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

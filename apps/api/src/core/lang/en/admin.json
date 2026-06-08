@@ -1,0 +1,434 @@
+{
+  "layout": {
+    "adminConsole": "Admin Console",
+    "adminWorkspace": "Administration workspace",
+    "systemStatus": "System status",
+    "secureWorkspace": "Secure admin workspace",
+    "profile": "Profile",
+    "openUserMenu": "Open user menu",
+    "openNavigation": "Open navigation"
+  },
+  "navigation": {
+    "overview": "Overview",
+    "management": "Management",
+    "security": "Security",
+    "system": "System",
+    "modules": "Modules",
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "organizations": "Organizations",
+    "roles": "Roles",
+    "permissions": "Permissions",
+    "auditLogs": "Audit Logs",
+    "settings": "Settings",
+    "systemLogs": "System Logs",
+    "notificationSettings": "Notification Settings",
+    "documents": "Documents"
+  },
+  "entities": {
+    "user": "user",
+    "organization": "organization",
+    "role": "role",
+    "document": "document"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "description": "Overview of core admin activity and platform health.",
+    "dataIncomplete": "Dashboard data is incomplete",
+    "statUsersTitle": "Users",
+    "statUsersDescription": "Registered user accounts.",
+    "statRolesTitle": "Roles",
+    "statRolesDescription": "Available system and organization roles.",
+    "statModulesTitle": "Modules",
+    "statModulesDescription": "Connected platform modules.",
+    "statDocumentsTitle": "Documents",
+    "statDocumentsDescription": "Managed documents in the system.",
+    "statCriticalLogsTitle": "Critical logs",
+    "statCriticalLogsDescription": "Recent error-level runtime events.",
+    "statNotificationsTitle": "Unread notifications",
+    "statNotificationsDescription": "Pending alerts for the current user.",
+    "statSystemLogsTitle": "System logs",
+    "statSystemLogsDescription": "Latest technical events from the platform.",
+    "quickActions": "Quick actions",
+    "quickActionsDescription": "Open the main admin sections.",
+    "quickActionUsersDescription": "Manage access and membership.",
+    "quickActionRolesDescription": "Review permissions and scopes.",
+    "quickActionModulesDescription": "Check installed capabilities.",
+    "quickActionDocumentsDescription": "Open managed content.",
+    "recentSystemLogs": "Recent system logs",
+    "recentSystemLogsDescription": "Last technical events recorded by the platform.",
+    "criticalStatus": "Critical status",
+    "criticalStatusDescription": "Error-level events in the latest scan.",
+    "currentOrganization": "Current organization",
+    "activeOrganization": "Active organization",
+    "lastUpdated": "Last updated",
+    "viewAllLogs": "View all logs",
+    "viewAllNotifications": "View notifications"
+  },
+  "users": {
+    "title": "Users",
+    "description": "Manage organization users, roles and statuses.",
+    "searchPlaceholder": "Search by name or email",
+    "emptyTitle": "No users found",
+    "emptyDescription": "Try changing search or status filters.",
+    "table": {
+      "organizationsRoles": "Organizations / Roles",
+      "systemRoles": "System roles",
+      "viewDetails": "View details",
+      "changeStatus": "Change status",
+      "openActions": "Open actions for {{name}}",
+      "noOrganizations": "No organizations"
+    },
+    "fields": {
+      "email": "Email",
+      "name": "Name",
+      "password": "Password",
+      "organization": "Organization",
+      "role": "Role"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "blocked": "Blocked"
+    },
+    "filters": {
+      "status": "Status"
+    },
+    "form": {
+      "createTitle": "Create user",
+      "editTitle": "Edit user",
+      "createDescription": "Create a new user in the active organization.",
+      "editDescription": "Update user profile and organization role.",
+      "roleUnresolvedTitle": "Role is not resolved",
+      "roleUnresolvedDescription": "Select a role for this user in the active organization.",
+      "selectOrganization": "Select organization",
+      "selectRole": "Select role",
+      "validation": {
+        "email": "Enter a valid email",
+        "nameMin": "Name must be at least 2 characters",
+        "passwordMin": "Password must be at least 8 characters",
+        "roleRequired": "Role is required"
+      }
+    },
+    "statusDialog": {
+      "title": "Change user status",
+      "description": "Update login access for {{name}}.",
+      "impactTitle": "Access impact",
+      "impactDescription": "Inactive or blocked users will not be able to sign in.",
+      "submit": "Update status"
+    },
+    "detail": {
+      "notFound": "User not found",
+      "backToUsers": "Back to users",
+      "editUser": "Edit user",
+      "changeStatus": "Change status",
+      "detailsTitle": "User details",
+      "id": "ID",
+      "created": "Created",
+      "updated": "Updated",
+      "systemRoles": "System roles",
+      "membershipsTitle": "Organization memberships",
+      "manageOrganizations": "Manage organizations",
+      "orgStatus": "Org status",
+      "membership": "Membership",
+      "emptyMembershipsTitle": "No organization memberships",
+      "emptyMembershipsDescription": "This user is not assigned to any organization yet."
+    },
+    "organizationsDialog": {
+      "title": "Manage organizations",
+      "description": "Update organization roles and membership status for {{email}}.",
+      "addOrganization": "Add organization",
+      "addMembership": "Add membership",
+      "removeMembership": "Remove membership",
+      "markInactive": "Mark inactive",
+      "confirmRemove": "Remove organization membership?\n\n{{email}} will lose access to {{organization}}.",
+      "cannotRemoveSelf": "You cannot remove yourself from the active organization",
+      "mustKeepOneActive": "Active user must keep at least one active membership",
+      "removeMembershipTitle": "Remove membership",
+      "selectOrganization": "Select organization",
+      "selectRole": "Select role"
+    }
+  },
+  "organizations": {
+    "title": "Organizations",
+    "description": "Manage organizations, their statuses and core counters.",
+    "searchPlaceholder": "Search by organization name or slug",
+    "emptyTitle": "No organizations found",
+    "emptyDescription": "Try changing search or status filters.",
+    "fields": {
+      "name": "Name",
+      "slug": "Slug"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "table": {
+      "users": "Users",
+      "roles": "Roles",
+      "openActions": "Open actions for {{name}}",
+      "changeStatus": "Change status"
+    },
+    "form": {
+      "createTitle": "Create organization",
+      "editTitle": "Edit organization",
+      "createDescription": "Create a new organization.",
+      "editDescription": "Update organization name and slug.",
+      "validation": {
+        "nameMin": "Name must be at least 2 characters",
+        "slugMin": "Slug must be at least 2 characters",
+        "slugFormat": "Slug must contain only lowercase latin letters, numbers and dashes"
+      }
+    },
+    "statusDialog": {
+      "title": "Change organization status",
+      "description": "Update status for {{name}} ({{slug}})",
+      "impactTitle": "Impact notice",
+      "impactDescription": "Inactive organization cannot be used as active context. Users may lose access to this organization.",
+      "submit": "Update status"
+    }
+  },
+  "roles": {
+    "title": "Roles",
+    "description": "Manage organization roles and permissions.",
+    "scopeNotice": "Roles are scoped by organization. Select organization before editing role permissions.",
+    "managingFor": "Managing roles for: {{organization}}",
+    "selectOrganizationTitle": "Select organization to manage roles",
+    "selectOrganizationDescription": "Roles are scoped to a single organization.",
+    "searchPlaceholder": "Search by role name or code",
+    "emptyTitle": "No roles found",
+    "emptyDescription": "Try changing search or include system filters.",
+    "fields": {
+      "code": "Code",
+      "type": "Type",
+      "permissions": "Permissions",
+      "users": "Users"
+    },
+    "type": {
+      "system": "System",
+      "organization": "Organization"
+    },
+    "toolbar": {
+      "organization": "Organization",
+      "selectOrganization": "Select organization",
+      "organizationScoped": "Roles are scoped to the selected organization.",
+      "currentOrganization": "Current organization: {{organization}}",
+      "currentOrganizationFallback": "Active organization",
+      "filters": "Filters",
+      "includeSystem": "Include system roles"
+    },
+    "table": {
+      "openActions": "Open actions for {{name}}"
+    },
+    "permissionsDialog": {
+      "title": "Edit permissions: {{name}}",
+      "description": "Configure role permissions grouped by module.",
+      "organization": "Organization: {{organization}}.",
+      "readOnlyTitle": "Read-only role",
+      "readOnlyDescription": "System roles are read-only.",
+      "protectedTitle": "Protected role",
+      "protectedDescription": "Permissions of organization_admin are protected.",
+      "selectedCount": "{{count}} permissions selected",
+      "resourceOther": "Other",
+      "selectAll": "Select all",
+      "clear": "Clear",
+      "permissionsCount": "{{count}} permissions",
+      "noDescription": "No description",
+      "empty": "No permissions available for this organization."
+    },
+    "form": {
+      "createTitle": "Create role",
+      "editTitle": "Edit role",
+      "createDescription": "Create a new organization role. Permissions can be configured after creation.",
+      "editDescription": "Update role display name.",
+      "organizationFallback": "Select organization",
+      "codePlaceholder": "documents_manager",
+      "permissionsAction": "Permissions",
+      "validation": {
+        "codeMin": "Code must be at least 2 characters",
+        "codeFormat": "Use lowercase latin letters, numbers, _ or -",
+        "nameMin": "Name must be at least 2 characters"
+      }
+    }
+  },
+  "permissions": {
+    "title": "Permissions",
+    "description": "Read-only registry of permissions registered by core and modules.",
+    "helper": "Permissions are managed by platform core and module manifests. Admin UI cannot create or edit them.",
+    "searchPlaceholder": "Search by code, module, resource or action",
+    "moduleFilter": "Module",
+    "allModules": "All modules",
+    "emptyTitle": "No permissions found",
+    "emptyDescription": "Try changing search query or module filter.",
+    "emptyGroupsTitle": "No permission groups found",
+    "emptyGroupsDescription": "Try changing search query or module filter.",
+    "resource": "Resource",
+    "action": "Action",
+    "groupedPermissions": "{{count}} permissions",
+    "resourceOther": "Other"
+  },
+  "settings": {
+    "description": "Manage global, organization and module settings.",
+    "searchPlaceholder": "Search by key or module",
+    "emptyTitle": "No settings found",
+    "emptyDescription": "Try changing search or filters.",
+    "failedToLoad": "Failed to load settings",
+    "scope": {
+      "global": "Global",
+      "organization": "Organization",
+      "module": "Module"
+    },
+    "toolbar": {
+      "allScopes": "All scopes",
+      "allModules": "All modules",
+      "new": "New",
+      "schema": "Schema"
+    },
+    "form": {
+      "createTitle": "Create setting",
+      "editTitle": "Edit setting",
+      "createDescription": "Create a new setting for global, organization or module scope.",
+      "editDescription": "Update setting value. Key and scope metadata are read-only in edit mode.",
+      "organizationSpecific": "organizationSpecific",
+      "restrictedTitle": "Restricted action",
+      "restrictedDescription": "Only super_admin can update GLOBAL settings and global MODULE settings.",
+      "selectModule": "Select module",
+      "keyPlaceholder": "app.demo",
+      "validation": {
+        "keyMin": "Key must be at least 2 characters",
+        "valueRequired": "Value is required",
+        "moduleRequired": "Module is required for MODULE scope",
+        "invalidJson": "Value must be valid JSON"
+      }
+    },
+    "schemaDialog": {
+      "title": "Module settings schema",
+      "selectModule": "Select a module to inspect settings schema.",
+      "noSchema": "This module manifest has no settings schema.",
+      "moduleNotSelected": "Module is not selected."
+    },
+    "jsonEditor": {
+      "label": "Value (JSON)",
+      "help": "Value must be valid JSON. Strings must be wrapped in quotes.",
+      "examples": "Examples: \"Project Kit\", true, 10485760, [\"pdf\", \"docx\"], {\"enabled\": true}"
+    }
+  },
+  "modulesPage": {
+    "title": "Modules",
+    "description": "Connected platform and business modules.",
+    "searchPlaceholder": "Search by module name or title",
+    "emptyTitle": "No modules found",
+    "emptyDescription": "Try changing search or status filters.",
+    "fields": {
+      "title": "Title",
+      "version": "Version",
+      "permissions": "Permissions",
+      "settings": "Settings"
+    },
+    "status": {
+      "enabled": "Enabled",
+      "disabled": "Disabled"
+    },
+    "settingsAvailable": "Available",
+    "settingsFields": "{{count}} fields",
+    "viewManifest": "View manifest",
+    "disableModule": "Disable module",
+    "enableModule": "Enable module",
+    "openActions": "Open actions for {{name}}",
+    "manifestDialog": {
+      "title": "Module manifest",
+      "description": "Inspect module metadata for {{name}}.",
+      "overview": "Overview",
+      "permissions": "Permissions",
+      "adminMenu": "Admin menu",
+      "settingsSchema": "Settings schema",
+      "rawManifest": "Raw manifest",
+      "name": "name",
+      "titleLabel": "title",
+      "version": "version",
+      "status": "status",
+      "descriptionLabel": "description",
+      "label": "Label",
+      "path": "Path",
+      "permission": "Permission",
+      "icon": "Icon",
+      "order": "Order",
+      "noAdminMenu": "No admin menu items in manifest.",
+      "noPermissions": "No permissions in manifest.",
+      "noSettingsSchema": "No settings schema in manifest.",
+      "emptyManifest": "Manifest is empty.",
+      "moduleNotSelected": "Module is not selected."
+    },
+    "statusDialog": {
+      "title": "Change module status",
+      "description": "Update status for {{name}}.",
+      "impactTitle": "Impact notice",
+      "impactDescription": "Disabling a module does not delete data. Permissions and settings remain. Endpoints protected by ModuleEnabledGuard return 403, and related menu items should be hidden in UI.",
+      "coreProtectionTitle": "Core protection",
+      "coreProtectionDescription": "The core module cannot be disabled.",
+      "submit": "Update status"
+    }
+  },
+  "logs": {
+    "audit": {
+      "title": "Audit Logs",
+      "description": "User actions and security-relevant events.",
+      "failedToLoad": "Failed to load audit logs",
+      "searchPlaceholder": "Search action, entity, user, organization, metadata",
+      "emptyTitle": "No audit logs found",
+      "emptyDescription": "Try changing search query or filters.",
+      "fields": {
+        "entity": "Entity",
+        "user": "User",
+        "organization": "Organization",
+        "ip": "IP",
+        "action": "Action",
+        "entityType": "Entity type",
+        "entityId": "Entity ID",
+        "userId": "User ID",
+        "organizationId": "Organization ID",
+        "dateFrom": "Date from",
+        "dateTo": "Date to",
+        "metadata": "Metadata",
+        "actor": "Actor",
+        "request": "Request",
+        "userAgent": "User agent"
+      },
+      "viewDetails": "View details",
+      "copyLogId": "Copy log ID",
+      "openActions": "Open actions",
+      "detailTitle": "Audit log details",
+      "detailDescription": "Detailed view for selected audit event.",
+      "failedToLoadDetails": "Failed to load details"
+    },
+    "system": {
+      "title": "System Logs",
+      "description": "Technical and runtime events from the platform.",
+      "failedToLoad": "Failed to load system logs",
+      "searchPlaceholder": "Search message, source, user, organization, context",
+      "emptyTitle": "No system logs found",
+      "emptyDescription": "Try changing search query or filters.",
+      "fields": {
+        "level": "Level",
+        "source": "Source",
+        "message": "Message",
+        "user": "User",
+        "organization": "Organization",
+        "userId": "User ID",
+        "organizationId": "Organization ID",
+        "dateFrom": "Date from",
+        "dateTo": "Date to",
+        "context": "Context",
+        "errorStack": "Error stack"
+      },
+      "viewDetails": "View details",
+      "copyLogId": "Copy log ID",
+      "openActions": "Open actions",
+      "detailTitle": "System log details",
+      "detailDescription": "Detailed view for selected technical runtime event.",
+      "failedToLoadDetails": "Failed to load details",
+      "noContext": "No context.",
+      "noErrorStack": "No error stack."
+    }
+  }
+}

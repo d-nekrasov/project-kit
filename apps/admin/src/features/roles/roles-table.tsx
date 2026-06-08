@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { RolesTableProps } from '@/features/roles/roles-page.types';
 import { RoleTypeBadge } from '@/features/roles/role-type-badge';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 function formatDate(value: string) {
   return new Date(value).toLocaleString();
@@ -56,12 +57,14 @@ function RolesTableSkeleton() {
 }
 
 export function RolesTable({ roles, isLoading, onEdit, onEditPermissions }: RolesTableProps) {
+  const { t } = useI18n();
+
   if (isLoading) {
     return <RolesTableSkeleton />;
   }
 
   if (!roles.length) {
-    return <EmptyState title="No roles found" description="Try changing search or include system filters." />;
+    return <EmptyState title={t('roles.emptyTitle')} description={t('roles.emptyDescription')} />;
   }
 
   return (
@@ -70,13 +73,13 @@ export function RolesTable({ roles, isLoading, onEdit, onEditPermissions }: Role
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Code</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Permissions</TableHead>
-              <TableHead>Users</TableHead>
-              <TableHead>Created at</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>{t('common.name')}</TableHead>
+              <TableHead>{t('roles.fields.code')}</TableHead>
+              <TableHead>{t('roles.fields.type')}</TableHead>
+              <TableHead>{t('roles.fields.permissions')}</TableHead>
+              <TableHead>{t('roles.fields.users')}</TableHead>
+              <TableHead>{t('common.createdAt')}</TableHead>
+              <TableHead className="text-right">{t('common.actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -99,18 +102,18 @@ export function RolesTable({ roles, isLoading, onEdit, onEditPermissions }: Role
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger>
-                        <Button type="button" variant="ghost" size="sm" aria-label={`Open actions for ${role.name}`}>
+                        <Button type="button" variant="ghost" size="sm" aria-label={t('roles.table.openActions', { name: role.name })}>
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
                         <DropdownMenuItem onClick={() => onEdit(role)} disabled={!canEdit}>
-                          <Pencil className="mr-2 inline h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
+                        <Pencil className="mr-2 inline h-4 w-4" />
+                          {t('common.edit')}
+                      </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => onEditPermissions(role)} disabled={!canEditPermissions}>
                           <ShieldAlert className="mr-2 inline h-4 w-4" />
-                          Permissions
+                          {t('roles.form.permissionsAction')}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

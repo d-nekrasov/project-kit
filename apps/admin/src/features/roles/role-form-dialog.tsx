@@ -17,18 +17,7 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import type { RoleFormDialogProps, RoleFormValues } from '@/features/roles/roles-page.types';
-
-const createSchema = z.object({
-  code: z
-    .string()
-    .min(2, 'Code must be at least 2 characters')
-    .regex(/^[a-z0-9_-]+$/, 'Use lowercase latin letters, numbers, _ or -'),
-  name: z.string().min(2, 'Name must be at least 2 characters')
-});
-
-const editSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters')
-});
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 export function RoleFormDialog({
   open,
@@ -41,6 +30,17 @@ export function RoleFormDialog({
   onOpenChange,
   onSubmit
 }: RoleFormDialogProps) {
+  const { t } = useI18n();
+  const createSchema = z.object({
+    code: z
+      .string()
+      .min(2, t('roles.form.validation.codeMin'))
+      .regex(/^[a-z0-9_-]+$/, t('roles.form.validation.codeFormat')),
+    name: z.string().min(2, t('roles.form.validation.nameMin'))
+  });
+  const editSchema = z.object({
+    name: z.string().min(2, t('roles.form.validation.nameMin'))
+  });
   const schema = mode === 'create' ? createSchema : editSchema;
 
   const form = useForm<RoleFormValues>({
@@ -68,11 +68,9 @@ export function RoleFormDialog({
     <Dialog open={open}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{mode === 'create' ? 'Create role' : 'Edit role'}</DialogTitle>
+          <DialogTitle>{mode === 'create' ? t('roles.form.createTitle') : t('roles.form.editTitle')}</DialogTitle>
           <DialogDescription>
-            {mode === 'create'
-              ? 'Create a new organization role. Permissions can be configured after creation.'
-              : 'Update role display name.'}
+            {mode === 'create' ? t('roles.form.createDescription') : t('roles.form.editDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -81,15 +79,15 @@ export function RoleFormDialog({
           {errorMessage ? (
             <Alert className="border-red-200 bg-red-50 text-red-700">
               <AlertCircle className="mb-1 h-4 w-4" />
-              <AlertTitle>Request failed</AlertTitle>
+              <AlertTitle>{t('common.requestFailed')}</AlertTitle>
               <AlertDescription>{errorMessage}</AlertDescription>
             </Alert>
           ) : null}
 
             {mode === 'create' ? (
               <FormItem>
-                <FormLabel>Organization</FormLabel>
-                <Input value={organizationName ?? 'Select organization'} disabled />
+                <FormLabel>{t('roles.toolbar.organization')}</FormLabel>
+                <Input value={organizationName ?? t('roles.form.organizationFallback')} disabled />
               </FormItem>
             ) : null}
 
@@ -99,9 +97,9 @@ export function RoleFormDialog({
                 name="code"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Code</FormLabel>
+                    <FormLabel>{t('roles.fields.code')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="documents_manager" {...field} />
+                      <Input placeholder={t('roles.form.codePlaceholder')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -109,7 +107,7 @@ export function RoleFormDialog({
               />
             ) : (
               <FormItem>
-                <FormLabel>Code</FormLabel>
+                <FormLabel>{t('roles.fields.code')}</FormLabel>
                 <Input value={role?.code ?? ''} disabled />
               </FormItem>
             )}
@@ -119,7 +117,7 @@ export function RoleFormDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>{t('common.name')}</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -130,10 +128,14 @@ export function RoleFormDialog({
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={isSubmitting || isSubmitDisabled}>
-                {isSubmitting ? 'Saving...' : mode === 'create' ? 'Create role' : 'Save changes'}
+                {isSubmitting
+                  ? t('common.saving')
+                  : mode === 'create'
+                    ? t('common.createItem', { item: t('entities.role') })
+                    : t('common.saveChanges')}
               </Button>
             </DialogFooter>
           </form>

@@ -1,11 +1,13 @@
+import { useI18n } from '@/lib/i18n/use-i18n';
+
 type JsonViewerProps = {
   value: unknown;
   emptyText?: string;
 };
 
-export function JsonViewer({ value, emptyText = 'No data.' }: JsonViewerProps) {
+export function JsonViewer({ value, emptyText = 'common.noDataAvailableYet' }: JsonViewerProps) {
   if (value === null || value === undefined) {
-    return <p className="text-sm text-muted-foreground">{emptyText}</p>;
+    return <JsonViewerEmpty emptyText={emptyText} />;
   }
 
   return (
@@ -15,3 +17,7 @@ export function JsonViewer({ value, emptyText = 'No data.' }: JsonViewerProps) {
   );
 }
 
+function JsonViewerEmpty({ emptyText }: { emptyText: string }) {
+  const { t } = useI18n();
+  return <p className="text-sm text-muted-foreground">{emptyText.includes('.') ? t(emptyText) : emptyText}</p>;
+}

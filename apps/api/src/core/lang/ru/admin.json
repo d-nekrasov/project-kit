@@ -1,0 +1,434 @@
+{
+  "layout": {
+    "adminConsole": "Админ-консоль",
+    "adminWorkspace": "Рабочее пространство администрирования",
+    "systemStatus": "Состояние системы",
+    "secureWorkspace": "Защищенное пространство администратора",
+    "profile": "Профиль",
+    "openUserMenu": "Открыть меню пользователя",
+    "openNavigation": "Открыть навигацию"
+  },
+  "navigation": {
+    "overview": "Обзор",
+    "management": "Управление",
+    "security": "Безопасность",
+    "system": "Система",
+    "modules": "Модули",
+    "dashboard": "Дашборд",
+    "users": "Пользователи",
+    "organizations": "Организации",
+    "roles": "Роли",
+    "permissions": "Права",
+    "auditLogs": "Аудит",
+    "settings": "Настройки",
+    "systemLogs": "Системные логи",
+    "notificationSettings": "Уведомления",
+    "documents": "Документы"
+  },
+  "entities": {
+    "user": "пользователя",
+    "organization": "организацию",
+    "role": "роль",
+    "document": "документ"
+  },
+  "dashboard": {
+    "title": "Дашборд",
+    "description": "Обзор активности core admin и состояния платформы.",
+    "dataIncomplete": "Данные дашборда загружены не полностью",
+    "statUsersTitle": "Пользователи",
+    "statUsersDescription": "Зарегистрированные учетные записи.",
+    "statRolesTitle": "Роли",
+    "statRolesDescription": "Доступные системные и организационные роли.",
+    "statModulesTitle": "Модули",
+    "statModulesDescription": "Подключенные модули платформы.",
+    "statDocumentsTitle": "Документы",
+    "statDocumentsDescription": "Управляемые документы в системе.",
+    "statCriticalLogsTitle": "Критические логи",
+    "statCriticalLogsDescription": "Недавние runtime-события уровня error.",
+    "statNotificationsTitle": "Непрочитанные уведомления",
+    "statNotificationsDescription": "Ожидающие внимания уведомления текущего пользователя.",
+    "statSystemLogsTitle": "Системные логи",
+    "statSystemLogsDescription": "Последние технические события платформы.",
+    "quickActions": "Быстрые действия",
+    "quickActionsDescription": "Переход к основным разделам админки.",
+    "quickActionUsersDescription": "Управление доступом и участием.",
+    "quickActionRolesDescription": "Проверка прав и областей доступа.",
+    "quickActionModulesDescription": "Проверка установленных возможностей.",
+    "quickActionDocumentsDescription": "Открыть управляемый контент.",
+    "recentSystemLogs": "Последние системные логи",
+    "recentSystemLogsDescription": "Последние технические события платформы.",
+    "criticalStatus": "Критический статус",
+    "criticalStatusDescription": "События уровня error в последней выборке.",
+    "currentOrganization": "Текущая организация",
+    "activeOrganization": "Активная организация",
+    "lastUpdated": "Последнее обновление",
+    "viewAllLogs": "Открыть все логи",
+    "viewAllNotifications": "Открыть уведомления"
+  },
+  "users": {
+    "title": "Пользователи",
+    "description": "Управление пользователями организации, ролями и статусами.",
+    "searchPlaceholder": "Поиск по имени или email",
+    "emptyTitle": "Пользователи не найдены",
+    "emptyDescription": "Попробуйте изменить поиск или фильтр статуса.",
+    "table": {
+      "organizationsRoles": "Организации / Роли",
+      "systemRoles": "Системные роли",
+      "viewDetails": "Открыть детали",
+      "changeStatus": "Изменить статус",
+      "openActions": "Открыть действия для {{name}}",
+      "noOrganizations": "Нет организаций"
+    },
+    "fields": {
+      "email": "Email",
+      "name": "Имя",
+      "password": "Пароль",
+      "organization": "Организация",
+      "role": "Роль"
+    },
+    "status": {
+      "active": "Активен",
+      "inactive": "Неактивен",
+      "blocked": "Заблокирован"
+    },
+    "filters": {
+      "status": "Статус"
+    },
+    "form": {
+      "createTitle": "Создать пользователя",
+      "editTitle": "Редактировать пользователя",
+      "createDescription": "Создать нового пользователя в активной организации.",
+      "editDescription": "Обновить профиль пользователя и роль в организации.",
+      "roleUnresolvedTitle": "Роль не определена",
+      "roleUnresolvedDescription": "Выберите роль для этого пользователя в активной организации.",
+      "selectOrganization": "Выберите организацию",
+      "selectRole": "Выберите роль",
+      "validation": {
+        "email": "Введите корректный email",
+        "nameMin": "Имя должно содержать минимум 2 символа",
+        "passwordMin": "Пароль должен содержать минимум 8 символов",
+        "roleRequired": "Роль обязательна"
+      }
+    },
+    "statusDialog": {
+      "title": "Изменить статус пользователя",
+      "description": "Обновить доступ для входа пользователя {{name}}.",
+      "impactTitle": "Влияние на доступ",
+      "impactDescription": "Неактивные и заблокированные пользователи не смогут войти в систему.",
+      "submit": "Обновить статус"
+    },
+    "detail": {
+      "notFound": "Пользователь не найден",
+      "backToUsers": "Назад к пользователям",
+      "editUser": "Редактировать пользователя",
+      "changeStatus": "Изменить статус",
+      "detailsTitle": "Детали пользователя",
+      "id": "ID",
+      "created": "Создан",
+      "updated": "Обновлен",
+      "systemRoles": "Системные роли",
+      "membershipsTitle": "Членство в организациях",
+      "manageOrganizations": "Управлять организациями",
+      "orgStatus": "Статус организации",
+      "membership": "Членство",
+      "emptyMembershipsTitle": "Нет членств в организациях",
+      "emptyMembershipsDescription": "Пользователь пока не назначен ни в одну организацию."
+    },
+    "organizationsDialog": {
+      "title": "Управление организациями",
+      "description": "Обновите роли и статус членства в организациях для {{email}}.",
+      "addOrganization": "Добавить организацию",
+      "addMembership": "Добавить членство",
+      "removeMembership": "Удалить членство",
+      "markInactive": "Сделать неактивным",
+      "confirmRemove": "Удалить членство в организации?\n\n{{email}} потеряет доступ к {{organization}}.",
+      "cannotRemoveSelf": "Нельзя удалить себя из активной организации",
+      "mustKeepOneActive": "У активного пользователя должно остаться хотя бы одно активное членство",
+      "removeMembershipTitle": "Удалить членство",
+      "selectOrganization": "Выберите организацию",
+      "selectRole": "Выберите роль"
+    }
+  },
+  "organizations": {
+    "title": "Организации",
+    "description": "Управление организациями, их статусами и базовыми счетчиками.",
+    "searchPlaceholder": "Поиск по названию организации или slug",
+    "emptyTitle": "Организации не найдены",
+    "emptyDescription": "Попробуйте изменить поиск или фильтр статуса.",
+    "fields": {
+      "name": "Название",
+      "slug": "Slug"
+    },
+    "status": {
+      "active": "Активна",
+      "inactive": "Неактивна"
+    },
+    "table": {
+      "users": "Пользователи",
+      "roles": "Роли",
+      "openActions": "Открыть действия для {{name}}",
+      "changeStatus": "Изменить статус"
+    },
+    "form": {
+      "createTitle": "Создать организацию",
+      "editTitle": "Редактировать организацию",
+      "createDescription": "Создать новую организацию.",
+      "editDescription": "Обновить название организации и slug.",
+      "validation": {
+        "nameMin": "Название должно содержать минимум 2 символа",
+        "slugMin": "Slug должен содержать минимум 2 символа",
+        "slugFormat": "Slug может содержать только строчные латинские буквы, цифры и дефисы"
+      }
+    },
+    "statusDialog": {
+      "title": "Изменить статус организации",
+      "description": "Обновить статус для {{name}} ({{slug}})",
+      "impactTitle": "Влияние",
+      "impactDescription": "Неактивную организацию нельзя использовать как активный контекст. Пользователи могут потерять к ней доступ.",
+      "submit": "Обновить статус"
+    }
+  },
+  "roles": {
+    "title": "Роли",
+    "description": "Управление ролями организации и правами.",
+    "scopeNotice": "Роли привязаны к организации. Перед редактированием прав выберите организацию.",
+    "managingFor": "Управление ролями для: {{organization}}",
+    "selectOrganizationTitle": "Выберите организацию для управления ролями",
+    "selectOrganizationDescription": "Роли привязаны к одной организации.",
+    "searchPlaceholder": "Поиск по названию роли или коду",
+    "emptyTitle": "Роли не найдены",
+    "emptyDescription": "Попробуйте изменить поиск или фильтр системных ролей.",
+    "fields": {
+      "code": "Код",
+      "type": "Тип",
+      "permissions": "Права",
+      "users": "Пользователи"
+    },
+    "type": {
+      "system": "Системная",
+      "organization": "Организационная"
+    },
+    "toolbar": {
+      "organization": "Организация",
+      "selectOrganization": "Выберите организацию",
+      "organizationScoped": "Роли относятся к выбранной организации.",
+      "currentOrganization": "Текущая организация: {{organization}}",
+      "currentOrganizationFallback": "Активная организация",
+      "filters": "Фильтры",
+      "includeSystem": "Показывать системные роли"
+    },
+    "table": {
+      "openActions": "Открыть действия для {{name}}"
+    },
+    "permissionsDialog": {
+      "title": "Редактирование прав: {{name}}",
+      "description": "Настройте права роли, сгруппированные по модулям.",
+      "organization": "Организация: {{organization}}.",
+      "readOnlyTitle": "Роль только для чтения",
+      "readOnlyDescription": "Системные роли доступны только для чтения.",
+      "protectedTitle": "Защищенная роль",
+      "protectedDescription": "Права роли organization_admin защищены.",
+      "selectedCount": "Выбрано прав: {{count}}",
+      "resourceOther": "Другое",
+      "selectAll": "Выбрать все",
+      "clear": "Очистить",
+      "permissionsCount": "Прав: {{count}}",
+      "noDescription": "Описание отсутствует",
+      "empty": "Для этой организации нет доступных прав."
+    },
+    "form": {
+      "createTitle": "Создать роль",
+      "editTitle": "Редактировать роль",
+      "createDescription": "Создать новую роль организации. Права можно настроить после создания.",
+      "editDescription": "Обновить отображаемое имя роли.",
+      "organizationFallback": "Выберите организацию",
+      "codePlaceholder": "documents_manager",
+      "permissionsAction": "Права",
+      "validation": {
+        "codeMin": "Код должен содержать минимум 2 символа",
+        "codeFormat": "Используйте строчные латинские буквы, цифры, _ или -",
+        "nameMin": "Название должно содержать минимум 2 символа"
+      }
+    }
+  },
+  "permissions": {
+    "title": "Права",
+    "description": "Реестр прав только для чтения, зарегистрированных core и модулями.",
+    "helper": "Права управляются core платформы и manifest-файлами модулей. В Admin UI их нельзя создавать или редактировать.",
+    "searchPlaceholder": "Поиск по коду, модулю, ресурсу или действию",
+    "moduleFilter": "Модуль",
+    "allModules": "Все модули",
+    "emptyTitle": "Права не найдены",
+    "emptyDescription": "Попробуйте изменить поисковый запрос или фильтр модуля.",
+    "emptyGroupsTitle": "Группы прав не найдены",
+    "emptyGroupsDescription": "Попробуйте изменить поисковый запрос или фильтр модуля.",
+    "resource": "Ресурс",
+    "action": "Действие",
+    "groupedPermissions": "Прав: {{count}}",
+    "resourceOther": "Другое"
+  },
+  "settings": {
+    "description": "Управление глобальными, организационными и модульными настройками.",
+    "searchPlaceholder": "Поиск по ключу или модулю",
+    "emptyTitle": "Настройки не найдены",
+    "emptyDescription": "Попробуйте изменить поиск или фильтры.",
+    "failedToLoad": "Не удалось загрузить настройки",
+    "scope": {
+      "global": "Глобальная",
+      "organization": "Организационная",
+      "module": "Модульная"
+    },
+    "toolbar": {
+      "allScopes": "Все области",
+      "allModules": "Все модули",
+      "new": "Создать",
+      "schema": "Схема"
+    },
+    "form": {
+      "createTitle": "Создать настройку",
+      "editTitle": "Редактировать настройку",
+      "createDescription": "Создать новую настройку для глобальной, организационной или модульной области.",
+      "editDescription": "Обновить значение настройки. Ключ и метаданные области в режиме редактирования доступны только для чтения.",
+      "organizationSpecific": "organizationSpecific",
+      "restrictedTitle": "Ограниченное действие",
+      "restrictedDescription": "Только super_admin может изменять GLOBAL-настройки и глобальные MODULE-настройки.",
+      "selectModule": "Выберите модуль",
+      "keyPlaceholder": "app.demo",
+      "validation": {
+        "keyMin": "Ключ должен содержать минимум 2 символа",
+        "valueRequired": "Значение обязательно",
+        "moduleRequired": "Для области MODULE необходимо выбрать модуль",
+        "invalidJson": "Значение должно быть валидным JSON"
+      }
+    },
+    "schemaDialog": {
+      "title": "Схема настроек модуля",
+      "selectModule": "Выберите модуль для просмотра схемы настроек.",
+      "noSchema": "В manifest этого модуля нет схемы настроек.",
+      "moduleNotSelected": "Модуль не выбран."
+    },
+    "jsonEditor": {
+      "label": "Значение (JSON)",
+      "help": "Значение должно быть валидным JSON. Строки должны быть в кавычках.",
+      "examples": "Примеры: \"Project Kit\", true, 10485760, [\"pdf\", \"docx\"], {\"enabled\": true}"
+    }
+  },
+  "modulesPage": {
+    "title": "Модули",
+    "description": "Подключенные платформенные и бизнес-модули.",
+    "searchPlaceholder": "Поиск по имени или заголовку модуля",
+    "emptyTitle": "Модули не найдены",
+    "emptyDescription": "Попробуйте изменить поиск или фильтр статуса.",
+    "fields": {
+      "title": "Заголовок",
+      "version": "Версия",
+      "permissions": "Права",
+      "settings": "Настройки"
+    },
+    "status": {
+      "enabled": "Включен",
+      "disabled": "Выключен"
+    },
+    "settingsAvailable": "Доступно",
+    "settingsFields": "Полей: {{count}}",
+    "viewManifest": "Открыть manifest",
+    "disableModule": "Выключить модуль",
+    "enableModule": "Включить модуль",
+    "openActions": "Открыть действия для {{name}}",
+    "manifestDialog": {
+      "title": "Manifest модуля",
+      "description": "Просмотр метаданных модуля {{name}}.",
+      "overview": "Обзор",
+      "permissions": "Права",
+      "adminMenu": "Админ-меню",
+      "settingsSchema": "Схема настроек",
+      "rawManifest": "Исходный manifest",
+      "name": "name",
+      "titleLabel": "title",
+      "version": "version",
+      "status": "status",
+      "descriptionLabel": "description",
+      "label": "Label",
+      "path": "Path",
+      "permission": "Permission",
+      "icon": "Icon",
+      "order": "Order",
+      "noAdminMenu": "В manifest нет пунктов админ-меню.",
+      "noPermissions": "В manifest нет прав.",
+      "noSettingsSchema": "В manifest нет схемы настроек.",
+      "emptyManifest": "Manifest пуст.",
+      "moduleNotSelected": "Модуль не выбран."
+    },
+    "statusDialog": {
+      "title": "Изменить статус модуля",
+      "description": "Обновить статус для {{name}}.",
+      "impactTitle": "Влияние",
+      "impactDescription": "Отключение модуля не удаляет данные. Права и настройки сохраняются. Эндпоинты под ModuleEnabledGuard будут возвращать 403, а связанные пункты меню должны скрываться в UI.",
+      "coreProtectionTitle": "Защита core",
+      "coreProtectionDescription": "Модуль core нельзя отключить.",
+      "submit": "Обновить статус"
+    }
+  },
+  "logs": {
+    "audit": {
+      "title": "Аудит",
+      "description": "Действия пользователей и события, связанные с безопасностью.",
+      "failedToLoad": "Не удалось загрузить аудит",
+      "searchPlaceholder": "Поиск по действию, сущности, пользователю, организации, метаданным",
+      "emptyTitle": "Записи аудита не найдены",
+      "emptyDescription": "Попробуйте изменить поисковый запрос или фильтры.",
+      "fields": {
+        "entity": "Сущность",
+        "user": "Пользователь",
+        "organization": "Организация",
+        "ip": "IP",
+        "action": "Действие",
+        "entityType": "Тип сущности",
+        "entityId": "ID сущности",
+        "userId": "ID пользователя",
+        "organizationId": "ID организации",
+        "dateFrom": "Дата с",
+        "dateTo": "Дата по",
+        "metadata": "Метаданные",
+        "actor": "Актор",
+        "request": "Запрос",
+        "userAgent": "User agent"
+      },
+      "viewDetails": "Открыть детали",
+      "copyLogId": "Скопировать ID лога",
+      "openActions": "Открыть действия",
+      "detailTitle": "Детали записи аудита",
+      "detailDescription": "Подробный просмотр выбранного события аудита.",
+      "failedToLoadDetails": "Не удалось загрузить детали"
+    },
+    "system": {
+      "title": "Системные логи",
+      "description": "Технические и runtime-события платформы.",
+      "failedToLoad": "Не удалось загрузить системные логи",
+      "searchPlaceholder": "Поиск по сообщению, источнику, пользователю, организации, контексту",
+      "emptyTitle": "Системные логи не найдены",
+      "emptyDescription": "Попробуйте изменить поисковый запрос или фильтры.",
+      "fields": {
+        "level": "Уровень",
+        "source": "Источник",
+        "message": "Сообщение",
+        "user": "Пользователь",
+        "organization": "Организация",
+        "userId": "ID пользователя",
+        "organizationId": "ID организации",
+        "dateFrom": "Дата с",
+        "dateTo": "Дата по",
+        "context": "Контекст",
+        "errorStack": "Стек ошибки"
+      },
+      "viewDetails": "Открыть детали",
+      "copyLogId": "Скопировать ID лога",
+      "openActions": "Открыть действия",
+      "detailTitle": "Детали системного лога",
+      "detailDescription": "Подробный просмотр выбранного технического runtime-события.",
+      "failedToLoadDetails": "Не удалось загрузить детали",
+      "noContext": "Контекст отсутствует.",
+      "noErrorStack": "Стек ошибки отсутствует."
+    }
+  }
+}

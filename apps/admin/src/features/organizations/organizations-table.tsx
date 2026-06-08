@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { OrganizationStatusBadge } from '@/features/organizations/organization-status-badge';
 import type { OrganizationsTableProps } from '@/features/organizations/organizations-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 function formatDate(value: string) {
   return new Date(value).toLocaleString();
@@ -34,6 +35,8 @@ export function OrganizationsTable({
   onEdit,
   onChangeStatus
 }: OrganizationsTableProps) {
+  const { t } = useI18n();
+
   if (isLoading) {
     return <OrganizationsTableSkeleton />;
   }
@@ -44,13 +47,13 @@ export function OrganizationsTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
+              <TableHead>{t('organizations.fields.name')}</TableHead>
               <TableHead>Slug</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Users</TableHead>
-              <TableHead>Roles</TableHead>
-              <TableHead>Created at</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>{t('common.status')}</TableHead>
+              <TableHead>{t('organizations.table.users')}</TableHead>
+              <TableHead>{t('organizations.table.roles')}</TableHead>
+              <TableHead>{t('common.createdAt')}</TableHead>
+              <TableHead className="text-right">{t('common.actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -60,7 +63,7 @@ export function OrganizationsTable({
                   <div className="flex items-center gap-2">
                     <span className="font-medium">{organization.name}</span>
                     {organization.id === activeOrganizationId ? (
-                      <Badge className="bg-blue-100 text-blue-800">Current</Badge>
+                      <Badge className="bg-blue-100 text-blue-800">{t('common.current')}</Badge>
                     ) : null}
                   </div>
                 </TableCell>
@@ -74,19 +77,19 @@ export function OrganizationsTable({
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger>
-                      <Button type="button" variant="ghost" size="sm" aria-label={`Open actions for ${organization.name}`}>
+                      <Button type="button" variant="ghost" size="sm" aria-label={t('organizations.table.openActions', { name: organization.name })}>
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
                       <DropdownMenuItem onClick={() => onEdit(organization)}>
                         <Pencil className="mr-2 inline h-4 w-4" />
-                        Edit
+                        {t('common.edit')}
                       </DropdownMenuItem>
                       {isSuperAdmin ? (
                         <DropdownMenuItem onClick={() => onChangeStatus(organization)}>
                           <ShieldAlert className="mr-2 inline h-4 w-4" />
-                          Change status
+                          {t('organizations.table.changeStatus')}
                         </DropdownMenuItem>
                       ) : null}
                     </DropdownMenuContent>

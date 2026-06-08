@@ -12,6 +12,7 @@ import { auditLogsQueryKeys } from '@/features/audit-logs/audit-logs-query-keys'
 import { AuditLogsTable } from '@/features/audit-logs/audit-logs-table';
 import { AuditLogsToolbar } from '@/features/audit-logs/audit-logs-toolbar';
 import { getApiErrorMessage } from '@/lib/api-error-message';
+import { useI18n } from '@/lib/i18n/use-i18n';
 import { sdk } from '@/lib/sdk';
 
 function toDateRangeFrom(value: string) {
@@ -24,6 +25,7 @@ function toDateRangeTo(value: string) {
 
 export function AuditLogsPage() {
   const auth = useAuth();
+  const { t } = useI18n();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(50);
   const [search, setSearch] = useState('');
@@ -97,8 +99,8 @@ export function AuditLogsPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h2 className="text-2xl font-semibold text-foreground">Audit Logs</h2>
-        <p className="text-sm text-muted-foreground">User actions and security-relevant events.</p>
+        <h2 className="text-2xl font-semibold text-foreground">{t('logs.audit.title')}</h2>
+        <p className="text-sm text-muted-foreground">{t('logs.audit.description')}</p>
       </div>
 
       <AuditLogsToolbar
@@ -157,7 +159,7 @@ export function AuditLogsPage() {
 
       {pageError ? (
         <Alert className="border-red-200 bg-red-50">
-          <AlertTitle className="text-red-700">Failed to load audit logs</AlertTitle>
+          <AlertTitle className="text-red-700">{t('logs.audit.failedToLoad')}</AlertTitle>
           <AlertDescription className="text-red-700">{pageError}</AlertDescription>
         </Alert>
       ) : null}
@@ -192,7 +194,7 @@ export function AuditLogsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">Rows per page</span>
+          <span className="text-muted-foreground">{t('common.rowsPerPage')}</span>
           <Select
             value={String(limit)}
             onChange={(event) => {

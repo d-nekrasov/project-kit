@@ -20,14 +20,7 @@ import type {
   OrganizationFormDialogProps,
   OrganizationFormValues
 } from '@/features/organizations/organizations-page.types';
-
-const schema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  slug: z
-    .string()
-    .min(2, 'Slug must be at least 2 characters')
-    .regex(/^[a-z0-9-]+$/, 'Slug must contain only lowercase latin letters, numbers and dashes')
-});
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 export function OrganizationFormDialog({
   open,
@@ -38,6 +31,14 @@ export function OrganizationFormDialog({
   onOpenChange,
   onSubmit
 }: OrganizationFormDialogProps) {
+  const { t } = useI18n();
+  const schema = z.object({
+    name: z.string().min(2, t('organizations.form.validation.nameMin')),
+    slug: z
+      .string()
+      .min(2, t('organizations.form.validation.slugMin'))
+      .regex(/^[a-z0-9-]+$/, t('organizations.form.validation.slugFormat'))
+  });
   const form = useForm<OrganizationFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -66,9 +67,9 @@ export function OrganizationFormDialog({
     <Dialog open={open}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{mode === 'create' ? 'Create organization' : 'Edit organization'}</DialogTitle>
+          <DialogTitle>{mode === 'create' ? t('organizations.form.createTitle') : t('organizations.form.editTitle')}</DialogTitle>
           <DialogDescription>
-            {mode === 'create' ? 'Create a new organization.' : 'Update organization name and slug.'}
+            {mode === 'create' ? t('organizations.form.createDescription') : t('organizations.form.editDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -77,7 +78,7 @@ export function OrganizationFormDialog({
           {error ? (
             <Alert className="border-red-200 bg-red-50 text-red-700">
               <AlertCircle className="mb-1 h-4 w-4" />
-              <AlertTitle>Request failed</AlertTitle>
+              <AlertTitle>{t('common.requestFailed')}</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           ) : null}
@@ -87,7 +88,7 @@ export function OrganizationFormDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>{t('organizations.fields.name')}</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -101,7 +102,7 @@ export function OrganizationFormDialog({
               name="slug"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Slug</FormLabel>
+                  <FormLabel>{t('organizations.fields.slug')}</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -112,10 +113,14 @@ export function OrganizationFormDialog({
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Saving...' : mode === 'create' ? 'Create organization' : 'Save changes'}
+                {isSubmitting
+                  ? t('common.saving')
+                  : mode === 'create'
+                    ? t('common.createItem', { item: t('entities.organization') })
+                    : t('common.saveChanges')}
               </Button>
             </DialogFooter>
           </form>

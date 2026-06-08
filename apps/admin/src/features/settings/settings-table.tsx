@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { SettingScopeBadge } from '@/features/settings/setting-scope-badge';
 import type { SettingsTableProps } from '@/features/settings/settings-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 function formatDate(value: string | null) {
   if (!value) {
@@ -43,12 +44,14 @@ function SettingsTableSkeleton() {
 }
 
 export function SettingsTable({ settings, isLoading, onEdit }: SettingsTableProps) {
+  const { t } = useI18n();
+
   if (isLoading) {
     return <SettingsTableSkeleton />;
   }
 
   if (!settings.length) {
-    return <EmptyState title="No settings found" description="Try changing search or filters." />;
+    return <EmptyState title={t('settings.emptyTitle')} description={t('settings.emptyDescription')} />;
   }
 
   return (
@@ -57,13 +60,13 @@ export function SettingsTable({ settings, isLoading, onEdit }: SettingsTableProp
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Key</TableHead>
-              <TableHead>Value</TableHead>
-              <TableHead>Scope</TableHead>
-              <TableHead>Module</TableHead>
-              <TableHead>Organization</TableHead>
-              <TableHead>Updated at</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>{t('common.key')}</TableHead>
+              <TableHead>{t('common.value')}</TableHead>
+              <TableHead>{t('common.scope')}</TableHead>
+              <TableHead>{t('common.module')}</TableHead>
+              <TableHead>{t('common.organization')}</TableHead>
+              <TableHead>{t('common.updatedAt')}</TableHead>
+              <TableHead className="text-right">{t('common.actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -89,7 +92,7 @@ export function SettingsTable({ settings, isLoading, onEdit }: SettingsTableProp
                     <DropdownMenuContent>
                       <DropdownMenuItem onClick={() => onEdit(setting)}>
                         <Pencil className="mr-2 inline h-4 w-4" />
-                        Edit
+                        {t('common.edit')}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

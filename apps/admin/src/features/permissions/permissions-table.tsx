@@ -4,6 +4,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PermissionModuleBadge } from '@/features/permissions/permission-module-badge';
 import type { PermissionsTableProps } from '@/features/permissions/permissions-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 function formatDate(value: string) {
   return new Date(value).toLocaleString();
@@ -22,12 +23,13 @@ function PermissionsTableSkeleton() {
 }
 
 export function PermissionsTable({ permissions, isLoading }: PermissionsTableProps) {
+  const { t } = useI18n();
   if (isLoading) {
     return <PermissionsTableSkeleton />;
   }
 
   if (!permissions.length) {
-    return <EmptyState title="No permissions found" description="Try changing search query or module filter." />;
+    return <EmptyState title={t('permissions.emptyTitle')} description={t('permissions.emptyDescription')} />;
   }
 
   return (
@@ -36,12 +38,12 @@ export function PermissionsTable({ permissions, isLoading }: PermissionsTablePro
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Code</TableHead>
-              <TableHead>Module</TableHead>
-              <TableHead>Resource</TableHead>
-              <TableHead>Action</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Created at</TableHead>
+              <TableHead>{t('roles.fields.code')}</TableHead>
+              <TableHead>{t('permissions.moduleFilter')}</TableHead>
+              <TableHead>{t('permissions.resource')}</TableHead>
+              <TableHead>{t('permissions.action')}</TableHead>
+              <TableHead>{t('common.description')}</TableHead>
+              <TableHead>{t('common.createdAt')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

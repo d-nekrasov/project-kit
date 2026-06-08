@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { AUDIT_ACTION_OPTIONS, AUDIT_ENTITY_TYPE_OPTIONS, type AuditLogsToolbarProps } from '@/features/audit-logs/audit-logs-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 export function AuditLogsToolbar({
   search,
@@ -24,22 +25,24 @@ export function AuditLogsToolbar({
   onDateToChange,
   onReset
 }: AuditLogsToolbarProps) {
+  const { t } = useI18n();
+
   return (
     <div className="grid gap-3 rounded-lg border bg-card p-4 md:grid-cols-2 xl:grid-cols-4">
       <div className="space-y-1 md:col-span-2 xl:col-span-4">
-        <Label htmlFor="audit-logs-search">Search</Label>
+        <Label htmlFor="audit-logs-search">{t('common.search')}</Label>
         <Input
           id="audit-logs-search"
-          placeholder="Search action, entity, user, organization, metadata"
+          placeholder={t('logs.audit.searchPlaceholder')}
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
         />
       </div>
 
       <div className="space-y-1">
-        <Label htmlFor="audit-logs-action">Action</Label>
+        <Label htmlFor="audit-logs-action">{t('logs.audit.fields.action')}</Label>
         <Select id="audit-logs-action" value={action} onChange={(event) => onActionChange(event.target.value)}>
-          <option value="">All</option>
+          <option value="">{t('common.all')}</option>
           {AUDIT_ACTION_OPTIONS.filter((item) => item).map((item) => (
             <option key={item} value={item}>
               {item}
@@ -49,9 +52,9 @@ export function AuditLogsToolbar({
       </div>
 
       <div className="space-y-1">
-        <Label htmlFor="audit-logs-entity-type">Entity type</Label>
+        <Label htmlFor="audit-logs-entity-type">{t('logs.audit.fields.entityType')}</Label>
         <Select id="audit-logs-entity-type" value={entityType} onChange={(event) => onEntityTypeChange(event.target.value)}>
-          <option value="">All</option>
+          <option value="">{t('common.all')}</option>
           {AUDIT_ENTITY_TYPE_OPTIONS.filter((item) => item).map((item) => (
             <option key={item} value={item}>
               {item}
@@ -61,17 +64,17 @@ export function AuditLogsToolbar({
       </div>
 
       <div className="space-y-1">
-        <Label htmlFor="audit-logs-entity-id">Entity ID</Label>
+        <Label htmlFor="audit-logs-entity-id">{t('logs.audit.fields.entityId')}</Label>
         <Input id="audit-logs-entity-id" value={entityId} onChange={(event) => onEntityIdChange(event.target.value)} />
       </div>
 
       <div className="space-y-1">
-        <Label htmlFor="audit-logs-user-id">User ID</Label>
+        <Label htmlFor="audit-logs-user-id">{t('logs.audit.fields.userId')}</Label>
         <Input id="audit-logs-user-id" value={userId} onChange={(event) => onUserIdChange(event.target.value)} />
       </div>
 
       <div className="space-y-1">
-        <Label htmlFor="audit-logs-organization-id">Organization ID</Label>
+        <Label htmlFor="audit-logs-organization-id">{t('logs.audit.fields.organizationId')}</Label>
         <Input
           id="audit-logs-organization-id"
           value={organizationId}
@@ -80,12 +83,12 @@ export function AuditLogsToolbar({
       </div>
 
       <div className="space-y-1">
-        <Label htmlFor="audit-logs-date-from">Date from</Label>
+        <Label htmlFor="audit-logs-date-from">{t('logs.audit.fields.dateFrom')}</Label>
         <Calendar id="audit-logs-date-from" value={dateFrom} onChange={(event) => onDateFromChange(event.target.value)} />
       </div>
 
       <div className="space-y-1">
-        <Label htmlFor="audit-logs-date-to">Date to</Label>
+        <Label htmlFor="audit-logs-date-to">{t('logs.audit.fields.dateTo')}</Label>
         <Calendar id="audit-logs-date-to" value={dateTo} onChange={(event) => onDateToChange(event.target.value)} />
       </div>
 
@@ -95,7 +98,7 @@ export function AuditLogsToolbar({
         </Label>
         <div className="flex justify-end">
           <Button type="button" variant="outline" size="sm" className="w-full md:w-auto" onClick={onReset}>
-            Reset filters
+            {t('common.resetFilters')}
           </Button>
         </div>
       </div>

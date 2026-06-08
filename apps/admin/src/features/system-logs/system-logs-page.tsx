@@ -13,6 +13,7 @@ import { SystemLogsTable } from '@/features/system-logs/system-logs-table';
 import { SystemLogsToolbar } from '@/features/system-logs/system-logs-toolbar';
 import { type SystemLogLevelFilter, toSystemLogLevel } from '@/features/system-logs/system-logs-page.types';
 import { getApiErrorMessage } from '@/lib/api-error-message';
+import { useI18n } from '@/lib/i18n/use-i18n';
 import { sdk } from '@/lib/sdk';
 
 function toDateRangeFrom(value: string) {
@@ -25,6 +26,7 @@ function toDateRangeTo(value: string) {
 
 export function SystemLogsPage() {
   const auth = useAuth();
+  const { t } = useI18n();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(50);
   const [search, setSearch] = useState('');
@@ -95,8 +97,8 @@ export function SystemLogsPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h2 className="text-2xl font-semibold text-foreground">System Logs</h2>
-        <p className="text-sm text-muted-foreground">Technical and runtime events from the platform.</p>
+        <h2 className="text-2xl font-semibold text-foreground">{t('logs.system.title')}</h2>
+        <p className="text-sm text-muted-foreground">{t('logs.system.description')}</p>
       </div>
 
       <SystemLogsToolbar
@@ -149,7 +151,7 @@ export function SystemLogsPage() {
 
       {pageError ? (
         <Alert className="border-red-200 bg-red-50">
-          <AlertTitle className="text-red-700">Failed to load system logs</AlertTitle>
+          <AlertTitle className="text-red-700">{t('logs.system.failedToLoad')}</AlertTitle>
           <AlertDescription className="text-red-700">{pageError}</AlertDescription>
         </Alert>
       ) : null}
@@ -184,7 +186,7 @@ export function SystemLogsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">Rows per page</span>
+          <span className="text-muted-foreground">{t('common.rowsPerPage')}</span>
           <Select
             value={String(limit)}
             onChange={(event) => {

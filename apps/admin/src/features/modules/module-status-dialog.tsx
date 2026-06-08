@@ -14,6 +14,8 @@ import {
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import type { ModuleStatusDialogProps } from '@/features/modules/modules-page.types';
+import { useI18n } from '@/lib/i18n/use-i18n';
+import { translateWithFallback } from '@/lib/i18n/translate-with-fallback';
 
 export function ModuleStatusDialog({
   open,
@@ -23,6 +25,7 @@ export function ModuleStatusDialog({
   onOpenChange,
   onSubmit
 }: ModuleStatusDialogProps) {
+  const { t } = useI18n();
   const [status, setStatus] = useState<ModuleStatus>('ENABLED');
 
   useEffect(() => {
@@ -32,15 +35,16 @@ export function ModuleStatusDialog({
   }, [module]);
 
   const isCoreModule = module?.name === 'core';
+  const moduleTitle = module ? translateWithFallback(t, module.manifest?.titleKey, module.title) : '-';
   const submitDisabled = useMemo(() => isSubmitting || isCoreModule, [isCoreModule, isSubmitting]);
 
   return (
     <Dialog open={open}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Change module status</DialogTitle>
+          <DialogTitle>{t('modulesPage.statusDialog.title')}</DialogTitle>
           <DialogDescription>
-            Update status for <span className="font-medium">{module?.title ?? module?.name ?? '-'}</span>.
+            {t('modulesPage.statusDialog.description', { name: moduleTitle || module?.name || '-' })}
           </DialogDescription>
         </DialogHeader>
 
@@ -55,45 +59,42 @@ export function ModuleStatusDialog({
         >
           {error ? (
             <Alert className="border-red-200 bg-red-50 text-red-700">
-              <AlertTitle>Request failed</AlertTitle>
+              <AlertTitle>{t('common.requestFailed')}</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           ) : null}
 
           <Alert className="border-amber-200 bg-amber-50 text-amber-800">
-            <AlertTitle>Impact notice</AlertTitle>
-            <AlertDescription>
-              Disabling a module does not delete data. Permissions and settings remain. Endpoints protected by
-              ModuleEnabledGuard return 403, and related menu items should be hidden in UI.
-            </AlertDescription>
+            <AlertTitle>{t('modulesPage.statusDialog.impactTitle')}</AlertTitle>
+            <AlertDescription>{t('modulesPage.statusDialog.impactDescription')}</AlertDescription>
           </Alert>
 
           {isCoreModule ? (
             <Alert className="border-blue-200 bg-blue-50 text-blue-800">
-              <AlertTitle>Core protection</AlertTitle>
-              <AlertDescription>The core module cannot be disabled.</AlertDescription>
+              <AlertTitle>{t('modulesPage.statusDialog.coreProtectionTitle')}</AlertTitle>
+              <AlertDescription>{t('modulesPage.statusDialog.coreProtectionDescription')}</AlertDescription>
             </Alert>
           ) : null}
 
           <div className="space-y-2">
-            <Label htmlFor="module-status">Status</Label>
+            <Label htmlFor="module-status">{t('common.status')}</Label>
             <Select
               id="module-status"
               value={status}
               onChange={(event) => setStatus(event.target.value as ModuleStatus)}
               disabled={isCoreModule}
             >
-              <option value="ENABLED">ENABLED</option>
-              <option value="DISABLED">DISABLED</option>
+              <option value="ENABLED">{t('modulesPage.status.enabled')}</option>
+              <option value="DISABLED">{t('modulesPage.status.disabled')}</option>
             </Select>
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={submitDisabled}>
-              {isSubmitting ? 'Updating...' : 'Update status'}
+              {isSubmitting ? t('common.updating') : t('modulesPage.statusDialog.submit')}
             </Button>
           </DialogFooter>
         </form>

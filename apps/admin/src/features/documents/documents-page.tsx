@@ -16,6 +16,7 @@ import type { DocumentFormValues, DocumentStatusFilter } from '@/features/docume
 import { DocumentsTable } from '@/features/documents/documents-table';
 import { DocumentsToolbar } from '@/features/documents/documents-toolbar';
 import { getApiErrorMessage } from '@/lib/api-error-message';
+import { useI18n } from '@/lib/i18n/use-i18n';
 import { sdk } from '@/lib/sdk';
 
 function isModuleDisabledError(error: unknown) {
@@ -26,6 +27,7 @@ function isModuleDisabledError(error: unknown) {
 
 export function DocumentsPage() {
   const auth = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -131,11 +133,11 @@ export function DocumentsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-foreground">Documents</h2>
-          <p className="text-sm text-muted-foreground">Manage organization documents and their publication lifecycle.</p>
+          <h2 className="text-2xl font-semibold text-foreground">{t('documents.title')}</h2>
+          <p className="text-sm text-muted-foreground">{t('documents.description')}</p>
         </div>
         <Button type="button" onClick={() => setCreateDialogOpen(true)} disabled={moduleDisabled}>
-          Create document
+          {t('documents.actions.create')}
         </Button>
       </div>
 
@@ -154,15 +156,15 @@ export function DocumentsPage() {
 
       {moduleDisabled ? (
         <EmptyState
-          title="Documents module is disabled"
-          description="Enable the module in Modules page to use documents."
+          title={t('documents.moduleDisabled.title')}
+          description={t('documents.moduleDisabled.description')}
         />
       ) : null}
 
       {moduleDisabled ? (
         <div className="flex justify-center">
           <Button type="button" variant="outline" onClick={() => navigate('/modules')}>
-            Go to Modules
+            {t('documents.actions.goToModules')}
           </Button>
         </div>
       ) : null}
@@ -181,12 +183,15 @@ export function DocumentsPage() {
       {!moduleDisabled ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4 text-sm">
           <div className="text-muted-foreground">
-            Page {documentsMeta?.page ?? page} of {documentsMeta?.totalPages ?? 1} • Total: {documentsMeta?.total ?? 0}
+            {`${t('documents.pagination.page', {
+              page: documentsMeta?.page ?? page,
+              pages: documentsMeta?.totalPages ?? 1
+            })} • ${t('documents.pagination.total', { total: documentsMeta?.total ?? 0 })}`}
           </div>
 
           <div className="flex items-center gap-2">
             <Button type="button" variant="outline" size="sm" onClick={() => setPage((value) => value - 1)} disabled={page <= 1}>
-              Previous
+              {t('common.previous')}
             </Button>
             <Button
               type="button"
@@ -195,12 +200,12 @@ export function DocumentsPage() {
               onClick={() => setPage((value) => value + 1)}
               disabled={page >= (documentsMeta?.totalPages ?? 1)}
             >
-              Next
+              {t('common.next')}
             </Button>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-muted-foreground">Rows per page</span>
+            <span className="text-muted-foreground">{t('common.rowsPerPage')}</span>
             <Select
               value={String(limit)}
               onChange={(event) => {
