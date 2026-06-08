@@ -20,16 +20,17 @@ export class I18nService {
   ) {}
 
   async getCatalog(): Promise<I18nCatalogResponse> {
-    const locale = await this.getPrimaryLocale();
+    const locale = await this.getSystemLocale();
+    const currentLocale = locale ?? DEFAULT_LOCALE;
     const fallbackLocale = FALLBACK_LOCALE;
     const enabledModules = await this.getEnabledModuleNames();
 
     const fallbackMessages = await this.loadMergedMessages(fallbackLocale, enabledModules);
     const localeMessages =
-      locale === fallbackLocale ? fallbackMessages : await this.loadMergedMessages(locale, enabledModules);
+      currentLocale === fallbackLocale ? fallbackMessages : await this.loadMergedMessages(currentLocale, enabledModules);
 
     return {
-      locale,
+      locale: currentLocale,
       fallbackLocale,
       messages: this.i18nLoaderService.mergeCatalogs(fallbackMessages, localeMessages)
     };
@@ -39,7 +40,7 @@ export class I18nService {
     return messages[key] ?? key;
   }
 
-  private async getPrimaryLocale(): Promise<string> {
+  private async getSystemLocale(): Promise<string | null> {
     const setting = await this.prisma.setting.findFirst({
       where: {
         key: 'system.locale',
@@ -56,7 +57,7 @@ export class I18nService {
       return rawValue.trim().toLowerCase();
     }
 
-    return DEFAULT_LOCALE;
+    return null;
   }
 
   private async getEnabledModuleNames(): Promise<string[]> {
