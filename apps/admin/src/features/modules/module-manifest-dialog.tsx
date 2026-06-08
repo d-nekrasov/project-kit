@@ -31,7 +31,7 @@ function renderAdminMenu(
   t: (key: string, params?: Record<string, string | number | boolean | null | undefined>) => string
 ) {
   if (!items?.length) {
-    return renderEmpty(t('modules.manifest.emptyAdminMenu'));
+    return renderEmpty(t('modules.manifestDialog.emptyAdminMenu'));
   }
 
   return (
@@ -39,21 +39,21 @@ function renderAdminMenu(
       {items.map((item, index) => (
         <div key={`${item.path}-${index}`} className="rounded-md border p-3 text-sm">
           <div>
-            <span className="font-medium">{t('modules.manifest.fields.label')}:</span>{' '}
+            <span className="font-medium">{t('modules.manifestDialog.fields.label')}:</span>{' '}
             {translateWithFallback(t, item.labelKey, item.label)}
           </div>
           <div>
-            <span className="font-medium">{t('modules.manifest.fields.path')}:</span>{' '}
+            <span className="font-medium">{t('modules.manifestDialog.fields.path')}:</span>{' '}
             <span className="font-mono text-xs">{item.path}</span>
           </div>
           <div>
-            <span className="font-medium">{t('modules.manifest.fields.permission')}:</span> {item.permission ?? '—'}
+            <span className="font-medium">{t('modules.manifestDialog.fields.permission')}:</span> {item.permission ?? '—'}
           </div>
           <div>
-            <span className="font-medium">{t('modules.manifest.fields.icon')}:</span> {item.icon ?? '—'}
+            <span className="font-medium">{t('modules.manifestDialog.fields.icon')}:</span> {item.icon ?? '—'}
           </div>
           <div>
-            <span className="font-medium">{t('modules.manifest.fields.order')}:</span> {item.order ?? '—'}
+            <span className="font-medium">{t('modules.manifestDialog.fields.order')}:</span> {item.order ?? '—'}
           </div>
         </div>
       ))}
@@ -73,38 +73,39 @@ export function ModuleManifestDialog({ open, module, onOpenChange }: ModuleManif
     <Dialog open={open}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>{t('modules.manifest.title')}</DialogTitle>
+          <DialogTitle>{t('modules.manifestDialog.title')}</DialogTitle>
           <DialogDescription>
-            {t('modules.manifest.description', { name: moduleTitle || module?.name || '-' })}
+            {t('modules.manifestDialog.description', { name: moduleTitle || module?.name || '-' })}
           </DialogDescription>
         </DialogHeader>
 
         {module ? (
           <div className="max-h-[70vh] space-y-4 overflow-auto pr-1">
             <section className="space-y-2 rounded-md border p-3">
-              <h3 className="text-sm font-semibold">{t('modules.manifest.sections.overview')}</h3>
+              <h3 className="text-sm font-semibold">{t('modules.manifestDialog.sections.general')}</h3>
               <div className="grid gap-1 text-sm text-foreground/80 md:grid-cols-2">
                 <div>
-                  <span className="font-medium">{t('modules.manifest.overview.name')}:</span>{' '}
+                  <span className="font-medium">{t('modules.manifestDialog.fields.name')}:</span>{' '}
                   <span className="font-mono text-xs">{module.name}</span>
                 </div>
                 <div>
-                  <span className="font-medium">{t('modules.manifest.overview.title')}:</span> {moduleTitle}
+                  <span className="font-medium">{t('modules.manifestDialog.fields.title')}:</span> {moduleTitle}
                 </div>
                 <div>
-                  <span className="font-medium">{t('modules.manifest.overview.version')}:</span> {manifest?.version ?? module.version}
+                  <span className="font-medium">{t('modules.manifestDialog.fields.version')}:</span> {manifest?.version ?? module.version}
                 </div>
                 <div>
-                  <span className="font-medium">{t('modules.manifest.overview.status')}:</span> <ModuleStatusBadge status={module.status} />
+                  <span className="font-medium">{t('modules.manifestDialog.fields.status')}:</span>{' '}
+                  <ModuleStatusBadge status={module.status} />
                 </div>
                 <div className="md:col-span-2">
-                  <span className="font-medium">{t('modules.manifest.overview.description')}:</span> {moduleDescription}
+                  <span className="font-medium">{t('modules.manifestDialog.fields.description')}:</span> {moduleDescription}
                 </div>
               </div>
             </section>
 
             <section className="space-y-2 rounded-md border p-3">
-              <h3 className="text-sm font-semibold">{t('modules.manifest.sections.permissions')}</h3>
+              <h3 className="text-sm font-semibold">{t('modules.manifestDialog.sections.permissions')}</h3>
               {manifest?.permissions?.length ? (
                 <ul className="space-y-1 text-sm">
                   {manifest.permissions.map((code) => (
@@ -114,27 +115,29 @@ export function ModuleManifestDialog({ open, module, onOpenChange }: ModuleManif
                   ))}
                 </ul>
               ) : (
-                renderEmpty(t('modules.manifest.noPermissions'))
+                renderEmpty(t('modules.manifestDialog.noPermissions'))
               )}
             </section>
 
             <section className="space-y-2 rounded-md border p-3">
-              <h3 className="text-sm font-semibold">{t('modules.manifest.sections.adminMenu')}</h3>
+              <h3 className="text-sm font-semibold">{t('modules.manifestDialog.sections.adminMenu')}</h3>
               {renderAdminMenu(manifest?.adminMenu, t)}
             </section>
 
             <section className="space-y-2 rounded-md border p-3">
-              <h3 className="text-sm font-semibold">{t('modules.manifest.sections.settingsSchema')}</h3>
-              {manifest?.settingsSchema ? renderJsonBlock(manifest.settingsSchema) : renderEmpty(t('modules.manifest.noSettingsSchema'))}
+              <h3 className="text-sm font-semibold">{t('modules.manifestDialog.sections.settingsSchema')}</h3>
+              {manifest?.settingsSchema
+                ? renderJsonBlock(manifest.settingsSchema)
+                : renderEmpty(t('modules.manifestDialog.noSettingsSchema'))}
             </section>
 
             <section className="space-y-2 rounded-md border p-3">
-              <h3 className="text-sm font-semibold">{t('modules.manifest.sections.rawManifest')}</h3>
-              {manifest ? renderJsonBlock(manifest) : renderEmpty(t('modules.manifest.emptyManifest'))}
+              <h3 className="text-sm font-semibold">{t('modules.manifestDialog.sections.rawManifest')}</h3>
+              {manifest ? renderJsonBlock(manifest) : renderEmpty(t('modules.manifestDialog.emptyManifest'))}
             </section>
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">{t('modules.manifest.moduleNotSelected')}</p>
+          <p className="text-sm text-muted-foreground">{t('modules.manifestDialog.moduleNotSelected')}</p>
         )}
 
         <DialogFooter>

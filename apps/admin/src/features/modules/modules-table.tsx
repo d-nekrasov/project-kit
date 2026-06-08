@@ -118,7 +118,7 @@ export function ModulesTable({ modules, isLoading, isSuperAdmin, onViewManifest,
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <span>{title}</span>
-                      {core ? <Badge className="bg-blue-100 text-blue-700">core</Badge> : null}
+                      {core ? <Badge className="bg-blue-100 text-blue-700">{t('modules.coreBadge')}</Badge> : null}
                     </div>
                   </TableCell>
                   <TableCell>{module.version}</TableCell>

@@ -313,62 +313,6 @@
       "examples": "Примеры: \"Project Kit\", true, 10485760, [\"pdf\", \"docx\"], {\"enabled\": true}"
     }
   },
-  "modulesPage": {
-    "title": "Модули",
-    "description": "Подключенные платформенные и бизнес-модули.",
-    "searchPlaceholder": "Поиск по имени или заголовку модуля",
-    "emptyTitle": "Модули не найдены",
-    "emptyDescription": "Попробуйте изменить поиск или фильтр статуса.",
-    "fields": {
-      "title": "Заголовок",
-      "version": "Версия",
-      "permissions": "Права",
-      "settings": "Настройки"
-    },
-    "status": {
-      "enabled": "Включен",
-      "disabled": "Выключен"
-    },
-    "settingsAvailable": "Доступно",
-    "settingsFields": "Полей: {{count}}",
-    "viewManifest": "Открыть manifest",
-    "disableModule": "Выключить модуль",
-    "enableModule": "Включить модуль",
-    "openActions": "Открыть действия для {{name}}",
-    "manifestDialog": {
-      "title": "Manifest модуля",
-      "description": "Просмотр метаданных модуля {{name}}.",
-      "overview": "Обзор",
-      "permissions": "Права",
-      "adminMenu": "Админ-меню",
-      "settingsSchema": "Схема настроек",
-      "rawManifest": "Исходный manifest",
-      "name": "name",
-      "titleLabel": "title",
-      "version": "version",
-      "status": "status",
-      "descriptionLabel": "description",
-      "label": "Label",
-      "path": "Path",
-      "permission": "Permission",
-      "icon": "Icon",
-      "order": "Order",
-      "noAdminMenu": "В manifest нет пунктов админ-меню.",
-      "noPermissions": "В manifest нет прав.",
-      "noSettingsSchema": "В manifest нет схемы настроек.",
-      "emptyManifest": "Manifest пуст.",
-      "moduleNotSelected": "Модуль не выбран."
-    },
-    "statusDialog": {
-      "title": "Изменить статус модуля",
-      "description": "Обновить статус для {{name}}.",
-      "impactTitle": "Влияние",
-      "impactDescription": "Отключение модуля не удаляет данные. Права и настройки сохраняются. Эндпоинты под ModuleEnabledGuard будут возвращать 403, а связанные пункты меню должны скрываться в UI.",
-      "coreProtectionTitle": "Защита core",
-      "coreProtectionDescription": "Модуль core нельзя отключить.",
-      "submit": "Обновить статус"
-    }
-  },
   "logs": {
     "audit": {
       "title": "Аудит",

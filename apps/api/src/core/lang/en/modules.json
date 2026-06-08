@@ -1,12 +1,13 @@
 {
   "modules": {
     "title": "Modules",
-    "description": "Connected platform and business modules.",
-    "searchPlaceholder": "Search by module name or title",
+    "description": "Manage installed platform modules",
+    "searchPlaceholder": "Search by module code or title",
     "enabled": "Enabled",
     "disabled": "Disabled",
+    "coreBadge": "core",
     "table": {
-      "name": "Name",
+      "name": "Code",
       "title": "Title",
       "version": "Version",
       "status": "Status",
@@ -22,14 +23,15 @@
       "notInstalled": "Not installed"
     },
     "pagination": {
-      "page": "Page {{page}} of {{totalPages}}",
+      "page": "Page {{page}}",
+      "of": "of {{pages}}",
       "total": "Total: {{total}}",
       "previous": "Previous",
       "next": "Next"
     },
     "empty": {
       "title": "No modules found",
-      "description": "Try changing search or status filters."
+      "description": "There are no registered modules in the system yet."
     },
     "settings": {
       "available": "Available",
@@ -37,38 +39,36 @@
     },
     "actions": {
       "open": "Open actions for {{name}}",
-      "viewManifest": "View manifest",
+      "viewManifest": "Open manifest",
       "enable": "Enable module",
       "disable": "Disable module"
     },
-    "manifest": {
+    "manifestDialog": {
       "title": "Module manifest",
       "description": "Inspect module metadata for {{name}}.",
       "emptyAdminMenu": "No admin menu items in manifest.",
-      "noPermissions": "No permissions in manifest.",
-      "noSettingsSchema": "No settings schema in manifest.",
+      "noPermissions": "No registered permissions in the manifest.",
+      "noSettingsSchema": "No settings schema in the manifest.",
       "emptyManifest": "Manifest is empty.",
       "moduleNotSelected": "Module is not selected.",
       "sections": {
-        "overview": "Overview",
+        "general": "General information",
         "permissions": "Permissions",
         "adminMenu": "Admin menu",
         "settingsSchema": "Settings schema",
         "rawManifest": "Raw manifest"
       },
       "fields": {
+        "name": "Code",
+        "title": "Title",
+        "version": "Version",
+        "status": "Status",
+        "description": "Description",
         "label": "Label",
         "path": "Path",
         "permission": "Permission",
         "icon": "Icon",
         "order": "Order"
-      },
-      "overview": {
-        "name": "name",
-        "title": "title",
-        "version": "version",
-        "status": "status",
-        "description": "description"
       }
     },
     "statusDialog": {
