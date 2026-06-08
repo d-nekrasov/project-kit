@@ -3,6 +3,34 @@ export type LoginDto = {
   password: string;
 };
 
+export type ForgotPasswordDto = {
+  email: string;
+};
+
+export type ForgotPasswordResponse = {
+  message: string;
+};
+
+export type ResetPasswordDto = {
+  token: string;
+  password: string;
+  passwordConfirmation: string;
+};
+
+export type ResetPasswordResponse = {
+  message: string;
+};
+
+export type ValidateResetPasswordTokenDto = {
+  token: string;
+};
+
+export type ValidateResetPasswordTokenResponse = {
+  valid: boolean;
+  reason?: 'invalid' | 'expired' | 'used' | 'user_inactive';
+  expiresAt?: string;
+};
+
 export type CurrentUserOrganization = {
   id: string;
   name: string;

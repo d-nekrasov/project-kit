@@ -7,7 +7,9 @@ import { AuditLogsPage } from '@/features/audit-logs/audit-logs-page';
 import { DashboardPage } from '@/features/dashboard/dashboard-page';
 import { DocumentsPage } from '@/features/documents/documents-page';
 import { InstallPage } from '@/features/installer/install-page';
+import { ForgotPasswordPage } from '@/features/login/forgot-password-page';
 import { LoginPage } from '@/features/login/login-page';
+import { ResetPasswordPage } from '@/features/login/reset-password-page';
 import { ModulesPage } from '@/features/modules/modules-page';
 import { NotificationSettingsPage } from '@/features/notification-settings/notification-settings-page';
 import { NotificationsPage } from '@/features/notifications/notifications-page';
@@ -29,6 +31,14 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: <LoginPage />
+  },
+  {
+    path: '/forgot-password',
+    element: <ForgotPasswordPage />
+  },
+  {
+    path: '/reset-password',
+    element: <ResetPasswordPage />
   },
   {
     path: '/',
