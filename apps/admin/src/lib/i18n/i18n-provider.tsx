@@ -3,7 +3,7 @@ import { createContext, useCallback, useEffect, useMemo, useState, type PropsWit
 import { sdk } from '@/lib/sdk';
 import type { I18nCatalogResponse, I18nContextValue, I18nMessages, I18nParams } from '@/lib/i18n/types';
 
-const DEFAULT_LOCALE = 'en';
+const DEFAULT_LOCALE = 'ru';
 const EMPTY_MESSAGES: I18nMessages = {};
 
 function interpolate(template: string, params?: I18nParams) {

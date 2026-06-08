@@ -9,10 +9,12 @@ export type LocaleKeyDiff = {
 export async function auditLocaleKeys(
   loader = new I18nLoaderService(resolve(__dirname, '../../src'))
 ): Promise<{
-  core: LocaleKeyDiff;
+  core: LocaleKeyDiff & { ruKeys: string[]; enKeys: string[] };
   modules: Record<string, LocaleKeyDiff>;
 }> {
-  const core = diffKeys(await loader.loadCoreMessages('ru'), await loader.loadCoreMessages('en'));
+  const ruCore = await loader.loadCoreMessages('ru');
+  const enCore = await loader.loadCoreMessages('en');
+  const coreDiff = diffKeys(ruCore, enCore);
   const modules = {
     documents: diffKeys(
       await loader.loadModuleMessages('documents', 'ru'),
@@ -20,7 +22,14 @@ export async function auditLocaleKeys(
     )
   };
 
-  return { core, modules };
+  return {
+    core: {
+      ...coreDiff,
+      ruKeys: Object.keys(ruCore).sort(),
+      enKeys: Object.keys(enCore).sort()
+    },
+    modules
+  };
 }
 
 function diffKeys(left: Record<string, string>, right: Record<string, string>): LocaleKeyDiff {

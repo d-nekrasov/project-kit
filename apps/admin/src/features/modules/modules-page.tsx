@@ -135,9 +135,8 @@ export function ModulesPage() {
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4 text-sm">
         <div className="text-muted-foreground">
-          {`${t('modules.pagination.page', {
-            page: modulesMeta?.page ?? page,
-            totalPages: modulesMeta?.totalPages ?? 1
+          {`${t('modules.pagination.page', { page: modulesMeta?.page ?? page })} ${t('modules.pagination.of', {
+            pages: modulesMeta?.totalPages ?? 1
           })} • ${t('modules.pagination.total', { total: modulesMeta?.total ?? 0 })}`}
         </div>
 

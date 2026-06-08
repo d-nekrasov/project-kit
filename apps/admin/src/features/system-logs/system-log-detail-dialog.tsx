@@ -47,7 +47,7 @@ export function SystemLogDetailDialog({ open, log, isLoading, error, onOpenChang
         {!isLoading && !error && log ? (
           <div className="max-h-[70vh] space-y-4 overflow-auto pr-1">
             <section className="space-y-2 rounded-md border p-3">
-              <h3 className="text-sm font-semibold">{t('modulesPage.manifestDialog.overview')}</h3>
+              <h3 className="text-sm font-semibold">{t('modules.manifestDialog.sections.general')}</h3>
               <DetailRow label="ID" value={log.id} />
               <DetailRow label={t('common.createdAt')} value={new Date(log.createdAt).toLocaleString()} />
               <div className="grid gap-1 text-sm md:grid-cols-[180px_1fr]">

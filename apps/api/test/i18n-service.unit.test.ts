@@ -122,6 +122,23 @@ test('I18nService uses ru when system.locale is absent', async () => {
   });
 });
 
+test('I18nService keeps ru as current locale and en as fallback when system.locale is absent', async () => {
+  const loader = createLoader(
+    {
+      en: { 'modules.title': 'Modules' },
+      ru: {}
+    },
+    {}
+  );
+
+  const service = new I18nService(createPrisma(null, []) as any, loader as I18nLoaderService);
+  const catalog = await service.getCatalog();
+
+  assert.equal(catalog.locale, 'ru');
+  assert.equal(catalog.fallbackLocale, 'en');
+  assert.equal(catalog.messages['modules.title'], 'Modules');
+});
+
 test('I18nService.translate returns key when translation is missing', () => {
   const loader = createLoader({}, {});
   const service = new I18nService(createPrisma('en', []) as any, loader as I18nLoaderService);
@@ -205,6 +222,21 @@ test('I18nService falls back to en module translation when locale file is missin
   const catalog = await service.getCatalog();
 
   assert.equal(catalog.messages['documents.title'], 'Documents');
+});
+
+test('I18nService falls back to en core translation when key is missing in ru', async () => {
+  const loader = createLoader(
+    {
+      en: { 'modules.manifestDialog.title': 'Module manifest' },
+      ru: {}
+    },
+    {}
+  );
+
+  const service = new I18nService(createPrisma('ru', []) as any, loader as I18nLoaderService);
+  const catalog = await service.getCatalog();
+
+  assert.equal(catalog.messages['modules.manifestDialog.title'], 'Module manifest');
 });
 
 test('I18nService does not include translations for disabled modules', async () => {

@@ -262,7 +262,7 @@ export function DashboardPage() {
     },
     {
       title: t('dashboard.statModulesTitle'),
-      description: `${formatNumber(enabledModules)} ${t('modulesPage.status.enabled').toLowerCase()}`,
+      description: `${formatNumber(enabledModules)} ${t('modules.status.enabled').toLowerCase()}`,
       value: modulesQuery.data?.meta.total,
       icon: Layers3,
       query: 'modules',
@@ -384,7 +384,7 @@ export function DashboardPage() {
 
                   <div className="grid gap-3 text-sm">
                     <div className="flex items-center justify-between rounded-md bg-muted/40 px-3 py-2">
-                      <span className="text-muted-foreground">{t('modulesPage.status.enabled')}</span>
+                      <span className="text-muted-foreground">{t('modules.status.enabled')}</span>
                       <span className="font-medium">{canReadModules ? formatNumber(enabledModules) : '—'}</span>
                     </div>
                     <div className="flex items-center justify-between rounded-md bg-muted/40 px-3 py-2">

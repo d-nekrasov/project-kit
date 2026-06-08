@@ -1,13 +1,14 @@
 {
   "modules": {
     "title": "Модули",
-    "description": "Подключенные платформенные и бизнес-модули.",
-    "searchPlaceholder": "Поиск по имени или заголовку модуля",
+    "description": "Управление установленными модулями платформы",
+    "searchPlaceholder": "Поиск по коду или названию модуля",
     "enabled": "Включен",
     "disabled": "Выключен",
+    "coreBadge": "core",
     "table": {
-      "name": "Имя",
-      "title": "Заголовок",
+      "name": "Код",
+      "title": "Название",
       "version": "Версия",
       "status": "Статус",
       "description": "Описание",
@@ -22,14 +23,15 @@
       "notInstalled": "Не установлен"
     },
     "pagination": {
-      "page": "Страница {{page}} из {{totalPages}}",
+      "page": "Страница {{page}}",
+      "of": "из {{pages}}",
       "total": "Всего: {{total}}",
       "previous": "Назад",
-      "next": "Далее"
+      "next": "Вперёд"
     },
     "empty": {
       "title": "Модули не найдены",
-      "description": "Попробуйте изменить поиск или фильтр статуса."
+      "description": "В системе пока нет зарегистрированных модулей."
     },
     "settings": {
       "available": "Доступно",
@@ -37,38 +39,36 @@
     },
     "actions": {
       "open": "Открыть действия для {{name}}",
-      "viewManifest": "Открыть manifest",
+      "viewManifest": "Открыть манифест",
       "enable": "Включить модуль",
       "disable": "Выключить модуль"
     },
-    "manifest": {
-      "title": "Manifest модуля",
+    "manifestDialog": {
+      "title": "Манифест модуля",
       "description": "Просмотр метаданных модуля {{name}}.",
-      "emptyAdminMenu": "В manifest нет пунктов админ-меню.",
-      "noPermissions": "В manifest нет прав.",
-      "noSettingsSchema": "В manifest нет схемы настроек.",
-      "emptyManifest": "Manifest пуст.",
+      "emptyAdminMenu": "В манифесте нет пунктов меню администратора.",
+      "noPermissions": "В манифесте нет зарегистрированных прав.",
+      "noSettingsSchema": "В манифесте нет схемы настроек.",
+      "emptyManifest": "Манифест пуст.",
       "moduleNotSelected": "Модуль не выбран.",
       "sections": {
-        "overview": "Обзор",
+        "general": "Основная информация",
         "permissions": "Права",
-        "adminMenu": "Админ-меню",
+        "adminMenu": "Меню администратора",
         "settingsSchema": "Схема настроек",
-        "rawManifest": "Исходный manifest"
+        "rawManifest": "Исходный манифест"
       },
       "fields": {
-        "label": "Label",
-        "path": "Path",
-        "permission": "Permission",
-        "icon": "Icon",
-        "order": "Order"
-      },
-      "overview": {
-        "name": "name",
-        "title": "title",
-        "version": "version",
-        "status": "status",
-        "description": "description"
+        "name": "Код",
+        "title": "Название",
+        "version": "Версия",
+        "status": "Статус",
+        "description": "Описание",
+        "label": "Метка",
+        "path": "Путь",
+        "permission": "Право доступа",
+        "icon": "Иконка",
+        "order": "Порядок"
       }
     },
     "statusDialog": {
