@@ -294,6 +294,13 @@
       "restrictedDescription": "Only super_admin can update GLOBAL settings and global MODULE settings.",
       "selectModule": "Select module",
       "keyPlaceholder": "app.demo",
+      "errors": {
+        "invalidInput": "Check the entered data",
+        "invalidJson": "Enter valid JSON",
+        "localeUnsupported": "Only ru and en locales are supported",
+        "required": "This field is required",
+        "scopeRequired": "Setting scope is required"
+      },
       "validation": {
         "keyMin": "Key must be at least 2 characters",
         "valueRequired": "Value is required",

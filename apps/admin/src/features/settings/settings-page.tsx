@@ -194,6 +194,7 @@ export function SettingsPage() {
       </div>
 
       <SettingFormDialog
+        key={editingSetting?.id ?? 'create'}
         open={formOpen}
         mode={editingSetting ? 'edit' : 'create'}
         setting={editingSetting}

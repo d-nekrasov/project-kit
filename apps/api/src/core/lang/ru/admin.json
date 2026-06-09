@@ -294,6 +294,13 @@
       "restrictedDescription": "Только super_admin может изменять GLOBAL-настройки и глобальные MODULE-настройки.",
       "selectModule": "Выберите модуль",
       "keyPlaceholder": "app.demo",
+      "errors": {
+        "invalidInput": "Проверьте введенные данные",
+        "invalidJson": "Введите корректный JSON",
+        "localeUnsupported": "Поддерживаются только локали ru и en",
+        "required": "Поле обязательно",
+        "scopeRequired": "Область настройки обязательна"
+      },
       "validation": {
         "keyMin": "Ключ должен содержать минимум 2 символа",
         "valueRequired": "Значение обязательно",
