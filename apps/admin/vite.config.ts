@@ -16,6 +16,7 @@ export default defineConfig({
         name: 'Project Kit Admin',
         short_name: 'PK Admin',
         description: 'Administrative interface for Project Kit.',
+        lang: 'ru',
         start_url: '/',
         scope: '/',
         display: 'standalone',
