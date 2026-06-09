@@ -338,59 +338,6 @@
     "groupedPermissions": "{{count}} permissions",
     "resourceOther": "Other"
   },
-  "settings": {
-    "description": "Manage global, organization and module settings.",
-    "searchPlaceholder": "Search by key or module",
-    "emptyTitle": "No settings found",
-    "emptyDescription": "Try changing search or filters.",
-    "failedToLoad": "Failed to load settings",
-    "scope": {
-      "global": "Global",
-      "organization": "Organization",
-      "module": "Module"
-    },
-    "toolbar": {
-      "allScopes": "All scopes",
-      "allModules": "All modules",
-      "new": "New",
-      "schema": "Schema"
-    },
-    "form": {
-      "createTitle": "Create setting",
-      "editTitle": "Edit setting",
-      "createDescription": "Create a new setting for global, organization or module scope.",
-      "editDescription": "Update setting value. Key and scope metadata are read-only in edit mode.",
-      "organizationSpecific": "organizationSpecific",
-      "restrictedTitle": "Restricted action",
-      "restrictedDescription": "Only super_admin can update GLOBAL settings and global MODULE settings.",
-      "selectModule": "Select module",
-      "keyPlaceholder": "app.demo",
-      "errors": {
-        "invalidInput": "Check the entered data",
-        "invalidJson": "Enter valid JSON",
-        "localeUnsupported": "Only ru and en locales are supported",
-        "required": "This field is required",
-        "scopeRequired": "Setting scope is required"
-      },
-      "validation": {
-        "keyMin": "Key must be at least 2 characters",
-        "valueRequired": "Value is required",
-        "moduleRequired": "Module is required for MODULE scope",
-        "invalidJson": "Value must be valid JSON"
-      }
-    },
-    "schemaDialog": {
-      "title": "Module settings schema",
-      "selectModule": "Select a module to inspect settings schema.",
-      "noSchema": "This module manifest has no settings schema.",
-      "moduleNotSelected": "Module is not selected."
-    },
-    "jsonEditor": {
-      "label": "Value (JSON)",
-      "help": "Value must be valid JSON. Strings must be wrapped in quotes.",
-      "examples": "Examples: \"Project Kit\", true, 10485760, [\"pdf\", \"docx\"], {\"enabled\": true}"
-    }
-  },
   "logs": {
     "audit": {
       "title": "Audit Logs",
