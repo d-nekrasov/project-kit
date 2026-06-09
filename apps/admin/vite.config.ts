@@ -42,8 +42,22 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
+        navigateFallback: null,
         navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
+          {
+            urlPattern: ({ request, url }) => request.mode === 'navigate' && !url.pathname.startsWith('/api/'),
+            handler: 'NetworkOnly',
+            options: {
+              precacheFallback: {
+                fallbackURL: '/offline.html'
+              }
+            }
+          },
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith('/api/'),
+            handler: 'NetworkOnly'
+          },
           {
             urlPattern: ({ request, url }) =>
               !url.pathname.startsWith('/api/') &&

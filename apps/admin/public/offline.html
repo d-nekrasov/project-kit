@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <title>Project Kit Admin</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --background: #f7f8fa;
+        --foreground: #0f172a;
+        --card: #ffffff;
+        --muted-foreground: #64748b;
+        --border: #dce3ec;
+        --primary: #0f172a;
+        --primary-foreground: #ffffff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: radial-gradient(circle at top, #eef3fa 0%, #f7f8fa 40%, #f7f8fa 100%);
+        color: var(--foreground);
+        font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+      }
+
+      main {
+        width: min(100%, 420px);
+        padding: 32px;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: var(--card);
+        box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: 1.5rem;
+        line-height: 1.2;
+      }
+
+      p {
+        margin: 0;
+        line-height: 1.5;
+      }
+
+      p + p {
+        margin-top: 8px;
+        color: var(--muted-foreground);
+      }
+
+      .actions {
+        margin-top: 24px;
+      }
+
+      a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
+        padding: 0 16px;
+        border-radius: 10px;
+        background: var(--primary);
+        color: var(--primary-foreground);
+        font-weight: 600;
+        text-decoration: none;
+      }
+
+      a:focus-visible,
+      a:hover {
+        opacity: 0.92;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Project Kit Admin</h1>
+      <p>Приложение недоступно без подключения к интернету</p>
+      <p>Проверьте соединение и обновите страницу</p>
+      <div class="actions">
+        <a href="." onclick="window.location.reload(); return false;">Повторить</a>
+      </div>
+    </main>
+  </body>
+</html>
