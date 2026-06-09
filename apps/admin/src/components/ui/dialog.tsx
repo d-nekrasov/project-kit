@@ -1,4 +1,5 @@
 import type { PropsWithChildren } from 'react';
+import { createPortal } from 'react-dom';
 
 import { cn } from '@/lib/utils';
 
@@ -7,14 +8,20 @@ export function Dialog({ open, children }: PropsWithChildren<{ open: boolean }>)
     return null;
   }
 
-  return <>{children}</>;
+  if (typeof document === 'undefined') {
+    return <>{children}</>;
+  }
+
+  return createPortal(children, document.body);
 }
 
 export function DialogContent({ className, children }: PropsWithChildren<{ className?: string }>) {
   return (
-    <div className="fixed inset-0 z-[var(--z-dialog)] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-900/35" />
-      <div className={cn('relative z-10 w-full max-w-lg rounded-lg border bg-card p-6 shadow-xl', className)}>{children}</div>
+      <div className={cn('relative z-10 max-h-[calc(100vh-2rem)] w-full max-w-lg overflow-y-auto rounded-lg border bg-card p-6 shadow-xl', className)}>
+        {children}
+      </div>
     </div>
   );
 }
