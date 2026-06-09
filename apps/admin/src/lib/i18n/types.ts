@@ -14,3 +14,5 @@ export type I18nContextValue = {
   isLoading: boolean;
   t: (key: string, params?: I18nParams) => string;
 };
+
+export type TranslateWithFallback = I18nContextValue['t'];
