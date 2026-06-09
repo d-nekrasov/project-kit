@@ -12,13 +12,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { UserStatusBadge } from '@/features/users/user-status-badge';
 import type { UsersTableProps } from '@/features/users/users-page.types';
 import { useI18n } from '@/lib/i18n/use-i18n';
+import type { TranslateWithFallback } from '@/lib/i18n/types';
 
 function formatDate(value: string) {
   return new Date(value).toLocaleString();
 }
 
-function renderOrganizationRoles(user: UserResponse) {
-  const { t } = useI18n();
+function renderOrganizationRoles(user: UserResponse, t: TranslateWithFallback) {
   if (!user.organizations.length) {
     return <span className="text-muted-foreground">{t('users.table.noOrganizations')}</span>;
   }
@@ -80,7 +80,7 @@ export function UsersTable({ users, isLoading, onEdit, onChangeStatus, onViewDet
                 <TableCell>
                   <UserStatusBadge status={user.status} />
                 </TableCell>
-                <TableCell>{renderOrganizationRoles(user)}</TableCell>
+                <TableCell>{renderOrganizationRoles(user, t)}</TableCell>
                 <TableCell>
                   {user.systemRoles.length ? (
                     <div className="flex flex-wrap gap-1">
