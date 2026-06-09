@@ -17,10 +17,12 @@ import { notificationsQueryKeys } from '@/features/notifications/notifications-q
 import { NotificationsTable } from '@/features/notifications/notifications-table';
 import { NotificationsToolbar, type NotificationStatusFilter } from '@/features/notifications/notifications-toolbar';
 import { getApiErrorMessage } from '@/lib/api-error-message';
+import { useI18n } from '@/lib/i18n/use-i18n';
 import { sdk } from '@/lib/sdk';
 
 export function NotificationsPage() {
   const auth = useAuth();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
@@ -165,12 +167,13 @@ export function NotificationsPage() {
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4 text-sm">
         <div className="text-muted-foreground">
-          Page {meta?.page ?? page} of {meta?.totalPages ?? 1} • Total: {meta?.total ?? 0}
+          {t('common.pageOfTotal', { page: meta?.page ?? page, totalPages: meta?.totalPages ?? 1 })} •{' '}
+          {t('common.totalCount', { total: meta?.total ?? 0 })}
         </div>
 
         <div className="flex items-center gap-2">
           <Button type="button" variant="outline" size="sm" onClick={() => setPage((value) => value - 1)} disabled={page <= 1}>
-            Previous
+            {t('common.previous')}
           </Button>
           <Button
             type="button"
@@ -179,12 +182,12 @@ export function NotificationsPage() {
             onClick={() => setPage((value) => value + 1)}
             disabled={page >= (meta?.totalPages ?? 1)}
           >
-            Next
+            {t('common.next')}
           </Button>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">Rows per page</span>
+          <span className="text-muted-foreground">{t('common.rowsPerPage')}</span>
           <Select
             value={String(limit)}
             onChange={(inputEvent) => {
