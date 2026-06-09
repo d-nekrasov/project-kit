@@ -175,12 +175,13 @@ export function AuditLogsPage() {
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4 text-sm">
         <div className="text-muted-foreground">
-          Page {meta?.page ?? page} of {meta?.totalPages ?? 1} • Total: {meta?.total ?? 0}
+          {t('common.pageOfTotal', { page: meta?.page ?? page, totalPages: meta?.totalPages ?? 1 })} •{' '}
+          {t('common.totalCount', { total: meta?.total ?? 0 })}
         </div>
 
         <div className="flex items-center gap-2">
           <Button type="button" variant="outline" size="sm" onClick={() => setPage((value) => value - 1)} disabled={page <= 1}>
-            Previous
+            {t('common.previous')}
           </Button>
           <Button
             type="button"
@@ -189,7 +190,7 @@ export function AuditLogsPage() {
             onClick={() => setPage((value) => value + 1)}
             disabled={page >= (meta?.totalPages ?? 1)}
           >
-            Next
+            {t('common.next')}
           </Button>
         </div>
 

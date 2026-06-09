@@ -35,10 +35,7 @@ type SettingFormState = {
 type ProjectLocale = 'ru' | 'en';
 
 const SETTING_SCOPES = ['GLOBAL', 'ORGANIZATION', 'MODULE'] as const satisfies ReadonlyArray<SettingScope>;
-const LOCALE_OPTIONS = [
-  { value: 'ru', label: 'Русский' },
-  { value: 'en', label: 'English' }
-] as const satisfies ReadonlyArray<{ value: ProjectLocale; label: string }>;
+const LOCALE_OPTIONS = ['ru', 'en'] as const satisfies ReadonlyArray<ProjectLocale>;
 
 function scopeFromSetting(settingScope?: SettingScope) {
   return settingScope ?? 'ORGANIZATION';
@@ -242,6 +239,10 @@ export function SettingFormDialog({
       return '';
     }
   })();
+  const localeOptions = LOCALE_OPTIONS.map((value) => ({
+    value,
+    label: t(`settings.locale.${value}`)
+  }));
   const createSubmitBlocked = !isEdit && (scope === 'GLOBAL' || (scope === 'MODULE' && !organizationSpecific)) && !isSuperAdmin;
   const editSubmitBlocked = (() => {
     if (!editSetting) {
@@ -371,7 +372,7 @@ export function SettingFormDialog({
                 name="valueRaw"
                 render={() => (
                   <FormItem>
-                    <FormLabel>{t('settings.jsonEditor.label')}</FormLabel>
+                    <FormLabel>{t('settings.locale.label')}</FormLabel>
                     <FormControl>
                       <Select
                         value={localeValue}
@@ -383,7 +384,7 @@ export function SettingFormDialog({
                           })
                         }
                       >
-                        {LOCALE_OPTIONS.map((option) => (
+                        {localeOptions.map((option) => (
                           <option key={option.value} value={option.value}>
                             {option.label}
                           </option>

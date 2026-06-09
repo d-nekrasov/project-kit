@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { resolve } from 'node:path';
 import { test } from 'node:test';
 import { ModuleStatus, SettingScope } from '@prisma/client';
 import { I18nLoaderService, type I18nMessages } from '../src/core/i18n/i18n-loader.service';
@@ -50,8 +51,21 @@ function createPrisma(
 test('I18nService returns catalog for current system.locale with en fallback', async () => {
   const loader = createLoader(
     {
-      en: { 'common.save': 'Save', 'auth.login': 'Login' },
-      ru: { 'common.save': 'Сохранить' }
+      en: {
+        'common.save': 'Save',
+        'auth.login': 'Login',
+        'settings.title': 'Settings',
+        'settings.form.errors.invalidJson': 'Enter valid JSON',
+        'dashboard.status.operational': 'Operational',
+        'dashboard.statNotificationsTitle': 'Unread notifications'
+      },
+      ru: {
+        'common.save': 'Сохранить',
+        'settings.title': 'Настройки',
+        'settings.form.errors.invalidJson': 'Введите корректный JSON',
+        'dashboard.status.operational': 'Работает штатно',
+        'dashboard.statNotificationsTitle': 'Непрочитанные уведомления'
+      }
     },
     {
       documents: {
@@ -70,6 +84,10 @@ test('I18nService returns catalog for current system.locale with en fallback', a
     messages: {
       'common.save': 'Сохранить',
       'auth.login': 'Login',
+      'settings.title': 'Настройки',
+      'settings.form.errors.invalidJson': 'Введите корректный JSON',
+      'dashboard.status.operational': 'Работает штатно',
+      'dashboard.statNotificationsTitle': 'Непрочитанные уведомления',
       'documents.title': 'Документы'
     }
   });
@@ -297,4 +315,15 @@ test('I18nService preserves core fallback keys while applying locale overrides',
   assert.equal(catalog.messages['common.save'], 'Сохранить');
   assert.equal(catalog.messages['common.cancel'], 'Cancel');
   assert.equal(catalog.messages['modules.title'], 'Modules');
+});
+
+test('I18nService catalog includes settings and dashboard keys from real locale files', async () => {
+  const loader = new I18nLoaderService(resolve(__dirname, '../src'));
+  const service = new I18nService(createPrisma('ru') as any, loader);
+  const catalog = await service.getCatalog();
+
+  assert.equal(catalog.messages['settings.title'], 'Настройки');
+  assert.equal(catalog.messages['settings.form.errors.invalidJson'], 'Введите корректный JSON');
+  assert.equal(catalog.messages['dashboard.status.operational'], 'Работает штатно');
+  assert.equal(catalog.messages['dashboard.statNotificationsTitle'], 'Непрочитанные уведомления');
 });

@@ -1,7 +1,64 @@
 {
   "settings": {
     "title": "Настройки",
+    "description": "Управление глобальными, организационными и модульными настройками.",
     "systemLocale": "Язык системы",
-    "updated": "Настройки обновлены"
+    "updated": "Настройки обновлены",
+    "searchPlaceholder": "Поиск по ключу или модулю",
+    "emptyTitle": "Настройки не найдены",
+    "emptyDescription": "Попробуйте изменить поиск или фильтры.",
+    "failedToLoad": "Не удалось загрузить настройки",
+    "scope": {
+      "global": "Глобальная",
+      "organization": "Организационная",
+      "module": "Модульная"
+    },
+    "toolbar": {
+      "allScopes": "Все области",
+      "allModules": "Все модули",
+      "new": "Создать",
+      "schema": "Схема"
+    },
+    "form": {
+      "createTitle": "Создать настройку",
+      "editTitle": "Редактировать настройку",
+      "createDescription": "Создать новую настройку для глобальной, организационной или модульной области.",
+      "editDescription": "Обновить значение настройки. Ключ и метаданные области в режиме редактирования доступны только для чтения.",
+      "organizationSpecific": "organizationSpecific",
+      "restrictedTitle": "Ограниченное действие",
+      "restrictedDescription": "Только super_admin может изменять GLOBAL-настройки и глобальные MODULE-настройки.",
+      "selectModule": "Выберите модуль",
+      "keyPlaceholder": "app.demo",
+      "errors": {
+        "invalidInput": "Проверьте введенные данные",
+        "invalidJson": "Введите корректный JSON",
+        "localeUnsupported": "Поддерживаются только локали ru и en",
+        "required": "Поле обязательно",
+        "scopeRequired": "Область настройки обязательна"
+      },
+      "validation": {
+        "keyMin": "Ключ должен содержать минимум 2 символа",
+        "valueRequired": "Значение обязательно",
+        "moduleRequired": "Для области MODULE необходимо выбрать модуль",
+        "invalidJson": "Значение должно быть валидным JSON"
+      }
+    },
+    "schemaDialog": {
+      "title": "Схема настроек модуля",
+      "selectModule": "Выберите модуль для просмотра схемы настроек.",
+      "noSchema": "В manifest этого модуля нет схемы настроек.",
+      "moduleNotSelected": "Модуль не выбран."
+    },
+    "jsonEditor": {
+      "label": "Значение (JSON)",
+      "help": "Значение должно быть валидным JSON. Строки должны быть в кавычках.",
+      "examples": "Примеры: \"Project Kit\", true, 10485760, [\"pdf\", \"docx\"], {\"enabled\": true}"
+    },
+    "locale": {
+      "label": "Язык системы",
+      "ru": "Русский",
+      "en": "English",
+      "unsupported": "Поддерживаются только локали ru и en"
+    }
   }
 }
