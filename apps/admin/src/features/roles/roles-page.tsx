@@ -232,7 +232,8 @@ export function RolesPage() {
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4 text-sm">
         <div className="text-muted-foreground">
-          Page {rolesMeta?.page ?? page} of {rolesMeta?.totalPages ?? 1} • Total: {rolesMeta?.total ?? 0}
+          {t('common.pageOfTotal', { page: rolesMeta?.page ?? page, totalPages: rolesMeta?.totalPages ?? 1 })} •{' '}
+          {t('common.totalCount', { total: rolesMeta?.total ?? 0 })}
         </div>
 
         <div className="flex items-center gap-2">

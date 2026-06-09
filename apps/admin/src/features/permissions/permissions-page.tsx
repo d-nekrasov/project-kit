@@ -126,12 +126,16 @@ export function PermissionsPage() {
       {viewMode === 'table' ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4 text-sm">
           <div className="text-muted-foreground">
-            Page {permissionsMeta?.page ?? page} of {permissionsMeta?.totalPages ?? 1} • Total: {permissionsMeta?.total ?? 0}
+            {t('common.pageOfTotal', {
+              page: permissionsMeta?.page ?? page,
+              totalPages: permissionsMeta?.totalPages ?? 1
+            })}{' '}
+            • {t('common.totalCount', { total: permissionsMeta?.total ?? 0 })}
           </div>
 
           <div className="flex items-center gap-2">
             <Button type="button" variant="outline" size="sm" onClick={() => setPage((value) => value - 1)} disabled={page <= 1}>
-              Previous
+              {t('common.previous')}
             </Button>
             <Button
               type="button"
@@ -140,7 +144,7 @@ export function PermissionsPage() {
               onClick={() => setPage((value) => value + 1)}
               disabled={page >= (permissionsMeta?.totalPages ?? 1)}
             >
-              Next
+              {t('common.next')}
             </Button>
           </div>
 
