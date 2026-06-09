@@ -59,11 +59,82 @@
     "recentSystemLogsDescription": "Последние технические события платформы.",
     "criticalStatus": "Критический статус",
     "criticalStatusDescription": "События уровня error в последней выборке.",
+    "status": {
+      "operational": "Работает штатно",
+      "needsAttention": "Требует внимания",
+      "critical": "Критический",
+      "warning": "Предупреждение",
+      "unknown": "Неизвестно"
+    },
     "currentOrganization": "Текущая организация",
     "activeOrganization": "Активная организация",
     "lastUpdated": "Последнее обновление",
     "viewAllLogs": "Открыть все логи",
     "viewAllNotifications": "Открыть уведомления"
+  },
+  "notificationSettings": {
+    "title": "Настройки уведомлений",
+    "description": "Управление коннекторами уведомлений и шаблонами событий.",
+    "sections": {
+      "connectors": "Коннекторы",
+      "templates": "Шаблоны"
+    },
+    "channels": {
+      "inApp": "В приложении",
+      "email": "Email",
+      "future": "{{channel}} (позже)"
+    },
+    "connectors": {
+      "description": "Настройка доставки уведомлений в приложении и по SMTP.",
+      "emptyTitle": "Коннекторы отсутствуют",
+      "emptyDescription": "Коннекторы уведомлений появятся здесь после сидирования backend.",
+      "openActions": "Открыть действия для {{code}}",
+      "readOnlyConfig": "У этого коннектора нет редактируемой конфигурации.",
+      "passwordHelp": "Оставьте пароль без изменений, чтобы сохранить текущее значение.",
+      "dialog": {
+        "title": "Редактировать коннектор уведомлений",
+        "fallback": "Коннектор"
+      },
+      "fields": {
+        "channel": "Канал",
+        "config": "Конфигурация",
+        "host": "Хост",
+        "port": "Порт",
+        "secure": "Защищенное соединение",
+        "from": "Отправитель",
+        "username": "Имя пользователя",
+        "password": "Пароль"
+      },
+      "validation": {
+        "hostRequired": "Хост обязателен, когда SMTP включен.",
+        "fromRequired": "Отправитель обязателен, когда SMTP включен."
+      }
+    },
+    "templates": {
+      "description": "Редактируйте текст событий и каналы доставки.",
+      "searchPlaceholder": "Поиск по событию",
+      "emptyTitle": "Шаблоны отсутствуют",
+      "emptyDescription": "Шаблоны уведомлений, подходящие под поиск, появятся здесь.",
+      "openActions": "Открыть действия для {{event}}",
+      "placeholdersHelp": "Плейсхолдеры используют синтаксис {{placeholder}} и подставляются из payload уведомления.",
+      "dialog": {
+        "title": "Редактировать шаблон уведомления",
+        "fallback": "Шаблон"
+      },
+      "fields": {
+        "event": "Событие",
+        "channels": "Каналы",
+        "title": "Заголовок",
+        "message": "Сообщение",
+        "emailSubject": "Тема письма",
+        "emailBody": "Тело письма"
+      },
+      "validation": {
+        "titleRequired": "Заголовок обязателен.",
+        "messageRequired": "Сообщение обязательно.",
+        "channelsRequired": "Выберите хотя бы один канал."
+      }
+    }
   },
   "users": {
     "title": "Пользователи",

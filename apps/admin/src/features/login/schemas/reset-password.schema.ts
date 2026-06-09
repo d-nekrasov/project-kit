@@ -2,18 +2,26 @@ import { z } from 'zod';
 
 const PASSWORD_MIN_LENGTH = 8;
 
-export const resetPasswordSchema = z
-  .object({
-    password: z
-      .string()
-      .min(PASSWORD_MIN_LENGTH, `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`),
-    passwordConfirmation: z
-      .string()
-      .min(PASSWORD_MIN_LENGTH, `Password confirmation must be at least ${PASSWORD_MIN_LENGTH} characters.`)
-  })
-  .refine((values) => values.password === values.passwordConfirmation, {
-    message: 'Password confirmation does not match.',
-    path: ['passwordConfirmation']
-  });
+type Translate = (key: string, params?: Record<string, string | number | boolean | null | undefined>) => string;
 
-export type ResetPasswordForm = z.infer<typeof resetPasswordSchema>;
+export const createResetPasswordSchema = (t: Translate) =>
+  z
+    .object({
+      password: z
+        .string()
+        .min(1, t('auth.validation.passwordRequired'))
+        .min(PASSWORD_MIN_LENGTH, t('auth.validation.passwordMin', { count: PASSWORD_MIN_LENGTH })),
+      passwordConfirmation: z
+        .string()
+        .min(1, t('auth.validation.passwordConfirmationRequired'))
+        .min(
+          PASSWORD_MIN_LENGTH,
+          t('auth.validation.passwordConfirmationMin', { count: PASSWORD_MIN_LENGTH })
+        )
+    })
+    .refine((values) => values.password === values.passwordConfirmation, {
+      message: t('auth.validation.passwordConfirmationMismatch'),
+      path: ['passwordConfirmation']
+    });
+
+export type ResetPasswordForm = z.infer<ReturnType<typeof createResetPasswordSchema>>;

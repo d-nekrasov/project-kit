@@ -1,12 +1,14 @@
 import type { NotificationChannel } from '@project-kit/sdk';
 
 import { Badge } from '@/components/ui/badge';
+import { useI18n } from '@/lib/i18n/use-i18n';
 
 type NotificationChannelBadgeProps = {
   channel: NotificationChannel;
 };
 
 export function NotificationChannelBadge({ channel }: NotificationChannelBadgeProps) {
+  const { t } = useI18n();
   const className =
     channel === 'IN_APP'
       ? 'bg-emerald-100 text-emerald-800'
@@ -14,5 +16,7 @@ export function NotificationChannelBadge({ channel }: NotificationChannelBadgePr
         ? 'bg-blue-100 text-blue-800'
         : 'bg-slate-100 text-foreground/80';
 
-  return <Badge className={className}>{channel}</Badge>;
+  const label = channel === 'IN_APP' ? t('notificationSettings.channels.inApp') : channel === 'EMAIL' ? t('notificationSettings.channels.email') : channel;
+
+  return <Badge className={className}>{label}</Badge>;
 }

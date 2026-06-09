@@ -12,27 +12,32 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/features/auth/use-auth';
 import { AuthCard } from '@/features/login/components/auth-card';
 import { getRecoveryErrorMessage } from '@/features/login/recovery-error-message';
-import { type ResetPasswordForm, resetPasswordSchema } from '@/features/login/schemas/reset-password.schema';
+import { createResetPasswordSchema, type ResetPasswordForm } from '@/features/login/schemas/reset-password.schema';
+import { useI18n } from '@/lib/i18n/use-i18n';
 import { sdk } from '@/lib/sdk';
 
-function getResetPasswordTokenErrorMessage(reason: 'invalid' | 'expired' | 'used' | 'user_inactive'): string {
+function getResetPasswordTokenErrorMessage(
+  t: (key: string, params?: Record<string, string | number | boolean | null | undefined>) => string,
+  reason: 'invalid' | 'expired' | 'used' | 'user_inactive'
+): string {
   if (reason === 'expired') {
-    return 'This password reset link has expired. Request a new reset link and try again.';
+    return t('auth.resetPassword.tokenExpired');
   }
 
   if (reason === 'used') {
-    return 'This password reset link has already been used. Request a new reset link and try again.';
+    return t('auth.resetPassword.tokenUsed');
   }
 
   if (reason === 'user_inactive') {
-    return 'This password reset link is no longer active. Contact an administrator or request a new reset link.';
+    return t('auth.resetPassword.tokenUserInactive');
   }
 
-  return 'This password reset link is invalid. Request a new reset link and try again.';
+  return t('auth.resetPassword.tokenInvalid');
 }
 
 export function ResetPasswordPage() {
   const auth = useAuth();
+  const { t } = useI18n();
   const [searchParams] = useSearchParams();
   const token = useMemo(() => searchParams.get('token')?.trim() ?? '', [searchParams]);
   const [error, setError] = useState<string | null>(null);
@@ -40,9 +45,10 @@ export function ResetPasswordPage() {
   const [isValidatingToken, setIsValidatingToken] = useState(true);
   const [tokenValidationError, setTokenValidationError] = useState<string | null>(null);
   const [isTokenValid, setIsTokenValid] = useState(false);
+  const schema = useMemo(() => createResetPasswordSchema(t), [t]);
 
   const form = useForm<ResetPasswordForm>({
-    resolver: zodResolver(resetPasswordSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       password: '',
       passwordConfirmation: ''
@@ -72,7 +78,7 @@ export function ResetPasswordPage() {
 
         if (!response.valid) {
           setIsTokenValid(false);
-          setTokenValidationError(getResetPasswordTokenErrorMessage(response.reason ?? 'invalid'));
+          setTokenValidationError(getResetPasswordTokenErrorMessage(t, response.reason ?? 'invalid'));
           return;
         }
 
@@ -86,13 +92,11 @@ export function ResetPasswordPage() {
         setIsTokenValid(false);
 
         if (nextError instanceof ApiError && nextError.status === 0) {
-          setTokenValidationError(
-            import.meta.env.DEV ? nextError.message : 'Unable to connect to API. Check that backend is running.'
-          );
+          setTokenValidationError(import.meta.env.DEV ? nextError.message : t('auth.apiUnavailable'));
           return;
         }
 
-        setTokenValidationError(getRecoveryErrorMessage(nextError));
+        setTokenValidationError(getRecoveryErrorMessage(nextError, t));
       })
       .finally(() => {
         if (isActive) {
@@ -103,7 +107,7 @@ export function ResetPasswordPage() {
     return () => {
       isActive = false;
     };
-  }, [token]);
+  }, [t, token]);
 
   if (auth.isAuthenticated) {
     return <Navigate to="/" replace />;
@@ -111,14 +115,14 @@ export function ResetPasswordPage() {
 
   if (!token) {
     return (
-      <AuthCard title="Reset password" description="This password reset link is incomplete.">
+      <AuthCard title={t('auth.resetPassword.title')} description={t('auth.resetPassword.incompleteDescription')}>
         <div className="space-y-4">
-          <ErrorState message="Password reset token is missing. Request a new reset link and try again." />
+          <ErrorState message={t('auth.validation.tokenRequired')} />
           <Link
             className="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             to="/login"
           >
-            Go to login
+            {t('auth.resetPassword.backToLogin')}
           </Link>
         </div>
       </AuthCard>
@@ -127,28 +131,26 @@ export function ResetPasswordPage() {
 
   if (isValidatingToken) {
     return (
-      <AuthCard title="Reset password" description="Checking your password reset link.">
-        <div className="rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">Validating reset link...</div>
+      <AuthCard title={t('auth.resetPassword.title')} description={t('auth.resetPassword.checkingDescription')}>
+        <div className="rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">{t('auth.resetPassword.validating')}</div>
       </AuthCard>
     );
   }
 
   if (!isTokenValid) {
     return (
-      <AuthCard title="Reset password" description="This password reset link cannot be used.">
+      <AuthCard title={t('auth.resetPassword.title')} description={t('auth.resetPassword.invalidDescription')}>
         <div className="space-y-4">
-          <ErrorState
-            message={tokenValidationError ?? 'This password reset link is invalid. Request a new reset link and try again.'}
-          />
+          <ErrorState message={tokenValidationError ?? t('auth.resetPassword.tokenInvalid')} />
           <Link
             className="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             to="/forgot-password"
           >
-            Request a new reset link
+            {t('auth.resetPassword.requestNewLink')}
           </Link>
           <div className="text-center text-sm text-muted-foreground">
             <Link className="transition-colors hover:text-foreground" to="/login">
-              Back to login
+              {t('auth.resetPassword.backToLogin')}
             </Link>
           </div>
         </div>
@@ -157,18 +159,18 @@ export function ResetPasswordPage() {
   }
 
   return (
-    <AuthCard title="Set a new password" description="Choose a new password for your admin account.">
+    <AuthCard title={t('auth.resetPassword.title')} description={t('auth.resetPassword.description')}>
       {successMessage ? (
         <div className="space-y-4">
           <Alert>
-            <AlertTitle>Password updated</AlertTitle>
+            <AlertTitle>{t('auth.resetPassword.successTitle')}</AlertTitle>
             <AlertDescription>{successMessage}</AlertDescription>
           </Alert>
           <Link
             className="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             to="/login"
           >
-            Continue to login
+            {t('auth.resetPassword.continueToLogin')}
           </Link>
         </div>
       ) : (
@@ -178,14 +180,14 @@ export function ResetPasswordPage() {
             onSubmit={form.handleSubmit(async (values) => {
               setError(null);
               try {
-                const response = await sdk.auth.resetPassword({
+                await sdk.auth.resetPassword({
                   token,
                   password: values.password,
                   passwordConfirmation: values.passwordConfirmation
                 });
-                setSuccessMessage(response.message);
+                setSuccessMessage(t('auth.resetPassword.success'));
               } catch (nextError) {
-                setError(getRecoveryErrorMessage(nextError));
+                setError(getRecoveryErrorMessage(nextError, t));
               }
             })}
           >
@@ -194,7 +196,7 @@ export function ResetPasswordPage() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>New password</FormLabel>
+                  <FormLabel>{t('auth.resetPassword.passwordLabel')}</FormLabel>
                   <FormControl>
                     <Input autoComplete="new-password" type="password" {...field} />
                   </FormControl>
@@ -208,7 +210,7 @@ export function ResetPasswordPage() {
               name="passwordConfirmation"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Confirm new password</FormLabel>
+                  <FormLabel>{t('auth.resetPassword.confirmPasswordLabel')}</FormLabel>
                   <FormControl>
                     <Input autoComplete="new-password" type="password" {...field} />
                   </FormControl>
@@ -220,12 +222,12 @@ export function ResetPasswordPage() {
             {error ? <ErrorState message={error} /> : null}
 
             <Button className="w-full" type="submit" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? 'Resetting...' : 'Reset password'}
+              {form.formState.isSubmitting ? t('auth.resetPassword.submitting') : t('auth.resetPassword.submit')}
             </Button>
 
             <div className="text-center text-sm text-muted-foreground">
               <Link className="transition-colors hover:text-foreground" to="/login">
-                Back to login
+                {t('auth.resetPassword.backToLogin')}
               </Link>
             </div>
           </form>

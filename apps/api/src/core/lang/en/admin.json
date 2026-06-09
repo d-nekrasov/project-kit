@@ -59,11 +59,82 @@
     "recentSystemLogsDescription": "Last technical events recorded by the platform.",
     "criticalStatus": "Critical status",
     "criticalStatusDescription": "Error-level events in the latest scan.",
+    "status": {
+      "operational": "Operational",
+      "needsAttention": "Needs attention",
+      "critical": "Critical",
+      "warning": "Warning",
+      "unknown": "Unknown"
+    },
     "currentOrganization": "Current organization",
     "activeOrganization": "Active organization",
     "lastUpdated": "Last updated",
     "viewAllLogs": "View all logs",
     "viewAllNotifications": "View notifications"
+  },
+  "notificationSettings": {
+    "title": "Notification Settings",
+    "description": "Manage notification connectors and event templates.",
+    "sections": {
+      "connectors": "Connectors",
+      "templates": "Templates"
+    },
+    "channels": {
+      "inApp": "In-app",
+      "email": "Email",
+      "future": "{{channel}} (future)"
+    },
+    "connectors": {
+      "description": "Configure in-app and SMTP notification delivery.",
+      "emptyTitle": "No connectors",
+      "emptyDescription": "Notification connectors will appear here after backend seed.",
+      "openActions": "Open actions for {{code}}",
+      "readOnlyConfig": "This connector does not expose editable configuration.",
+      "passwordHelp": "Leave password unchanged to keep the current value.",
+      "dialog": {
+        "title": "Edit notification connector",
+        "fallback": "Connector"
+      },
+      "fields": {
+        "channel": "Channel",
+        "config": "Config",
+        "host": "Host",
+        "port": "Port",
+        "secure": "Secure",
+        "from": "From",
+        "username": "Username",
+        "password": "Password"
+      },
+      "validation": {
+        "hostRequired": "Host is required when SMTP is enabled.",
+        "fromRequired": "From is required when SMTP is enabled."
+      }
+    },
+    "templates": {
+      "description": "Edit event copy and delivery channels.",
+      "searchPlaceholder": "Search by event",
+      "emptyTitle": "No templates",
+      "emptyDescription": "Notification templates matching your search will appear here.",
+      "openActions": "Open actions for {{event}}",
+      "placeholdersHelp": "Placeholders use {{placeholder}} syntax and are rendered from notification payload.",
+      "dialog": {
+        "title": "Edit notification template",
+        "fallback": "Template"
+      },
+      "fields": {
+        "event": "Event",
+        "channels": "Channels",
+        "title": "Title",
+        "message": "Message",
+        "emailSubject": "Email subject",
+        "emailBody": "Email body"
+      },
+      "validation": {
+        "titleRequired": "Title is required.",
+        "messageRequired": "Message is required.",
+        "channelsRequired": "Select at least one channel."
+      }
+    }
   },
   "users": {
     "title": "Users",

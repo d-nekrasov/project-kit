@@ -1,6 +1,6 @@
 import { ApiError } from '@project-kit/sdk';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 
@@ -10,7 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/features/auth/use-auth';
 import { AuthCard } from '@/features/login/components/auth-card';
-import { type LoginForm, loginSchema } from '@/features/login/schemas/login.schema';
+import { createLoginSchema, type LoginForm } from '@/features/login/schemas/login.schema';
 import { getApiErrorMessage } from '@/lib/api-error-message';
 import { useI18n } from '@/lib/i18n/use-i18n';
 
@@ -19,9 +19,10 @@ export function LoginPage() {
   const navigate = useNavigate();
   const { t } = useI18n();
   const [error, setError] = useState<string | null>(null);
+  const schema = useMemo(() => createLoginSchema(t), [t]);
 
   const form = useForm<LoginForm>({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       email: '',
       password: ''
@@ -79,7 +80,7 @@ export function LoginPage() {
                 <div className="flex items-center justify-between gap-3">
                   <FormLabel>{t('auth.password')}</FormLabel>
                   <Link className="text-sm text-muted-foreground transition-colors hover:text-foreground" to="/forgot-password">
-                    {t('auth.forgotPassword')}
+                    {t('auth.forgotPassword.link')}
                   </Link>
                 </div>
                 <FormControl>
