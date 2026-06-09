@@ -4,11 +4,20 @@ import { sdk } from '@/lib/sdk';
 import type { I18nCatalogResponse, I18nContextValue, I18nMessages, I18nParams } from '@/lib/i18n/types';
 
 const DEFAULT_LOCALE = 'ru';
+const LOCALE_STORAGE_KEY = 'project-kit.locale';
 const EMPTY_MESSAGES: I18nMessages = {};
 
-function updateDocumentLanguage(nextLocale: string) {
+function persistLocale(nextLocale: string) {
   if (typeof document !== 'undefined') {
     document.documentElement.lang = nextLocale;
+  }
+
+  if (typeof localStorage !== 'undefined') {
+    try {
+      localStorage.setItem(LOCALE_STORAGE_KEY, nextLocale);
+    } catch {
+      // Ignore storage failures so i18n still works in restricted environments.
+    }
   }
 }
 
@@ -58,7 +67,7 @@ export function I18nProvider({ children }: PropsWithChildren) {
 
       setLocale(nextLocale);
       setMessages(nextMessages);
-      updateDocumentLanguage(nextLocale);
+      persistLocale(nextLocale);
     } catch {
       if (!isMountedRef.current) {
         return;
@@ -66,7 +75,7 @@ export function I18nProvider({ children }: PropsWithChildren) {
 
       setLocale(DEFAULT_LOCALE);
       setMessages(EMPTY_MESSAGES);
-      updateDocumentLanguage(DEFAULT_LOCALE);
+      persistLocale(DEFAULT_LOCALE);
     } finally {
       if (isMountedRef.current) {
         setIsLoading(false);

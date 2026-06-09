@@ -6,7 +6,7 @@
 
 - Web App Manifest с `name`, `short_name`, `start_url`, `scope`, `theme_color`, `background_color` и наборами иконок `192x192`, `512x512`, `512x512 maskable`.
 - Service worker в режиме `registerType: 'prompt'` через `virtual:pwa-register/react`.
-- Offline fallback для навигации на `/offline.html`.
+- Offline fallback для навигации на `/offline.html` с runtime-переключением `ru/en` через `project-kit.locale` в `localStorage`.
 - Кэширование только статических ассетов (`style`, `script`, `worker`, `font`, `image`) по стратегии `StaleWhileRevalidate`.
 - UI для установки приложения из меню пользователя.
 - UI для controlled update flow без автоматической перезагрузки.
@@ -26,6 +26,7 @@
 - `/api/*` исключены из precache fallback и runtime cache, чтобы не ломать auth, session/cookie flow и актуальность данных.
 - Обновление controlled: новая версия показывает `PwaUpdatePrompt`, после подтверждения вызывается `updateServiceWorker(true)`.
 - Reload loop не ожидается, потому что обновление не применяется автоматически на каждом старте и не завязано на unconditional reload.
+- Manifest генерируется на build-time, поэтому его `lang`, `name`, `short_name` и `description` настраиваются через `VITE_PWA_*` env и не могут синхронно читать runtime `system.locale` из backend settings.
 
 ## Как тестировать локально
 
@@ -34,6 +35,18 @@
 3. Собрать production bundle: `pnpm --filter admin build`.
 4. Поднять preview: `pnpm --filter admin preview`.
 5. Открыть preview в браузере по адресу, который напечатает Vite.
+
+## PWA localization
+
+- Runtime locale приложения после загрузки каталога сохраняется в `localStorage` под ключом `project-kit.locale` и выставляется в `document.documentElement.lang`.
+- `/offline.html` читает locale в порядке: `?lang=...` -> `localStorage['project-kit.locale']` -> `<html lang>` -> `navigator.language`, затем нормализует его до `ru` или `en`.
+- Manifest не читает `/api/i18n/catalog` и другие backend settings, потому что собирается во время `vite build`, когда runtime API еще недоступен.
+- Для build-time настройки manifest используйте:
+  - `VITE_PWA_LOCALE`
+  - `VITE_PWA_NAME`
+  - `VITE_PWA_SHORT_NAME`
+  - `VITE_PWA_DESCRIPTION`
+- Если env не заданы, используются безопасные fallback значения, и сборка остается рабочей.
 
 ## Как проверять Lighthouse
 
