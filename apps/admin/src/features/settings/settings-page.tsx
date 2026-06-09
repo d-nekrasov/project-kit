@@ -19,7 +19,7 @@ import { sdk } from '@/lib/sdk';
 
 export function SettingsPage() {
   const auth = useAuth();
-  const { t } = useI18n();
+  const { t, reloadCatalog } = useI18n();
   const queryClient = useQueryClient();
   const { user } = auth;
   const isSuperAdmin = user?.systemRoles.includes('super_admin') ?? false;
@@ -78,10 +78,14 @@ export function SettingsPage() {
         organizationSpecific: values.scope === 'MODULE' ? values.organizationSpecific : undefined,
         value: values.value
       }),
-    onSuccess: async () => {
+    onSuccess: async (_, variables) => {
       setFormOpen(false);
       setEditingSetting(null);
       await queryClient.invalidateQueries({ queryKey: settingsQueryKeys.all });
+
+      if (variables.key === 'system.locale') {
+        await reloadCatalog();
+      }
     }
   });
 

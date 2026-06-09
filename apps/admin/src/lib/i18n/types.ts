@@ -13,6 +13,7 @@ export type I18nContextValue = {
   messages: I18nMessages;
   isLoading: boolean;
   t: (key: string, params?: I18nParams) => string;
+  reloadCatalog: () => Promise<void>;
 };
 
 export type TranslateWithFallback = I18nContextValue['t'];
