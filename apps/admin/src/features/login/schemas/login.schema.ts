@@ -1,8 +1,11 @@
 import { z } from 'zod';
 
-export const loginSchema = z.object({
-  email: z.string().email('Enter a valid email address.'),
-  password: z.string().min(1, 'Password is required.')
-});
+type Translate = (key: string, params?: Record<string, string | number | boolean | null | undefined>) => string;
 
-export type LoginForm = z.infer<typeof loginSchema>;
+export const createLoginSchema = (t: Translate) =>
+  z.object({
+    email: z.string().min(1, t('auth.validation.emailRequired')).email(t('auth.validation.emailInvalid')),
+    password: z.string().min(1, t('auth.validation.passwordRequired'))
+  });
+
+export type LoginForm = z.infer<ReturnType<typeof createLoginSchema>>;

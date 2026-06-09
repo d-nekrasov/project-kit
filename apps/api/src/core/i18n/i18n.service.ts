@@ -11,6 +11,18 @@ export type I18nCatalogResponse = {
 
 const DEFAULT_LOCALE = 'ru';
 const FALLBACK_LOCALE = 'en';
+const SUPPORTED_LOCALES = ['ru', 'en'] as const;
+
+function unwrapLocaleString(value: string): string {
+  const normalized = value.trim();
+
+  try {
+    const reparsed = JSON.parse(normalized);
+    return typeof reparsed === 'string' ? reparsed.trim() : normalized;
+  } catch {
+    return normalized;
+  }
+}
 
 @Injectable()
 export class I18nService {
@@ -54,7 +66,10 @@ export class I18nService {
 
     const rawValue = setting?.value;
     if (typeof rawValue === 'string' && rawValue.trim()) {
-      return rawValue.trim().toLowerCase();
+      const normalizedLocale = unwrapLocaleString(rawValue).toLowerCase();
+      if (SUPPORTED_LOCALES.includes(normalizedLocale as (typeof SUPPORTED_LOCALES)[number])) {
+        return normalizedLocale;
+      }
     }
 
     return null;

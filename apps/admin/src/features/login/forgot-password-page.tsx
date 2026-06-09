@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, Navigate } from 'react-router-dom';
 
@@ -11,19 +11,19 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/features/auth/use-auth';
 import { AuthCard } from '@/features/login/components/auth-card';
 import { getRecoveryErrorMessage } from '@/features/login/recovery-error-message';
-import { type ForgotPasswordForm, forgotPasswordSchema } from '@/features/login/schemas/forgot-password.schema';
+import { createForgotPasswordSchema, type ForgotPasswordForm } from '@/features/login/schemas/forgot-password.schema';
+import { useI18n } from '@/lib/i18n/use-i18n';
 import { sdk } from '@/lib/sdk';
-
-const SUCCESS_MESSAGE =
-  'If an account exists for that email, password reset instructions will be sent.';
 
 export function ForgotPasswordPage() {
   const auth = useAuth();
+  const { t } = useI18n();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const schema = useMemo(() => createForgotPasswordSchema(t), [t]);
 
   const form = useForm<ForgotPasswordForm>({
-    resolver: zodResolver(forgotPasswordSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       email: ''
     }
@@ -34,18 +34,18 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <AuthCard title="Reset password" description="Enter your email to receive password reset instructions.">
+    <AuthCard title={t('auth.forgotPassword.title')} description={t('auth.forgotPassword.description')}>
       {isSubmitted ? (
         <div className="space-y-4">
           <Alert>
-            <AlertTitle>Check your email</AlertTitle>
-            <AlertDescription>{SUCCESS_MESSAGE}</AlertDescription>
+            <AlertTitle>{t('auth.forgotPassword.successTitle')}</AlertTitle>
+            <AlertDescription>{t('auth.forgotPassword.successMessage')}</AlertDescription>
           </Alert>
           <Link
             className="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             to="/login"
           >
-            Back to login
+            {t('auth.forgotPassword.backToLogin')}
           </Link>
         </div>
       ) : (
@@ -58,7 +58,7 @@ export function ForgotPasswordPage() {
                 await sdk.auth.forgotPassword(values);
                 setIsSubmitted(true);
               } catch (nextError) {
-                setError(getRecoveryErrorMessage(nextError));
+                setError(getRecoveryErrorMessage(nextError, t));
               }
             })}
           >
@@ -67,7 +67,7 @@ export function ForgotPasswordPage() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>{t('auth.forgotPassword.emailLabel')}</FormLabel>
                   <FormControl>
                     <Input autoComplete="email" type="email" {...field} />
                   </FormControl>
@@ -79,12 +79,12 @@ export function ForgotPasswordPage() {
             {error ? <ErrorState message={error} /> : null}
 
             <Button className="w-full" type="submit" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? 'Sending...' : 'Send reset link'}
+              {form.formState.isSubmitting ? t('auth.forgotPassword.submitting') : t('auth.forgotPassword.submit')}
             </Button>
 
             <div className="text-center text-sm text-muted-foreground">
               <Link className="transition-colors hover:text-foreground" to="/login">
-                Back to login
+                {t('auth.forgotPassword.backToLogin')}
               </Link>
             </div>
           </form>

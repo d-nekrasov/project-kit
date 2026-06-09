@@ -77,8 +77,8 @@ export function NotificationSettingsPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h2 className="text-2xl font-semibold text-foreground">Notification Settings</h2>
-        <p className="text-sm text-muted-foreground">Manage notification connectors and event templates.</p>
+        <h2 className="text-2xl font-semibold text-foreground">{t('notificationSettings.title')}</h2>
+        <p className="text-sm text-muted-foreground">{t('notificationSettings.description')}</p>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -87,14 +87,14 @@ export function NotificationSettingsPage() {
           variant={activeSection === 'connectors' ? 'default' : 'outline'}
           onClick={() => setActiveSection('connectors')}
         >
-          Connectors
+          {t('notificationSettings.sections.connectors')}
         </Button>
         <Button
           type="button"
           variant={activeSection === 'templates' ? 'default' : 'outline'}
           onClick={() => setActiveSection('templates')}
         >
-          Templates
+          {t('notificationSettings.sections.templates')}
         </Button>
       </div>
 
@@ -103,8 +103,8 @@ export function NotificationSettingsPage() {
       {activeSection === 'connectors' ? (
         <section className="space-y-3">
           <div>
-            <h3 className="text-lg font-semibold text-foreground">Connectors</h3>
-            <p className="text-sm text-muted-foreground">Configure in-app and SMTP notification delivery.</p>
+            <h3 className="text-lg font-semibold text-foreground">{t('notificationSettings.sections.connectors')}</h3>
+            <p className="text-sm text-muted-foreground">{t('notificationSettings.connectors.description')}</p>
           </div>
           <NotificationConnectorsTable
             connectors={connectorsQuery.isError ? [] : connectorsQuery.data ?? []}
@@ -116,14 +116,14 @@ export function NotificationSettingsPage() {
         <section className="space-y-3">
           <div className="grid gap-3 rounded-lg border bg-card p-4 md:grid-cols-[1fr_320px]">
             <div>
-              <h3 className="text-lg font-semibold text-foreground">Templates</h3>
-              <p className="text-sm text-muted-foreground">Edit event copy and delivery channels.</p>
+              <h3 className="text-lg font-semibold text-foreground">{t('notificationSettings.sections.templates')}</h3>
+              <p className="text-sm text-muted-foreground">{t('notificationSettings.templates.description')}</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="notification-template-search">{t('common.search')}</Label>
               <Input
                 id="notification-template-search"
-                placeholder="Search by event"
+                placeholder={t('notificationSettings.templates.searchPlaceholder')}
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
               />

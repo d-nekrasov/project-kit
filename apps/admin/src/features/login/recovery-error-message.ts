@@ -2,15 +2,15 @@ import { ApiError } from '@project-kit/sdk';
 
 import { getApiErrorMessage } from '@/lib/api-error-message';
 
-const INVALID_TOKEN_MESSAGE = 'Password reset token is invalid or expired';
+type Translate = (key: string, params?: Record<string, string | number | boolean | null | undefined>) => string;
 
-export function getRecoveryErrorMessage(error: unknown): string {
+export function getRecoveryErrorMessage(error: unknown, t: Translate): string {
   if (error instanceof ApiError && error.status === 0) {
-    return import.meta.env.DEV ? error.message : 'Unable to connect to API. Check that backend is running.';
+    return import.meta.env.DEV ? error.message : t('auth.apiUnavailable');
   }
 
   if (error instanceof ApiError && error.status === 400) {
-    return INVALID_TOKEN_MESSAGE;
+    return t('auth.resetPassword.tokenInvalidOrExpired');
   }
 
   return getApiErrorMessage(error);

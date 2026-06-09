@@ -76,15 +76,30 @@ const quickActions = [
   }
 ];
 
-function formatNumber(value: number | undefined) {
-  return new Intl.NumberFormat('en').format(value ?? 0);
+function formatNumber(locale: string, value: number | undefined) {
+  return new Intl.NumberFormat(locale).format(value ?? 0);
 }
 
-function formatDateTime(value: string) {
-  return new Intl.DateTimeFormat('en', {
+function formatDateTime(locale: string, value: string) {
+  return new Intl.DateTimeFormat(locale, {
     dateStyle: 'medium',
     timeStyle: 'short'
   }).format(new Date(value));
+}
+
+function getDashboardStatusLabel(
+  t: (key: string, params?: Record<string, string | number | boolean | null | undefined>) => string,
+  status: 'operational' | 'needsAttention' | 'critical' | 'warning' | 'unknown'
+) {
+  const statusKeyMap = {
+    operational: 'dashboard.status.operational',
+    needsAttention: 'dashboard.status.needsAttention',
+    critical: 'dashboard.status.critical',
+    warning: 'dashboard.status.warning',
+    unknown: 'dashboard.status.unknown'
+  } as const;
+
+  return t(statusKeyMap[status]);
 }
 
 function getLevelClass(level: string) {
@@ -111,6 +126,7 @@ function DashboardAlert({ message }: { message: string }) {
 }
 
 function StatCard({
+  locale,
   title,
   description,
   value,
@@ -118,6 +134,7 @@ function StatCard({
   isLoading,
   isUnavailable
 }: {
+  locale: string;
   title: string;
   description: string;
   value: number | undefined;
@@ -140,7 +157,7 @@ function StatCard({
         {isLoading ? (
           <Skeleton className="h-9 w-24" />
         ) : (
-          <div className="text-3xl font-semibold tracking-tight">{isUnavailable ? '—' : formatNumber(value)}</div>
+          <div className="text-3xl font-semibold tracking-tight">{isUnavailable ? '—' : formatNumber(locale, value)}</div>
         )}
       </CardContent>
     </Card>
@@ -159,7 +176,7 @@ function SectionSkeleton() {
 
 export function DashboardPage() {
   const auth = useAuth();
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const activeOrg = auth.user?.organizations.find((item) => item.id === auth.activeOrganizationId);
   const canReadUsers = auth.hasPermission('users.read');
   const canReadRoles = auth.hasPermission('roles.read');
@@ -215,7 +232,7 @@ export function DashboardPage() {
     [t('navigation.documents'), documentsQuery],
     [t('navigation.systemLogs'), systemLogsQuery],
     [t('layout.systemStatus'), criticalLogsQuery],
-    ['Notifications', unreadNotificationsQuery]
+    [t('dashboard.statNotificationsTitle'), unreadNotificationsQuery]
   ] satisfies Array<[string, { isError: boolean; error: unknown }]>;
 
   const errorMessages = queryErrors
@@ -235,9 +252,17 @@ export function DashboardPage() {
     documentsQuery.isLoading ||
     unreadNotificationsQuery.isLoading;
   const hasCriticalLogs = Boolean(criticalLogsCount && criticalLogsCount > 0);
+  const criticalStatus = !canReadSystemLogs
+    ? null
+    : criticalLogsQuery.isError
+      ? 'unknown'
+      : hasCriticalLogs
+        ? 'needsAttention'
+        : 'operational';
+  const criticalStatusLabel = criticalStatus ? getDashboardStatusLabel(t, criticalStatus) : t('common.accessDenied');
 
   const stats: Array<{
-      title: string;
+    title: string;
     description: string;
     value: number | undefined;
     icon: IconComponent;
@@ -262,7 +287,7 @@ export function DashboardPage() {
     },
     {
       title: t('dashboard.statModulesTitle'),
-      description: `${formatNumber(enabledModules)} ${t('modules.status.enabled').toLowerCase()}`,
+      description: `${formatNumber(locale, enabledModules)} ${t('modules.status.enabled').toLowerCase()}`,
       value: modulesQuery.data?.meta.total,
       icon: Layers3,
       query: 'modules',
@@ -299,6 +324,7 @@ export function DashboardPage() {
         {stats.map((stat) => (
           <StatCard
             key={stat.title}
+            locale={locale}
             title={stat.title}
             description={stat.unavailable ? t('common.accessDenied') : stat.description}
             value={stat.value}
@@ -336,7 +362,7 @@ export function DashboardPage() {
                     <div className="min-w-0 flex-1 space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge className={getLevelClass(log.level)}>{log.level}</Badge>
-                        <span className="text-xs text-muted-foreground">{formatDateTime(log.createdAt)}</span>
+                        <span className="text-xs text-muted-foreground">{formatDateTime(locale, log.createdAt)}</span>
                       </div>
                       <p className="truncate text-sm font-medium text-foreground">{log.message}</p>
                       <p className="text-xs text-muted-foreground">{log.source}</p>
@@ -370,13 +396,13 @@ export function DashboardPage() {
                         {hasCriticalLogs ? <AlertCircle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
                       </div>
                       <div>
-                        <div className="font-medium text-foreground">
-                          {!canReadSystemLogs ? t('common.accessDenied') : hasCriticalLogs ? 'Needs attention' : 'Operational'}
-                        </div>
+                        <div className="font-medium text-foreground">{criticalStatusLabel}</div>
                         <div className="text-sm text-muted-foreground">
                           {!canReadSystemLogs
                             ? t('common.noPermissionToViewPage')
-                            : `${formatNumber(criticalLogsCount)} ${t('dashboard.statCriticalLogsDescription').toLowerCase()}`}
+                            : criticalLogsQuery.isError
+                              ? t('dashboard.status.unknown')
+                              : `${formatNumber(locale, criticalLogsCount)} ${t('dashboard.statCriticalLogsDescription').toLowerCase()}`}
                         </div>
                       </div>
                     </div>
@@ -385,11 +411,11 @@ export function DashboardPage() {
                   <div className="grid gap-3 text-sm">
                     <div className="flex items-center justify-between rounded-md bg-muted/40 px-3 py-2">
                       <span className="text-muted-foreground">{t('modules.status.enabled')}</span>
-                      <span className="font-medium">{canReadModules ? formatNumber(enabledModules) : '—'}</span>
+                      <span className="font-medium">{canReadModules ? formatNumber(locale, enabledModules) : '—'}</span>
                     </div>
                     <div className="flex items-center justify-between rounded-md bg-muted/40 px-3 py-2">
                       <span className="text-muted-foreground">{t('dashboard.statNotificationsTitle')}</span>
-                      <span className="font-medium">{formatNumber(unreadNotificationsQuery.data?.count)}</span>
+                      <span className="font-medium">{formatNumber(locale, unreadNotificationsQuery.data?.count)}</span>
                     </div>
                     <div className="flex items-center justify-between rounded-md bg-muted/40 px-3 py-2">
                       <span className="text-muted-foreground">{t('dashboard.activeOrganization')}</span>
