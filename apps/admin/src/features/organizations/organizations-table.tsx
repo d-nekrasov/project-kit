@@ -48,7 +48,7 @@ export function OrganizationsTable({
           <TableHeader>
             <TableRow>
               <TableHead>{t('organizations.fields.name')}</TableHead>
-              <TableHead>Slug</TableHead>
+              <TableHead>{t('organizations.fields.slug')}</TableHead>
               <TableHead>{t('common.status')}</TableHead>
               <TableHead>{t('organizations.table.users')}</TableHead>
               <TableHead>{t('organizations.table.roles')}</TableHead>

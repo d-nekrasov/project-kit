@@ -21,27 +21,15 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { useI18n } from '@/lib/i18n/use-i18n';
 
-const connectorFormSchema = z
-  .object({
-    status: z.enum(['ENABLED', 'DISABLED']),
-    host: z.string().optional(),
-    port: z.number().int().min(1).max(65535),
-    secure: z.boolean(),
-    username: z.string().optional(),
-    password: z.string().optional(),
-    from: z.string().optional()
-  })
-  .superRefine((values, ctx) => {
-    if (values.status === 'ENABLED' && !values.host?.trim()) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['host'], message: 'Host is required when SMTP is enabled' });
-    }
-
-    if (values.status === 'ENABLED' && !values.from?.trim()) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['from'], message: 'From is required when SMTP is enabled' });
-    }
-  });
-
-type ConnectorFormState = z.infer<typeof connectorFormSchema>;
+type ConnectorFormState = {
+  status: 'ENABLED' | 'DISABLED';
+  host?: string;
+  port: number;
+  secure: boolean;
+  username?: string;
+  password?: string;
+  from?: string;
+};
 
 type NotificationConnectorDialogProps = {
   open: boolean;
@@ -76,6 +64,33 @@ export function NotificationConnectorDialog({
   onSubmit
 }: NotificationConnectorDialogProps) {
   const { t } = useI18n();
+  const connectorFormSchema = z
+    .object({
+      status: z.enum(['ENABLED', 'DISABLED']),
+      host: z.string().optional(),
+      port: z.number().int().min(1).max(65535),
+      secure: z.boolean(),
+      username: z.string().optional(),
+      password: z.string().optional(),
+      from: z.string().optional()
+    })
+    .superRefine((values, ctx) => {
+      if (values.status === 'ENABLED' && !values.host?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['host'],
+          message: t('notificationSettings.connectors.validation.hostRequired')
+        });
+      }
+
+      if (values.status === 'ENABLED' && !values.from?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['from'],
+          message: t('notificationSettings.connectors.validation.fromRequired')
+        });
+      }
+    });
   const form = useForm<ConnectorFormState>({
     resolver: zodResolver(connectorFormSchema),
     defaultValues: {
@@ -130,8 +145,8 @@ export function NotificationConnectorDialog({
     <Dialog open={open}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Edit notification connector</DialogTitle>
-          <DialogDescription>{connector?.code ?? 'Connector'}</DialogDescription>
+          <DialogTitle>{t('notificationSettings.connectors.dialog.title')}</DialogTitle>
+          <DialogDescription>{connector?.code ?? t('notificationSettings.connectors.dialog.fallback')}</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -139,7 +154,7 @@ export function NotificationConnectorDialog({
           {error ? (
             <Alert className="border-red-200 bg-red-50 text-red-700">
               <AlertCircle className="mb-1 h-4 w-4" />
-              <AlertTitle>Request failed</AlertTitle>
+              <AlertTitle>{t('common.requestFailed')}</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           ) : null}
@@ -149,11 +164,11 @@ export function NotificationConnectorDialog({
               name="status"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Status</FormLabel>
+                  <FormLabel>{t('common.status')}</FormLabel>
                   <FormControl>
                     <Select {...field}>
-                      <option value="ENABLED">ENABLED</option>
-                      <option value="DISABLED">DISABLED</option>
+                      <option value="ENABLED">{t('modules.status.enabled')}</option>
+                      <option value="DISABLED">{t('modules.status.disabled')}</option>
                     </Select>
                   </FormControl>
                   <FormMessage />
@@ -168,7 +183,7 @@ export function NotificationConnectorDialog({
                   name="host"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Host</FormLabel>
+                      <FormLabel>{t('notificationSettings.connectors.fields.host')}</FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="smtp.example.com" />
                       </FormControl>
@@ -182,7 +197,7 @@ export function NotificationConnectorDialog({
                   name="port"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Port</FormLabel>
+                      <FormLabel>{t('notificationSettings.connectors.fields.port')}</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -212,7 +227,7 @@ export function NotificationConnectorDialog({
                           ref={field.ref}
                         />
                       </FormControl>
-                      <FormLabel>Secure</FormLabel>
+                      <FormLabel>{t('notificationSettings.connectors.fields.secure')}</FormLabel>
                     </FormItem>
                   )}
                 />
@@ -222,7 +237,7 @@ export function NotificationConnectorDialog({
                   name="from"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>From</FormLabel>
+                      <FormLabel>{t('notificationSettings.connectors.fields.from')}</FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="Project Kit <noreply@example.com>" />
                       </FormControl>
@@ -236,7 +251,7 @@ export function NotificationConnectorDialog({
                   name="username"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Username</FormLabel>
+                      <FormLabel>{t('notificationSettings.connectors.fields.username')}</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -250,11 +265,11 @@ export function NotificationConnectorDialog({
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel>{t('notificationSettings.connectors.fields.password')}</FormLabel>
                       <FormControl>
                         <Input type="password" {...field} />
                       </FormControl>
-                      <FormDescription>Leave password unchanged to keep the current value.</FormDescription>
+                      <FormDescription>{t('notificationSettings.connectors.passwordHelp')}</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -262,7 +277,7 @@ export function NotificationConnectorDialog({
               </div>
             ) : (
               <p className="rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">
-                This connector does not expose editable configuration.
+                {t('notificationSettings.connectors.readOnlyConfig')}
               </p>
             )}
 

@@ -33,7 +33,7 @@ export function UserOrganizationsCard({ user, canManage, onManage }: UserOrganiz
               <TableHeader>
                 <TableRow>
                   <TableHead>{t('common.organization')}</TableHead>
-                  <TableHead>Slug</TableHead>
+                  <TableHead>{t('organizations.fields.slug')}</TableHead>
                   <TableHead>{t('users.detail.orgStatus')}</TableHead>
                   <TableHead>{t('users.detail.membership')}</TableHead>
                   <TableHead>{t('common.role')}</TableHead>

@@ -38,7 +38,12 @@ export function NotificationConnectorsTable({ connectors, isLoading, onEdit }: N
   }
 
   if (!connectors.length) {
-    return <DataTableEmpty title="No connectors" description="Notification connectors will appear here after backend seed." />;
+    return (
+      <DataTableEmpty
+        title={t('notificationSettings.connectors.emptyTitle')}
+        description={t('notificationSettings.connectors.emptyDescription')}
+      />
+    );
   }
 
   return (
@@ -46,12 +51,12 @@ export function NotificationConnectorsTable({ connectors, isLoading, onEdit }: N
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Code</TableHead>
-            <TableHead>Channel</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Config</TableHead>
-            <TableHead>Updated at</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead>{t('roles.fields.code')}</TableHead>
+            <TableHead>{t('notificationSettings.connectors.fields.channel')}</TableHead>
+            <TableHead>{t('common.status')}</TableHead>
+            <TableHead>{t('notificationSettings.connectors.fields.config')}</TableHead>
+            <TableHead>{t('common.updatedAt')}</TableHead>
+            <TableHead className="text-right">{t('common.actions')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -69,7 +74,12 @@ export function NotificationConnectorsTable({ connectors, isLoading, onEdit }: N
               <TableCell className="text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger>
-                    <Button type="button" variant="ghost" size="sm" aria-label={`Open actions for ${connector.code}`}>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      aria-label={t('notificationSettings.connectors.openActions', { code: connector.code })}
+                    >
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>

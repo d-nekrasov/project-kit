@@ -1,7 +1,10 @@
 import { z } from 'zod';
 
-export const forgotPasswordSchema = z.object({
-  email: z.string().email('Enter a valid email address.')
-});
+type Translate = (key: string, params?: Record<string, string | number | boolean | null | undefined>) => string;
 
-export type ForgotPasswordForm = z.infer<typeof forgotPasswordSchema>;
+export const createForgotPasswordSchema = (t: Translate) =>
+  z.object({
+    email: z.string().min(1, t('auth.validation.emailRequired')).email(t('auth.validation.emailInvalid'))
+  });
+
+export type ForgotPasswordForm = z.infer<ReturnType<typeof createForgotPasswordSchema>>;

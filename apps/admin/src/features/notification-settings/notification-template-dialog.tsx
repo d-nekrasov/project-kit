@@ -24,15 +24,13 @@ import { useI18n } from '@/lib/i18n/use-i18n';
 const editableChannels = ['IN_APP', 'EMAIL'] as const;
 const futureChannels = ['SMS', 'MESSENGER', 'WEBHOOK'] as const;
 
-const templateFormSchema = z.object({
-  title: z.string().min(1, 'Title is required'),
-  message: z.string().min(1, 'Message is required'),
-  emailSubject: z.string().optional(),
-  emailBody: z.string().optional(),
-  channels: z.array(z.enum(editableChannels)).min(1, 'Select at least one channel')
-});
-
-type TemplateFormState = z.infer<typeof templateFormSchema>;
+type TemplateFormState = {
+  title: string;
+  message: string;
+  emailSubject?: string;
+  emailBody?: string;
+  channels: Array<(typeof editableChannels)[number]>;
+};
 
 type NotificationTemplateDialogProps = {
   open: boolean;
@@ -56,6 +54,13 @@ export function NotificationTemplateDialog({
   onSubmit
 }: NotificationTemplateDialogProps) {
   const { t } = useI18n();
+  const templateFormSchema = z.object({
+    title: z.string().min(1, t('notificationSettings.templates.validation.titleRequired')),
+    message: z.string().min(1, t('notificationSettings.templates.validation.messageRequired')),
+    emailSubject: z.string().optional(),
+    emailBody: z.string().optional(),
+    channels: z.array(z.enum(editableChannels)).min(1, t('notificationSettings.templates.validation.channelsRequired'))
+  });
   const form = useForm<TemplateFormState>({
     resolver: zodResolver(templateFormSchema),
     defaultValues: {
@@ -109,8 +114,8 @@ export function NotificationTemplateDialog({
     <Dialog open={open}>
       <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit notification template</DialogTitle>
-          <DialogDescription>{template?.event ?? 'Template'}</DialogDescription>
+          <DialogTitle>{t('notificationSettings.templates.dialog.title')}</DialogTitle>
+          <DialogDescription>{template?.event ?? t('notificationSettings.templates.dialog.fallback')}</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -118,13 +123,13 @@ export function NotificationTemplateDialog({
           {error ? (
             <Alert className="border-red-200 bg-red-50 text-red-700">
               <AlertCircle className="mb-1 h-4 w-4" />
-              <AlertTitle>Request failed</AlertTitle>
+              <AlertTitle>{t('common.requestFailed')}</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           ) : null}
 
             <FormItem>
-              <FormLabel>Event</FormLabel>
+              <FormLabel>{t('notificationSettings.templates.fields.event')}</FormLabel>
               <Input value={template?.event ?? ''} disabled />
             </FormItem>
 
@@ -133,7 +138,7 @@ export function NotificationTemplateDialog({
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Title</FormLabel>
+                  <FormLabel>{t('notificationSettings.templates.fields.title')}</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -147,7 +152,7 @@ export function NotificationTemplateDialog({
               name="message"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Message</FormLabel>
+                  <FormLabel>{t('notificationSettings.templates.fields.message')}</FormLabel>
                   <FormControl>
                     <Textarea rows={3} {...field} />
                   </FormControl>
@@ -162,7 +167,7 @@ export function NotificationTemplateDialog({
                 name="emailSubject"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email subject</FormLabel>
+                    <FormLabel>{t('notificationSettings.templates.fields.emailSubject')}</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -176,7 +181,7 @@ export function NotificationTemplateDialog({
                 name="emailBody"
                 render={({ field }) => (
                   <FormItem className="md:col-span-2">
-                    <FormLabel>Email body</FormLabel>
+                    <FormLabel>{t('notificationSettings.templates.fields.emailBody')}</FormLabel>
                     <FormControl>
                       <Textarea rows={6} {...field} />
                     </FormControl>
@@ -191,7 +196,7 @@ export function NotificationTemplateDialog({
               name="channels"
               render={() => (
                 <FormItem>
-                  <FormLabel>Channels</FormLabel>
+                  <FormLabel>{t('notificationSettings.templates.fields.channels')}</FormLabel>
                   <div className="flex flex-wrap gap-4 rounded-md border bg-muted/40 p-3">
                     {editableChannels.map((channel) => (
                       <label key={channel} className="flex items-center gap-2 text-sm text-foreground/80">
@@ -199,18 +204,20 @@ export function NotificationTemplateDialog({
                           checked={channels.includes(channel)}
                           onChange={(event) => toggleChannel(channel, event.target.checked)}
                         />
-                        {channel}
+                        {channel === 'IN_APP'
+                          ? t('notificationSettings.channels.inApp')
+                          : t('notificationSettings.channels.email')}
                       </label>
                     ))}
                     {futureChannels.map((channel) => (
                       <label key={channel} className="flex items-center gap-2 text-sm text-slate-400">
                         <Checkbox disabled />
-                        {channel} future
+                        {t('notificationSettings.channels.future', { channel })}
                       </label>
                     ))}
                   </div>
                   <FormMessage />
-                  <FormDescription>Placeholders use {'{{key}}'} syntax and are rendered from notification payload.</FormDescription>
+                  <FormDescription>{t('notificationSettings.templates.placeholdersHelp', { placeholder: '{{key}}' })}</FormDescription>
                 </FormItem>
               )}
             />

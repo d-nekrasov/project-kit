@@ -30,7 +30,12 @@ export function NotificationTemplatesTable({ templates, isLoading, onEdit }: Not
   }
 
   if (!templates.length) {
-    return <DataTableEmpty title="No templates" description="Notification templates matching your search will appear here." />;
+    return (
+      <DataTableEmpty
+        title={t('notificationSettings.templates.emptyTitle')}
+        description={t('notificationSettings.templates.emptyDescription')}
+      />
+    );
   }
 
   return (
@@ -38,12 +43,12 @@ export function NotificationTemplatesTable({ templates, isLoading, onEdit }: Not
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Event</TableHead>
-            <TableHead>Channels</TableHead>
-            <TableHead>Title</TableHead>
-            <TableHead>Email subject</TableHead>
-            <TableHead>Updated at</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead>{t('notificationSettings.templates.fields.event')}</TableHead>
+            <TableHead>{t('notificationSettings.templates.fields.channels')}</TableHead>
+            <TableHead>{t('notificationSettings.templates.fields.title')}</TableHead>
+            <TableHead>{t('notificationSettings.templates.fields.emailSubject')}</TableHead>
+            <TableHead>{t('common.updatedAt')}</TableHead>
+            <TableHead className="text-right">{t('common.actions')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -63,7 +68,12 @@ export function NotificationTemplatesTable({ templates, isLoading, onEdit }: Not
               <TableCell className="text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger>
-                    <Button type="button" variant="ghost" size="sm" aria-label={`Open actions for ${template.event}`}>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      aria-label={t('notificationSettings.templates.openActions', { event: template.event })}
+                    >
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>

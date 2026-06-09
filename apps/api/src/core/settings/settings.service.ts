@@ -24,6 +24,19 @@ type SettingTarget = {
   moduleCode: string | null;
 };
 
+const SUPPORTED_SYSTEM_LOCALES = ['ru', 'en'] as const;
+
+function unwrapLocaleString(value: string): string {
+  const normalized = value.trim();
+
+  try {
+    const reparsed = JSON.parse(normalized);
+    return typeof reparsed === 'string' ? reparsed.trim() : normalized;
+  } catch {
+    return normalized;
+  }
+}
+
 @Injectable()
 export class SettingsService {
   constructor(
@@ -119,6 +132,7 @@ export class SettingsService {
     organization: CurrentOrganization,
     requestMetadata?: RequestMetadata
   ): Promise<SettingResponseDto> {
+    const normalizedValue = this.normalizeSettingValue(keyParam, dto.value);
     const target = this.resolveSettingTarget(keyParam, dto, user, organization);
 
     const setting = await this.prisma.$transaction(async (tx) => {
@@ -129,14 +143,14 @@ export class SettingsService {
       if (existing.length === 1) {
         return tx.setting.update({
           where: { id: existing[0].id },
-          data: { value: dto.value as Prisma.InputJsonValue }
+          data: { value: normalizedValue as Prisma.InputJsonValue }
         });
       }
 
       return tx.setting.create({
         data: {
           ...target,
-          value: dto.value as Prisma.InputJsonValue
+          value: normalizedValue as Prisma.InputJsonValue
         }
       });
     });
@@ -160,6 +174,25 @@ export class SettingsService {
     });
 
     return response;
+  }
+
+  private normalizeSettingValue(keyParam: string, value: unknown): unknown {
+    const key = this.normalizeKey(keyParam);
+
+    if (key !== 'system.locale') {
+      return value;
+    }
+
+    if (typeof value !== 'string') {
+      throw new BadRequestException('system.locale must be a string');
+    }
+
+    const normalizedLocale = unwrapLocaleString(value).toLowerCase();
+    if (!SUPPORTED_SYSTEM_LOCALES.includes(normalizedLocale as (typeof SUPPORTED_SYSTEM_LOCALES)[number])) {
+      throw new BadRequestException('system.locale must be one of: ru, en');
+    }
+
+    return normalizedLocale;
   }
 
   private resolveSettingTarget(

@@ -1,10 +1,25 @@
-import { createContext, useCallback, useEffect, useMemo, useState, type PropsWithChildren } from 'react';
+import { createContext, useCallback, useEffect, useMemo, useRef, useState, type PropsWithChildren } from 'react';
 
 import { sdk } from '@/lib/sdk';
 import type { I18nCatalogResponse, I18nContextValue, I18nMessages, I18nParams } from '@/lib/i18n/types';
 
 const DEFAULT_LOCALE = 'ru';
+const LOCALE_STORAGE_KEY = 'project-kit.locale';
 const EMPTY_MESSAGES: I18nMessages = {};
+
+function persistLocale(nextLocale: string) {
+  if (typeof document !== 'undefined') {
+    document.documentElement.lang = nextLocale;
+  }
+
+  if (typeof localStorage !== 'undefined') {
+    try {
+      localStorage.setItem(LOCALE_STORAGE_KEY, nextLocale);
+    } catch {
+      // Ignore storage failures so i18n still works in restricted environments.
+    }
+  }
+}
 
 function interpolate(template: string, params?: I18nParams) {
   if (!params) {
@@ -21,7 +36,8 @@ const defaultContextValue: I18nContextValue = {
   locale: DEFAULT_LOCALE,
   messages: EMPTY_MESSAGES,
   isLoading: true,
-  t: (key, params) => interpolate(key, params)
+  t: (key, params) => interpolate(key, params),
+  reloadCatalog: async () => undefined
 };
 
 export const I18nContext = createContext<I18nContextValue>(defaultContextValue);
@@ -30,45 +46,52 @@ export function I18nProvider({ children }: PropsWithChildren) {
   const [locale, setLocale] = useState(DEFAULT_LOCALE);
   const [messages, setMessages] = useState<I18nMessages>(EMPTY_MESSAGES);
   const [isLoading, setIsLoading] = useState(true);
+  const isMountedRef = useRef(true);
+
+  const loadCatalog = useCallback(async () => {
+    if (isMountedRef.current) {
+      setIsLoading(true);
+    }
+
+    try {
+      const catalog = await sdk.client.get<I18nCatalogResponse>('/i18n/catalog', {
+        skipAuth: true,
+        skipOrganization: true
+      });
+      const nextLocale = catalog.locale || DEFAULT_LOCALE;
+      const nextMessages = catalog.messages ?? EMPTY_MESSAGES;
+
+      if (!isMountedRef.current) {
+        return;
+      }
+
+      setLocale(nextLocale);
+      setMessages(nextMessages);
+      persistLocale(nextLocale);
+    } catch {
+      if (!isMountedRef.current) {
+        return;
+      }
+
+      setLocale(DEFAULT_LOCALE);
+      setMessages(EMPTY_MESSAGES);
+      persistLocale(DEFAULT_LOCALE);
+    } finally {
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
+    }
+  }, []);
 
   useEffect(() => {
-    let isMounted = true;
-
-    const loadCatalog = async () => {
-      setIsLoading(true);
-
-      try {
-        const catalog = await sdk.client.get<I18nCatalogResponse>('/i18n/catalog', {
-          skipAuth: true,
-          skipOrganization: true
-        });
-
-        if (!isMounted) {
-          return;
-        }
-
-        setLocale(catalog.locale || DEFAULT_LOCALE);
-        setMessages(catalog.messages ?? EMPTY_MESSAGES);
-      } catch {
-        if (!isMounted) {
-          return;
-        }
-
-        setLocale(DEFAULT_LOCALE);
-        setMessages(EMPTY_MESSAGES);
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
+    isMountedRef.current = true;
 
     void loadCatalog();
 
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
     };
-  }, []);
+  }, [loadCatalog]);
 
   const t = useCallback(
     (key: string, params?: I18nParams) => {
@@ -83,9 +106,10 @@ export function I18nProvider({ children }: PropsWithChildren) {
       locale,
       messages,
       isLoading,
-      t
+      t,
+      reloadCatalog: loadCatalog
     }),
-    [isLoading, locale, messages, t]
+    [isLoading, loadCatalog, locale, messages, t]
   );
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
