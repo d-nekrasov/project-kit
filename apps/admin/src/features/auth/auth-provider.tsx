@@ -7,9 +7,8 @@ import { AuthContext, type AuthContextValue } from '@/features/auth/auth-context
 import {
   clearActiveOrganizationId,
   clearAuthStorage,
-  getAccessToken,
   getActiveOrganizationId,
-  setAccessToken,
+  removeLegacyAccessToken,
   setActiveOrganizationId
 } from '@/features/auth/auth-storage';
 import { sdk } from '@/lib/sdk';
@@ -37,10 +36,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
   );
 
   const refreshPermissions = useCallback(async () => {
-    const token = getAccessToken();
     const organizationId = getActiveOrganizationId();
 
-    if (!token || !organizationId) {
+    if (!organizationId) {
       setPermissions([]);
       setIsPermissionsLoading(false);
       return;
@@ -58,15 +56,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, []);
 
   const refreshMe = useCallback(async () => {
-    const token = getAccessToken();
-    if (!token) {
-      setUser(null);
-      setActiveOrganizationIdState(null);
-      setPermissions([]);
-      setIsPermissionsLoading(false);
-      setIsLoading(false);
-      return;
-    }
+    removeLegacyAccessToken();
 
     try {
       const nextUser = await sdk.auth.me();
@@ -105,7 +95,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
       try {
         const result = await sdk.auth.login({ email, password });
-        setAccessToken(result.accessToken);
+        removeLegacyAccessToken();
 
         const orgId = resolveOrganization(result.user, getActiveOrganizationId());
         if (orgId) {
@@ -125,7 +115,13 @@ export function AuthProvider({ children }: PropsWithChildren) {
     [queryClient, refreshPermissions]
   );
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try {
+      await sdk.auth.logout();
+    } catch {
+      // Clear local state even if the server-side session is already gone.
+    }
+
     queryClient.clear();
     clearAuthStorage();
     setUser(null);
@@ -150,7 +146,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     () => ({
       user,
       isLoading,
-      isAuthenticated: Boolean(user && getAccessToken()),
+      isAuthenticated: Boolean(user),
       permissions,
       isPermissionsLoading,
       activeOrganizationId,

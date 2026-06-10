@@ -8,6 +8,7 @@ export class ApiClient {
   private readonly getOrganizationId?: ApiClientOptions['getOrganizationId'];
   private readonly onUnauthorized?: ApiClientOptions['onUnauthorized'];
   private readonly fetchImpl: typeof fetch;
+  private readonly credentials: RequestCredentials;
 
   constructor(options: ApiClientOptions) {
     this.baseUrl = options.baseUrl.replace(/\/$/, '');
@@ -15,6 +16,7 @@ export class ApiClient {
     this.getOrganizationId = options.getOrganizationId;
     this.onUnauthorized = options.onUnauthorized;
     this.fetchImpl = options.fetchImpl ?? globalThis.fetch.bind(globalThis);
+    this.credentials = options.credentials ?? 'include';
   }
 
   get<T>(path: string, options?: RequestOptions): Promise<T> {
@@ -64,7 +66,8 @@ export class ApiClient {
       response = await this.fetchImpl(url, {
         method,
         headers,
-        body: options.body === undefined ? undefined : JSON.stringify(options.body)
+        body: options.body === undefined ? undefined : JSON.stringify(options.body),
+        credentials: this.credentials
       });
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : 'Failed to fetch';
@@ -98,7 +101,7 @@ export class ApiClient {
       data
     });
 
-    if (response.status === 401 && this.onUnauthorized) {
+    if (response.status === 401 && this.onUnauthorized && !options.skipAuth) {
       await this.onUnauthorized();
     }
 

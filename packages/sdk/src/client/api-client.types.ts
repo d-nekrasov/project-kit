@@ -4,6 +4,7 @@ export type ApiClientOptions = {
   getOrganizationId?: () => string | null | Promise<string | null>;
   onUnauthorized?: () => void | Promise<void>;
   fetchImpl?: typeof fetch;
+  credentials?: RequestCredentials;
 };
 
 export type RequestOptions = {

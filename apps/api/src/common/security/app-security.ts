@@ -63,7 +63,7 @@ export function buildCorsOptions(configService: ConfigService): CorsOptions {
 
       callback(null, false);
     },
-    credentials: false, // TODO: Switch to credentials=true when cookie-based auth is introduced.
+    credentials: true,
   };
 }
 

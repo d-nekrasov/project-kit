@@ -12,9 +12,11 @@ import { EmailSmtpNotificationConnector } from "../notifications/connectors/emai
 import { AuthRateLimitStore } from "./auth-rate-limit.store";
 import { AuthPasswordResetMailService } from "./auth-password-reset-mail.service";
 import { AuthController } from "./auth.controller";
+import { AuthCookieService } from "./auth-cookie.service";
 import { AuthService } from "./auth.service";
 import { AuthRateLimitGuard } from "./guards/auth-rate-limit.guard";
 import { JwtStrategy } from "./strategies/jwt.strategy";
+import { TokenBlacklistService } from "./token-blacklist.service";
 
 @Module({
   imports: [
@@ -59,11 +61,13 @@ import { JwtStrategy } from "./strategies/jwt.strategy";
   controllers: [AuthController],
   providers: [
     AuthService,
+    AuthCookieService,
     JwtStrategy,
     AuthRateLimitGuard,
     AuthRateLimitStore,
     AuthPasswordResetMailService,
     EmailSmtpNotificationConnector,
+    TokenBlacklistService,
   ],
   exports: [AuthService],
 })

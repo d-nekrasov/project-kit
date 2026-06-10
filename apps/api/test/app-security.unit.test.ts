@@ -43,7 +43,7 @@ test("buildCorsOptions allows configured origins and denies others", async () =>
 
   assert.equal(allowed, true);
   assert.equal(denied, false);
-  assert.equal(corsOptions.credentials, false);
+  assert.equal(corsOptions.credentials, true);
 });
 
 test("buildCorsOptions fails closed in production when ALLOWED_ORIGINS is missing", () => {

@@ -8,7 +8,9 @@ import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
 import { INestApplication } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
 import { Test } from "@nestjs/testing";
+import { UserStatus } from "@prisma/client";
 
 import { createProjectKitSdk } from "../../../packages/sdk/src/create-project-kit-sdk";
 import { configureApp } from "../src/common/security/app-security";
@@ -27,10 +29,27 @@ const { PrismaService } = require("../dist/src/infrastructure/prisma/prisma.serv
 
 let app: INestApplication;
 let prisma: InstanceType<typeof PrismaService>;
+let jwtService: JwtService;
 let baseUrl = "";
 let adminToken = "";
 let adminOrganizationId = "";
 let ipCounter = 0;
+
+function decodeJwtPayload(token: string): Record<string, unknown> {
+  const [, payload] = token.split(".");
+  assert.ok(payload);
+  return JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as Record<string, unknown>;
+}
+
+function getSetCookie(headers: Headers): string {
+  const cookie = headers.get("set-cookie");
+  assert.ok(cookie);
+  return cookie;
+}
+
+function extractCookiePair(setCookieHeader: string): string {
+  return setCookieHeader.split(";")[0] ?? setCookieHeader;
+}
 
 function runCommand(
   command: string,
@@ -64,12 +83,14 @@ async function apiRequest<T>(
     organizationId,
     forwardedFor,
     origin,
+    cookie,
   }: {
     body?: unknown;
     token?: string;
     organizationId?: string;
     forwardedFor?: string;
     origin?: string;
+    cookie?: string;
   } = {},
 ): Promise<{ status: number; data: T; headers: Headers }> {
   const response = await fetch(`${baseUrl}${path}`, {
@@ -81,6 +102,7 @@ async function apiRequest<T>(
       ...(organizationId ? { "x-organization-id": organizationId } : {}),
       ...(forwardedFor ? { "x-forwarded-for": forwardedFor } : {}),
       ...(origin ? { Origin: origin } : {}),
+      ...(cookie ? { Cookie: cookie } : {}),
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
@@ -140,6 +162,7 @@ before(async () => {
   assert.ok(address && typeof address === "object" && "port" in address);
   baseUrl = `http://127.0.0.1:${address.port}/api`;
   prisma = app.get(PrismaService);
+  jwtService = app.get(JwtService);
 });
 
 after(async () => {
@@ -183,6 +206,7 @@ test("allowed origins receive CORS headers, disallowed origins do not, and helme
   });
   assert.equal(allowedResponse.status, 200);
   assert.equal(allowedResponse.headers.get("access-control-allow-origin"), allowedOrigin);
+  assert.equal(allowedResponse.headers.get("access-control-allow-credentials"), "true");
   assert.equal(allowedResponse.headers.get("x-content-type-options"), "nosniff");
 
   const deniedResponse = await apiRequest<{ installed: boolean }>("GET", "/installer/status", {
@@ -190,6 +214,106 @@ test("allowed origins receive CORS headers, disallowed origins do not, and helme
   });
   assert.equal(deniedResponse.status, 200);
   assert.equal(deniedResponse.headers.get("access-control-allow-origin"), null);
+});
+
+test("login issues jti-bearing JWT and sets an httpOnly auth cookie", async () => {
+  const response = await apiRequest<{
+    accessToken: string;
+    user: { organizations: Array<{ id: string }> };
+  }>("POST", "/auth/login", {
+    body: {
+      email: "admin@example.com",
+      password: "AdminPassword123!",
+    },
+  });
+
+  assert.equal(response.status, 201);
+  const payload = decodeJwtPayload(response.data.accessToken);
+  assert.equal(typeof payload.jti, "string");
+
+  const setCookie = getSetCookie(response.headers);
+  assert.match(setCookie, /HttpOnly/);
+  assert.match(setCookie, /SameSite=Strict/);
+  assert.doesNotMatch(setCookie, /Secure/);
+});
+
+test("cookie auth works, bearer fallback remains available, and removed debug endpoints return 404", async () => {
+  const loginResponse = await apiRequest<{ accessToken: string }>("POST", "/auth/login", {
+    body: {
+      email: "admin@example.com",
+      password: "AdminPassword123!",
+    },
+  });
+  const authCookie = extractCookiePair(getSetCookie(loginResponse.headers));
+
+  const meViaCookie = await apiRequest<{ id: string }>("GET", "/auth/me", {
+    cookie: authCookie,
+  });
+  assert.equal(meViaCookie.status, 200);
+
+  const meViaBearer = await apiRequest<{ id: string }>("GET", "/auth/me", {
+    token: loginResponse.data.accessToken,
+  });
+  assert.equal(meViaBearer.status, 200);
+
+  const contextResponse = await apiRequest("GET", "/auth/context", {
+    token: loginResponse.data.accessToken,
+  });
+  assert.equal(contextResponse.status, 404);
+
+  const permissionsCheckResponse = await apiRequest("GET", "/auth/permissions-check", {
+    token: loginResponse.data.accessToken,
+  });
+  assert.equal(permissionsCheckResponse.status, 404);
+});
+
+test("logout revokes the current token, clears cookie, and protected endpoints reject the old token", async () => {
+  const loginResponse = await apiRequest<{ accessToken: string }>("POST", "/auth/login", {
+    body: {
+      email: "admin@example.com",
+      password: "AdminPassword123!",
+    },
+  });
+  const authCookie = extractCookiePair(getSetCookie(loginResponse.headers));
+
+  const logoutResponse = await apiRequest<{ success: true }>("POST", "/auth/logout", {
+    token: loginResponse.data.accessToken,
+    cookie: authCookie,
+  });
+  assert.equal(logoutResponse.status, 200);
+  assert.deepEqual(logoutResponse.data, { success: true });
+
+  const clearedCookie = getSetCookie(logoutResponse.headers);
+  assert.match(clearedCookie, /Max-Age=0/);
+  assert.match(clearedCookie, /HttpOnly/);
+
+  const meAfterLogout = await apiRequest<{ message: string }>("GET", "/auth/me", {
+    token: loginResponse.data.accessToken,
+  });
+  assert.equal(meAfterLogout.status, 401);
+});
+
+test("blocked users fail JWT strategy validation even with a signed token", async () => {
+  const blockedUser = await prisma.user.create({
+    data: {
+      email: `blocked-${Date.now()}@example.com`,
+      passwordHash: "unused",
+      status: UserStatus.BLOCKED,
+    },
+  });
+
+  const blockedToken = await jwtService.signAsync({
+    sub: blockedUser.id,
+    jti: `blocked-${blockedUser.id}`,
+    email: blockedUser.email,
+    systemRoles: [],
+    organizations: [],
+  });
+
+  const response = await apiRequest<{ message: string }>("GET", "/auth/me", {
+    token: blockedToken,
+  });
+  assert.equal(response.status, 401);
 });
 
 test("SMTP connector passwords are encrypted at rest, masked in API responses, and preserved on masked updates", async () => {

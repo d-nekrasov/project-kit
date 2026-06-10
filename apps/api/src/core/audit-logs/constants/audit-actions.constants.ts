@@ -1,5 +1,6 @@
 export const AUDIT_ACTIONS = {
   AUTH_LOGIN: "auth.login",
+  AUTH_LOGOUT: "auth.logout",
   AUTH_PASSWORD_RESET_REQUESTED: "auth.password_reset_requested",
   AUTH_PASSWORD_RESET_COMPLETED: "auth.password_reset_completed",
   AUTH_PASSWORD_RESET_FAILED: "auth.password_reset_failed",

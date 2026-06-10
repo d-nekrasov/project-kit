@@ -55,18 +55,8 @@ export type AuthResponse = {
   user: CurrentUser;
 };
 
-export type AuthContextResponse = {
-  userId: string;
-  organization: {
-    id: string;
-    slug: string;
-    role: string;
-  };
-};
-
-export type PermissionsCheckResponse = {
-  allowed: boolean;
-  permission: string;
+export type LogoutResponse = {
+  success: true;
 };
 
 export type AuthPermissionsResponse = {

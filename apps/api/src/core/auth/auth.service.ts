@@ -8,7 +8,7 @@ import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { OrganizationStatus, UserStatus } from "@prisma/client";
 import * as argon2 from "argon2";
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { PrismaService } from "../../infrastructure/prisma/prisma.service";
 import { RequestMetadata } from "../../common/utils/request-metadata.util";
 import { AuditLogsService } from "../audit-logs/audit-logs.service";
@@ -27,6 +27,7 @@ import { ValidateResetPasswordTokenResponseDto } from "./dto/validate-reset-pass
 import { CurrentUser } from "./types/current-user.type";
 import { JwtPayload } from "./types/jwt-payload.type";
 import { CurrentOrganization } from "../organization-context/types/current-organization.type";
+import { TokenBlacklistService } from "./token-blacklist.service";
 
 const INVALID_CREDENTIALS_MESSAGE = "Invalid email or password";
 const PASSWORD_RESET_RESPONSE_MESSAGE =
@@ -57,6 +58,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly auditLogsService: AuditLogsService,
     private readonly authPasswordResetMailService: AuthPasswordResetMailService,
+    private readonly tokenBlacklistService: TokenBlacklistService,
   ) {}
 
   async login(
@@ -84,6 +86,7 @@ export class AuthService {
     const currentUser = await this.buildCurrentUser(user.id);
     const payload: JwtPayload = {
       sub: currentUser.id,
+      jti: randomUUID(),
       email: currentUser.email,
       systemRoles: currentUser.systemRoles,
       organizations: currentUser.organizations.map((organization) => ({
@@ -110,6 +113,40 @@ export class AuthService {
         this.configService.get<string>("JWT_ACCESS_EXPIRES_IN") ?? "15m",
       user: currentUser,
     };
+  }
+
+  async logout(
+    accessToken: string,
+    requestMetadata?: RequestMetadata,
+  ): Promise<void> {
+    let payload: JwtPayload;
+    try {
+      payload = await this.jwtService.verifyAsync<JwtPayload>(accessToken);
+    } catch {
+      throw new UnauthorizedException();
+    }
+
+    if (!payload.exp) {
+      throw new UnauthorizedException();
+    }
+
+    const expiresAt = new Date(payload.exp * 1000);
+    if (payload.jti) {
+      this.tokenBlacklistService.revoke(payload.jti, expiresAt);
+    } else {
+      this.tokenBlacklistService.revoke(accessToken, expiresAt);
+    }
+
+    await this.auditLogsService.write({
+      action: AUDIT_ACTIONS.AUTH_LOGOUT,
+      entityType: AUDIT_ENTITY_TYPES.AUTH,
+      entityId: payload.sub,
+      userId: payload.sub,
+      organizationId: null,
+      metadata: null,
+      ip: requestMetadata?.ip,
+      userAgent: requestMetadata?.userAgent,
+    });
   }
 
   async getCurrentUserById(userId: string): Promise<CurrentUser> {
