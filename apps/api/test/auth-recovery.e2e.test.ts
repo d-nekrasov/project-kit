@@ -8,7 +8,7 @@ import { after, before, beforeEach, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
-import { INestApplication, ValidationPipe } from "@nestjs/common";
+import { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import {
   NotificationChannel,
@@ -19,6 +19,7 @@ import * as argon2 from "argon2";
 
 import { createProjectKitSdk } from "../../../packages/sdk/src/create-project-kit-sdk";
 import { ApiError } from "../../../packages/sdk/src/client/api-error";
+import { configureApp } from "../src/common/security/app-security";
 
 type SentEmail = {
   to: string;
@@ -52,6 +53,8 @@ const require = createRequire(import.meta.url);
 const apiDir = resolve(__dirname, "..");
 const repoRoot = resolve(apiDir, "..", "..");
 const baseResetUrl = "http://admin.local/reset-password";
+const allowedOrigin = "http://localhost:3000";
+const configEncryptionKey = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=";
 const databaseName = `project_kit_recovery_${Date.now()}_${Math.random().toString(16).slice(2, 10)}`;
 const databaseUrl = `postgresql://postgres:postgres@127.0.0.1:5432/${databaseName}?schema=public`;
 const { AppModule } = require("../dist/src/app.module");
@@ -186,6 +189,8 @@ before(async () => {
   process.env.JWT_ACCESS_EXPIRES_IN = "15m";
   process.env.AUTH_PASSWORD_RESET_TOKEN_TTL_MINUTES = "30";
   process.env.AUTH_PASSWORD_RESET_URL = baseResetUrl;
+  process.env.ALLOWED_ORIGINS = allowedOrigin;
+  process.env.CONFIG_ENCRYPTION_KEY = configEncryptionKey;
   process.env.CASBIN_MODEL_PATH = resolve(apiDir, "src/infrastructure/casbin/model.conf");
 
   const moduleRef = await Test.createTestingModule({
@@ -196,9 +201,7 @@ before(async () => {
     .compile();
 
   app = moduleRef.createNestApplication();
-  app.setGlobalPrefix("api");
-  app.enableCors();
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  configureApp(app);
   await app.listen(0, "127.0.0.1");
 
   const address = app.getHttpServer().address();
@@ -705,6 +708,42 @@ test("forgot-password and reset-password are rate-limited at route level", async
   });
   assert.equal(blockedReset.status, 429);
   assert.equal(blockedReset.data.message, "Too many requests. Please try again later.");
+});
+
+test("login is rate-limited separately and does not consume forgot/reset password budgets", async () => {
+  const user = await createUser({ password: "LoginRatePassword123!" });
+  const loginIp = nextIp("login-limit");
+
+  for (let index = 0; index < 5; index += 1) {
+    const response = await apiRequest<{ message: string }>("POST", "/auth/login", {
+      body: { email: user.email, password: "wrong-password" },
+      forwardedFor: loginIp,
+    });
+    assert.equal(response.status, 401);
+  }
+
+  const blockedLogin = await apiRequest<{ message: string }>("POST", "/auth/login", {
+    body: { email: user.email, password: "wrong-password" },
+    forwardedFor: loginIp,
+  });
+  assert.equal(blockedLogin.status, 429);
+  assert.equal(blockedLogin.data.message, "Too many requests. Please try again later.");
+
+  const forgotResponse = await apiRequest<{ message: string }>("POST", "/auth/forgot-password", {
+    body: { email: user.email },
+    forwardedFor: loginIp,
+  });
+  assert.equal(forgotResponse.status, 201);
+
+  const resetResponse = await apiRequest<{ message: string }>("POST", "/auth/reset-password", {
+    body: {
+      token: "login-limit-separate-budget",
+      password: "Password123!",
+      passwordConfirmation: "Password123!",
+    },
+    forwardedFor: loginIp,
+  });
+  assert.equal(resetResponse.status, 400);
 });
 
 test("SDK auth recovery methods match backend contract end-to-end", async () => {

@@ -59,7 +59,6 @@ export class AuthService {
     private readonly authPasswordResetMailService: AuthPasswordResetMailService,
   ) {}
 
-  // TODO: Add rate limiting for login endpoint.
   async login(
     dto: LoginDto,
     requestMetadata?: RequestMetadata,
@@ -117,7 +116,6 @@ export class AuthService {
     return this.buildCurrentUser(userId);
   }
 
-  // TODO: Add rate limiting for forgot-password endpoint.
   async forgotPassword(
     dto: ForgotPasswordDto,
     requestMetadata?: RequestMetadata,

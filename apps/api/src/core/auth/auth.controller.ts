@@ -22,6 +22,11 @@ import { Permissions } from "../permissions/decorators/permissions.decorator";
 import { PermissionsGuard } from "../permissions/guards/permissions.guard";
 
 const FIFTEEN_MINUTES_IN_MS = 15 * 60 * 1000;
+const LOGIN_RATE_LIMIT = {
+  key: "login",
+  limit: 5,
+  ttlMs: FIFTEEN_MINUTES_IN_MS,
+};
 const FORGOT_PASSWORD_RATE_LIMIT = {
   key: "forgot-password",
   limit: 5,
@@ -38,6 +43,8 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post("login")
+  @UseGuards(AuthRateLimitGuard)
+  @AuthRateLimit(LOGIN_RATE_LIMIT)
   login(
     @Body() dto: LoginDto,
     @Req()

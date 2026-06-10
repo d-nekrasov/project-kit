@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+import { ConfigEncryptionModule } from '../../common/security/config-encryption.module';
 import { CasbinModule } from '../../infrastructure/casbin/casbin.module';
 import { PrismaModule } from '../../infrastructure/prisma/prisma.module';
 import { AuditLogsModule } from '../audit-logs/audit-logs.module';
@@ -19,6 +20,7 @@ import { NotificationsService } from './notifications.service';
 
 @Module({
   imports: [
+    ConfigEncryptionModule,
     PrismaModule,
     CasbinModule,
     SystemLogsModule,

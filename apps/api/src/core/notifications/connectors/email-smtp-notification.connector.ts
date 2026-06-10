@@ -1,12 +1,21 @@
-import { Injectable } from '@nestjs/common';
-import nodemailer from 'nodemailer';
-import { SmtpConnectorConfig } from '../types/notification.types';
-import { NotificationConnector, NotificationConnectorSendInput, NotificationConnectorSendResult } from './notification-connector.interface';
+import { Injectable } from "@nestjs/common";
+import nodemailer from "nodemailer";
+import { ConfigEncryptionService } from "../../../common/security/config-encryption.service";
+import { SmtpConnectorConfig } from "../types/notification.types";
+import {
+  NotificationConnector,
+  NotificationConnectorSendInput,
+  NotificationConnectorSendResult,
+} from "./notification-connector.interface";
 
 @Injectable()
 export class EmailSmtpNotificationConnector implements NotificationConnector {
+  constructor(
+    private readonly configEncryptionService: ConfigEncryptionService,
+  ) {}
+
   async send(input: NotificationConnectorSendInput): Promise<NotificationConnectorSendResult> {
-    const config = (input.config ?? {}) as SmtpConnectorConfig;
+    const config = this.decryptConfig((input.config ?? {}) as SmtpConnectorConfig);
     if (!input.to) {
       return { ok: false, error: 'Recipient email is missing' };
     }
@@ -37,5 +46,16 @@ export class EmailSmtpNotificationConnector implements NotificationConnector {
     });
 
     return { ok: true };
+  }
+
+  private decryptConfig(config: SmtpConnectorConfig): SmtpConnectorConfig {
+    if (typeof config.password !== "string" || config.password.length === 0) {
+      return config;
+    }
+
+    return {
+      ...config,
+      password: this.configEncryptionService.decrypt(config.password),
+    };
   }
 }

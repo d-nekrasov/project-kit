@@ -2,6 +2,7 @@ import { Logger, Module } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
+import { ConfigEncryptionModule } from "../../common/security/config-encryption.module";
 import { CasbinModule } from "../../infrastructure/casbin/casbin.module";
 import { PrismaModule } from "../../infrastructure/prisma/prisma.module";
 import { PermissionsModule } from "../permissions/permissions.module";
@@ -17,6 +18,7 @@ import { JwtStrategy } from "./strategies/jwt.strategy";
 
 @Module({
   imports: [
+    ConfigEncryptionModule,
     PrismaModule,
     CasbinModule,
     PermissionsModule,

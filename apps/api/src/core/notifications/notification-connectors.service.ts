@@ -1,5 +1,6 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { NotificationConnector, NotificationConnectorStatus, Prisma } from '@prisma/client';
+import { ConfigEncryptionService } from '../../common/security/config-encryption.service';
 import { RequestMetadata } from '../../common/utils/request-metadata.util';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } from '../audit-logs/constants/audit-actions.constants';
@@ -9,11 +10,15 @@ import { CurrentOrganization } from '../organization-context/types/current-organ
 import { NotificationConnectorResponseDto } from './dto/notification-connector-response.dto';
 import { UpdateNotificationConnectorDto } from './dto/update-notification-connector.dto';
 
+const SENSITIVE_CONFIG_KEYS = new Set(['password', 'apiKey', 'token', 'secret']);
+const MASKED_SECRET_VALUE = '********';
+
 @Injectable()
 export class NotificationConnectorsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly auditLogsService: AuditLogsService
+    private readonly auditLogsService: AuditLogsService,
+    private readonly configEncryptionService: ConfigEncryptionService
   ) {}
 
   async findAll(currentUser: CurrentUser): Promise<NotificationConnectorResponseDto[]> {
@@ -78,10 +83,12 @@ export class NotificationConnectorsService {
     const next: Record<string, unknown> = { ...existing };
 
     for (const [key, value] of Object.entries(patch)) {
-      if (key === 'password' && (value === '********' || value === '')) {
+      if (this.isSensitiveKey(key) && (value === MASKED_SECRET_VALUE || value === '')) {
         continue;
       }
-      next[key] = value;
+      next[key] = this.shouldEncryptValue(key, value)
+        ? this.configEncryptionService.encrypt(value)
+        : value;
     }
 
     return next;
@@ -99,10 +106,26 @@ export class NotificationConnectorsService {
       return null;
     }
     const config = { ...(value as Record<string, unknown>) };
-    if (typeof config.password === 'string' && config.password.length > 0) {
-      config.password = '********';
+
+    for (const key of Object.keys(config)) {
+      if (
+        this.isSensitiveKey(key) &&
+        typeof config[key] === 'string' &&
+        (config[key] as string).length > 0
+      ) {
+        config[key] = MASKED_SECRET_VALUE;
+      }
     }
+
     return config;
+  }
+
+  private isSensitiveKey(key: string): boolean {
+    return SENSITIVE_CONFIG_KEYS.has(key);
+  }
+
+  private shouldEncryptValue(key: string, value: unknown): value is string {
+    return this.isSensitiveKey(key) && typeof value === 'string' && value.length > 0;
   }
 
   private toResponse(connector: NotificationConnector): NotificationConnectorResponseDto {
