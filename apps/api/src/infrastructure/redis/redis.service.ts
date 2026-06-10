@@ -15,7 +15,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   async onModuleInit(): Promise<void> {
     if (this.isRedisRequired() && !this.isRedisEnabled()) {
       throw new Error(
-        "Redis is required when MULTI_INSTANCE=true in production.",
+        "Redis is required in production. Set REDIS_ENABLED=true and REDIS_URL.",
       );
     }
 
@@ -48,15 +48,10 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   }
 
   isRedisRequired(): boolean {
-    const appEnv = (
-      this.configService.get<string>("APP_ENV") ?? "development"
-    ).toLowerCase();
-    const multiInstance = parseBooleanFlag(
-      this.configService.get<string>("MULTI_INSTANCE"),
-      false,
+    return (
+      (this.configService.get<string>("APP_ENV") ?? "development").toLowerCase() ===
+      "production"
     );
-
-    return appEnv === "production" && multiInstance;
   }
 
   getRedisUrl(): string | undefined {

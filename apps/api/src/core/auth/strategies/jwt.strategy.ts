@@ -42,21 +42,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     req: { headers: Record<string, string | string[] | undefined> },
     payload: JwtPayload,
   ): Promise<CurrentUser> {
-    if (!payload?.sub) {
+    if (!payload?.sub || !payload.jti) {
       throw new UnauthorizedException();
     }
 
-    const cookieHeader = Array.isArray(req.headers.cookie)
-      ? req.headers.cookie[0]
-      : req.headers.cookie;
-    const rawToken =
-      this.authCookieService.extractTokenFromCookieHeader(cookieHeader) ??
-      extractBearerTokenFromHeaders(req.headers);
-
-    if (payload.jti && this.tokenBlacklistService.isRevoked(payload.jti)) {
-      throw new UnauthorizedException();
-    }
-    if (!payload.jti && rawToken && this.tokenBlacklistService.isRevoked(rawToken)) {
+    if (await this.tokenBlacklistService.isRevoked(payload.jti)) {
       throw new UnauthorizedException();
     }
 

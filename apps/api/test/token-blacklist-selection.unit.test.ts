@@ -3,15 +3,15 @@ import { test } from "node:test";
 
 import { ConfigService } from "@nestjs/config";
 
-import { selectAuthRateLimitStore } from "../src/core/auth/select-auth-rate-limit-store";
+import { selectTokenBlacklistStore } from "../src/core/auth/select-token-blacklist-store";
 
 const inMemoryStore = {
-  increment: async () => 1,
-  reset: async () => undefined,
+  revoke: async () => undefined,
+  isRevoked: async () => false,
 };
 const redisStore = {
-  increment: async () => 1,
-  reset: async () => undefined,
+  revoke: async () => undefined,
+  isRevoked: async () => false,
 };
 
 function createRedisService(options: {
@@ -31,8 +31,8 @@ function createRedisService(options: {
   };
 }
 
-test("auth rate limit store uses in-memory store in development when Redis is disabled", () => {
-  const store = selectAuthRateLimitStore(
+test("token blacklist uses in-memory store in development when Redis is disabled", () => {
+  const store = selectTokenBlacklistStore(
     new ConfigService({ APP_ENV: "development" }),
     createRedisService({ enabled: false }),
     inMemoryStore,
@@ -42,8 +42,8 @@ test("auth rate limit store uses in-memory store in development when Redis is di
   assert.equal(store, inMemoryStore);
 });
 
-test("auth rate limit store uses in-memory store in test when Redis is disabled", () => {
-  const store = selectAuthRateLimitStore(
+test("token blacklist uses in-memory store in test when Redis is disabled", () => {
+  const store = selectTokenBlacklistStore(
     new ConfigService({ APP_ENV: "test" }),
     createRedisService({ enabled: false }),
     inMemoryStore,
@@ -53,8 +53,8 @@ test("auth rate limit store uses in-memory store in test when Redis is disabled"
   assert.equal(store, inMemoryStore);
 });
 
-test("auth rate limit store uses Redis store when Redis is enabled and configured", () => {
-  const store = selectAuthRateLimitStore(
+test("token blacklist uses Redis store in production when Redis is enabled", () => {
+  const store = selectTokenBlacklistStore(
     new ConfigService({ APP_ENV: "production" }),
     createRedisService({ enabled: true, url: "redis://127.0.0.1:6379" }),
     inMemoryStore,
@@ -64,15 +64,15 @@ test("auth rate limit store uses Redis store when Redis is enabled and configure
   assert.equal(store, redisStore);
 });
 
-test("auth rate limit store fails fast in production when Redis is unavailable", () => {
+test("token blacklist fails fast in production when Redis is unavailable", () => {
   assert.throws(
     () =>
-      selectAuthRateLimitStore(
+      selectTokenBlacklistStore(
         new ConfigService({ APP_ENV: "production" }),
         createRedisService({ enabled: false }),
         inMemoryStore,
         redisStore,
       ),
-    /Redis-backed auth rate limiting is required in production/,
+    /Redis-backed auth token blacklist is required in production/,
   );
 });

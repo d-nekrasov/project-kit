@@ -324,20 +324,22 @@ Recovery flow uses:
 Password reset email delivery also depends on the global `smtp_email` notification connector being enabled and configured.
 
 Production hardening env:
+- `APP_ENV=development|test|production`: selects environment-specific behavior. `development` and `test` may use in-memory auth infrastructure by default; `production` requires Redis.
 - `TRUST_PROXY=false|true|loopback|1`: configures Express `trust proxy`. When enabled behind nginx/traefik, `req.ip` is derived from trusted proxy hops instead of trusting raw `X-Forwarded-For`.
-- `MULTI_INSTANCE=true|false`: marks that the API is expected to run on multiple instances.
-- `REDIS_ENABLED=true|false` and `REDIS_URL=redis://...`: enable shared Redis infrastructure for auth rate limiting and realtime notification fan-out.
+- `MULTI_INSTANCE=true|false`: marks that the API is expected to run on multiple instances. This still matters for cross-instance SSE fan-out, but not for auth Redis requirements.
+- `REDIS_ENABLED=true|false` and `REDIS_URL=redis://...`: enable shared Redis infrastructure for auth rate limiting, JWT token blacklist, and realtime notification fan-out.
 - `CONFIG_ENCRYPTION_KEY`: required 32-byte raw string or base64-encoded 32-byte key used to encrypt notification connector secrets such as SMTP passwords and webhook tokens.
 - `SSE_MAX_CLIENTS`, `SSE_MAX_CLIENTS_PER_USER`, `SSE_HEARTBEAT_INTERVAL_MS`: protect the SSE registry from unbounded growth.
 
 Recommended local bootstrap:
 - `docker compose up -d postgres redis`
 - `cp apps/api/.env.example apps/api/.env`
-- leave `REDIS_ENABLED=false` for a simple single-instance dev setup, or set `REDIS_ENABLED=true` to test shared rate limits and SSE pub/sub locally.
+- leave `REDIS_ENABLED=false` for a simple dev/test setup that uses in-memory auth rate limiting and token blacklist, or set `REDIS_ENABLED=true` to test shared Redis-backed rate limits, logout invalidation, and SSE pub/sub locally.
 
 Production guidance:
-- auth rate limiting uses Redis in production and the API fails fast during bootstrap if `APP_ENV=production` without `REDIS_ENABLED=true` and a valid `REDIS_URL`;
-- when `APP_ENV=production` and `MULTI_INSTANCE=true`, Redis is also required for cross-instance SSE delivery;
+- auth rate limiting and JWT token blacklist use Redis in production, and the API fails fast during bootstrap if `APP_ENV=production` without `REDIS_ENABLED=true` and a valid `REDIS_URL`;
+- there is no silent in-memory fallback for auth in production;
+- when `APP_ENV=production` and `MULTI_INSTANCE=true`, the same Redis instance is also used for cross-instance SSE delivery;
 - before a production deploy that includes notification connectors, set `CONFIG_ENCRYPTION_KEY` and run `pnpm --filter api prisma:backfill-notification-connector-secrets` to migrate any existing plaintext connector secrets in `NotificationConnector.config`;
 - never trust `X-Forwarded-For` directly in application code. Configure `TRUST_PROXY` and use `req.ip`.
 

@@ -131,11 +131,11 @@ export class AuthService {
     }
 
     const expiresAt = new Date(payload.exp * 1000);
-    if (payload.jti) {
-      this.tokenBlacklistService.revoke(payload.jti, expiresAt);
-    } else {
-      this.tokenBlacklistService.revoke(accessToken, expiresAt);
+    if (!payload.jti) {
+      throw new UnauthorizedException();
     }
+
+    await this.tokenBlacklistService.revoke(payload.jti, expiresAt);
 
     await this.auditLogsService.write({
       action: AUDIT_ACTIONS.AUTH_LOGOUT,
