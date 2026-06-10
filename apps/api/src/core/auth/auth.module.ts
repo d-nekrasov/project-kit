@@ -9,7 +9,7 @@ import { PermissionsModule } from "../permissions/permissions.module";
 import { AuditLogsModule } from "../audit-logs/audit-logs.module";
 import { SystemLogsModule } from "../system-logs/system-logs.module";
 import { EmailSmtpNotificationConnector } from "../notifications/connectors/email-smtp-notification.connector";
-import { AuthRateLimitStore } from "./auth-rate-limit.store";
+import { AuthRateLimitModule } from "./auth-rate-limit.module";
 import { AuthPasswordResetMailService } from "./auth-password-reset-mail.service";
 import { AuthController } from "./auth.controller";
 import { AuthCookieService } from "./auth-cookie.service";
@@ -26,6 +26,7 @@ import { TokenBlacklistService } from "./token-blacklist.service";
     PermissionsModule,
     AuditLogsModule,
     SystemLogsModule,
+    AuthRateLimitModule,
     PassportModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
@@ -63,8 +64,6 @@ import { TokenBlacklistService } from "./token-blacklist.service";
     AuthService,
     AuthCookieService,
     JwtStrategy,
-    AuthRateLimitGuard,
-    AuthRateLimitStore,
     AuthPasswordResetMailService,
     EmailSmtpNotificationConnector,
     TokenBlacklistService,

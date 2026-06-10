@@ -192,6 +192,9 @@ before(async () => {
   process.env.ALLOWED_ORIGINS = allowedOrigin;
   process.env.CONFIG_ENCRYPTION_KEY = configEncryptionKey;
   process.env.CASBIN_MODEL_PATH = resolve(apiDir, "src/infrastructure/casbin/model.conf");
+  process.env.TRUST_PROXY = "1";
+  process.env.MULTI_INSTANCE = "false";
+  process.env.REDIS_ENABLED = "false";
 
   const moduleRef = await Test.createTestingModule({
     imports: [AppModule],

@@ -323,6 +323,22 @@ Recovery flow uses:
 
 Password reset email delivery also depends on the global `smtp_email` notification connector being enabled and configured.
 
+Production hardening env:
+- `TRUST_PROXY=false|true|loopback|1`: configures Express `trust proxy`. When enabled behind nginx/traefik, `req.ip` is derived from trusted proxy hops instead of trusting raw `X-Forwarded-For`.
+- `MULTI_INSTANCE=true|false`: marks that the API is expected to run on multiple instances.
+- `REDIS_ENABLED=true|false` and `REDIS_URL=redis://...`: enable shared Redis infrastructure for rate limiting and realtime notification fan-out.
+- `SSE_MAX_CLIENTS`, `SSE_MAX_CLIENTS_PER_USER`, `SSE_HEARTBEAT_INTERVAL_MS`: protect the SSE registry from unbounded growth.
+
+Recommended local bootstrap:
+- `docker compose up -d postgres redis`
+- `cp apps/api/.env.example apps/api/.env`
+- leave `REDIS_ENABLED=false` for a simple single-instance dev setup, or set `REDIS_ENABLED=true` to test shared rate limits and SSE pub/sub locally.
+
+Production guidance:
+- single-instance production can run without Redis, but shared rate limits and cross-instance SSE delivery will not exist;
+- when `APP_ENV=production` and `MULTI_INSTANCE=true`, Redis is required and the API fails fast during bootstrap if Redis is disabled or `REDIS_URL` is missing;
+- never trust `X-Forwarded-For` directly in application code. Configure `TRUST_PROXY` and use `req.ip`.
+
 ## Installer
 
 Check installation status:
@@ -801,7 +817,7 @@ Own notification endpoints require only `Authorization: Bearer <accessToken>`:
 - `PATCH /api/notifications/:id/read`
 - `PATCH /api/notifications/read-all`
 
-The admin notification bell uses SSE for realtime updates. Polling is only a fallback while SSE is disconnected, at most once per minute, plus normal focus/reconnect sync. The SSE registry is in memory for the single API instance MVP; multi-instance production should add Redis pub/sub or another broker. Sound alerts are controlled by a local browser preference on `/notifications`; the browser may require prior user interaction before allowing playback.
+The admin notification bell uses SSE for realtime updates. Polling is only a fallback while SSE is disconnected, at most once per minute, plus normal focus/reconnect sync. The API now enforces global/per-user SSE connection caps, cleans up clients on close/error, sends heartbeat pings, and can fan out events across instances through Redis pub/sub when Redis is enabled. Sound alerts are controlled by a local browser preference on `/notifications`; the browser may require prior user interaction before allowing playback.
 
 Connector and template management requires `Authorization`, `x-organization-id`, `notifications.manage`, and `super_admin`:
 - `GET /api/notification-connectors`

@@ -17,10 +17,12 @@ import { I18nModule } from './core/i18n/i18n.module';
 import { DocumentsModule } from './modules/documents/documents.module';
 import { OrganizationContextModule } from './core/organization-context/organization-context.module';
 import { NotificationsModule } from './core/notifications/notifications.module';
+import { RedisModule } from './infrastructure/redis/redis.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, envFilePath: ['.env', '.env.local'] }),
+    RedisModule,
     PrismaModule,
     LoggerModule,
     CasbinModule,

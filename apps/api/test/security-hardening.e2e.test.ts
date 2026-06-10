@@ -149,6 +149,9 @@ before(async () => {
   process.env.AUTH_PASSWORD_RESET_TOKEN_TTL_MINUTES = "30";
   process.env.AUTH_PASSWORD_RESET_URL = "http://localhost:3001/reset-password";
   process.env.CASBIN_MODEL_PATH = resolve(apiDir, "src/infrastructure/casbin/model.conf");
+  process.env.TRUST_PROXY = "1";
+  process.env.MULTI_INSTANCE = "false";
+  process.env.REDIS_ENABLED = "false";
 
   const moduleRef = await Test.createTestingModule({
     imports: [AppModule],
@@ -397,6 +400,7 @@ test("installer setup rejects repeat calls and concurrent retries without creati
 
   try {
     process.env.DATABASE_URL = dbUrl;
+    process.env.TRUST_PROXY = "1";
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -473,6 +477,7 @@ test("installer setup is rate-limited by IP before installation completes", asyn
 
   try {
     process.env.DATABASE_URL = dbUrl;
+    process.env.TRUST_PROXY = "1";
 
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],

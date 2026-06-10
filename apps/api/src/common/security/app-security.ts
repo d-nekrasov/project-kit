@@ -2,6 +2,7 @@ import { INestApplication, Logger, ValidationPipe } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { CorsOptions } from "@nestjs/common/interfaces/external/cors-options.interface";
 import helmet from "helmet";
+import { resolveTrustProxy } from "../utils/trust-proxy.util";
 
 const DEV_LOCALHOST_ORIGIN_PATTERN =
   /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i;
@@ -69,6 +70,12 @@ export function buildCorsOptions(configService: ConfigService): CorsOptions {
 
 export function configureApp(app: INestApplication): void {
   const configService = app.get(ConfigService);
+  const httpAdapter = app.getHttpAdapter().getInstance();
+
+  httpAdapter.set(
+    "trust proxy",
+    resolveTrustProxy(configService.get<string>("TRUST_PROXY")),
+  );
 
   app.setGlobalPrefix("api");
   app.use(helmet());
