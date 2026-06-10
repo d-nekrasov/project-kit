@@ -326,7 +326,8 @@ Password reset email delivery also depends on the global `smtp_email` notificati
 Production hardening env:
 - `TRUST_PROXY=false|true|loopback|1`: configures Express `trust proxy`. When enabled behind nginx/traefik, `req.ip` is derived from trusted proxy hops instead of trusting raw `X-Forwarded-For`.
 - `MULTI_INSTANCE=true|false`: marks that the API is expected to run on multiple instances.
-- `REDIS_ENABLED=true|false` and `REDIS_URL=redis://...`: enable shared Redis infrastructure for rate limiting and realtime notification fan-out.
+- `REDIS_ENABLED=true|false` and `REDIS_URL=redis://...`: enable shared Redis infrastructure for auth rate limiting and realtime notification fan-out.
+- `CONFIG_ENCRYPTION_KEY`: required 32-byte raw string or base64-encoded 32-byte key used to encrypt notification connector secrets such as SMTP passwords and webhook tokens.
 - `SSE_MAX_CLIENTS`, `SSE_MAX_CLIENTS_PER_USER`, `SSE_HEARTBEAT_INTERVAL_MS`: protect the SSE registry from unbounded growth.
 
 Recommended local bootstrap:
@@ -335,8 +336,9 @@ Recommended local bootstrap:
 - leave `REDIS_ENABLED=false` for a simple single-instance dev setup, or set `REDIS_ENABLED=true` to test shared rate limits and SSE pub/sub locally.
 
 Production guidance:
-- single-instance production can run without Redis, but shared rate limits and cross-instance SSE delivery will not exist;
-- when `APP_ENV=production` and `MULTI_INSTANCE=true`, Redis is required and the API fails fast during bootstrap if Redis is disabled or `REDIS_URL` is missing;
+- auth rate limiting uses Redis in production and the API fails fast during bootstrap if `APP_ENV=production` without `REDIS_ENABLED=true` and a valid `REDIS_URL`;
+- when `APP_ENV=production` and `MULTI_INSTANCE=true`, Redis is also required for cross-instance SSE delivery;
+- before a production deploy that includes notification connectors, set `CONFIG_ENCRYPTION_KEY` and run `pnpm --filter api prisma:backfill-notification-connector-secrets` to migrate any existing plaintext connector secrets in `NotificationConnector.config`;
 - never trust `X-Forwarded-For` directly in application code. Configure `TRUST_PROXY` and use `req.ip`.
 
 ## Installer
