@@ -17,6 +17,7 @@ import { I18nModule } from './core/i18n/i18n.module';
 import { DocumentsModule } from './modules/documents/documents.module';
 import { OrganizationContextModule } from './core/organization-context/organization-context.module';
 import { NotificationsModule } from './core/notifications/notifications.module';
+import { DataRetentionModule } from './core/data-retention/data-retention.module';
 import { RedisModule } from './infrastructure/redis/redis.module';
 
 @Module({
@@ -38,6 +39,7 @@ import { RedisModule } from './infrastructure/redis/redis.module';
     ModuleRegistryModule,
     InstallerModule,
     NotificationsModule,
+    DataRetentionModule,
     DocumentsModule,
     OrganizationContextModule
   ]

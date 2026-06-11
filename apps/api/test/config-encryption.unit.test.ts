@@ -1,20 +1,16 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { ConfigService } from "@nestjs/config";
+import {
+  createConfigEncryptionService,
+  generateConfigEncryptionKey,
+} from "./helpers/config-encryption";
 
-import { ConfigEncryptionService } from "../src/common/security/config-encryption.service";
-
-const configEncryptionKey = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=";
-const rotatedConfigEncryptionKey = "abcdefghijklmnopqrstuvwxyzABCDEF";
+const configEncryptionKey = generateConfigEncryptionKey();
+const rotatedConfigEncryptionKey = generateConfigEncryptionKey();
 
 test("ConfigEncryptionService encrypts and decrypts values", () => {
-  const service = new ConfigEncryptionService(
-    new ConfigService({
-      APP_ENV: "test",
-      CONFIG_ENCRYPTION_KEY: configEncryptionKey,
-    }),
-  );
+  const service = createConfigEncryptionService({ configEncryptionKey });
 
   const encrypted = service.encrypt("SuperSecret123!");
   assert.match(encrypted, /^enc:v1:/);
@@ -24,22 +20,13 @@ test("ConfigEncryptionService encrypts and decrypts values", () => {
 
 test("ConfigEncryptionService requires a valid key in production", () => {
   assert.throws(
-    () =>
-      new ConfigEncryptionService(
-        new ConfigService({
-          APP_ENV: "production",
-        }),
-      ),
+    () => createConfigEncryptionService({ appEnv: "production" }),
     /CONFIG_ENCRYPTION_KEY is required/,
   );
 });
 
 test("ConfigEncryptionService reports a clear error when encrypting without CONFIG_ENCRYPTION_KEY", () => {
-  const service = new ConfigEncryptionService(
-    new ConfigService({
-      APP_ENV: "development",
-    }),
-  );
+  const service = createConfigEncryptionService({ appEnv: "development" });
 
   assert.throws(
     () => service.encrypt("SuperSecret123!"),
@@ -48,18 +35,12 @@ test("ConfigEncryptionService reports a clear error when encrypting without CONF
 });
 
 test("ConfigEncryptionService reports a clear error when encrypted values cannot be decrypted with the current key", () => {
-  const originalService = new ConfigEncryptionService(
-    new ConfigService({
-      APP_ENV: "test",
-      CONFIG_ENCRYPTION_KEY: configEncryptionKey,
-    }),
-  );
-  const rotatedService = new ConfigEncryptionService(
-    new ConfigService({
-      APP_ENV: "test",
-      CONFIG_ENCRYPTION_KEY: rotatedConfigEncryptionKey,
-    }),
-  );
+  const originalService = createConfigEncryptionService({
+    configEncryptionKey,
+  });
+  const rotatedService = createConfigEncryptionService({
+    configEncryptionKey: rotatedConfigEncryptionKey,
+  });
 
   const encrypted = originalService.encrypt("SuperSecret123!");
 

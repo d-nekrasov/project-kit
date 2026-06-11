@@ -9,6 +9,7 @@ import { OrganizationStatus, Prisma, RoleType } from '@prisma/client';
 import { CasbinService } from '../../infrastructure/casbin/casbin.service';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { RequestMetadata } from '../../common/utils/request-metadata.util';
+import { CurrentUserCacheService } from '../auth/current-user-cache.service';
 import { CurrentUser } from '../auth/types/current-user.type';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } from '../audit-logs/constants/audit-actions.constants';
@@ -43,7 +44,8 @@ export class OrganizationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly casbinService: CasbinService,
-    private readonly auditLogsService: AuditLogsService
+    private readonly auditLogsService: AuditLogsService,
+    private readonly currentUserCacheService: CurrentUserCacheService
   ) {}
 
   async findAll(
@@ -249,6 +251,8 @@ export class OrganizationsService {
       data,
       include: ORGANIZATION_INCLUDE
     });
+    // Organization name/slug are embedded in every member's CurrentUser.
+    await this.currentUserCacheService.invalidateAll();
     const changedFields = [dto.name !== undefined ? 'name' : null, dto.slug !== undefined ? 'slug' : null].filter(Boolean);
     await this.auditLogsService.write({
       action: AUDIT_ACTIONS.ORGANIZATION_UPDATE,
@@ -299,6 +303,8 @@ export class OrganizationsService {
       data: { status },
       include: ORGANIZATION_INCLUDE
     });
+    // Inactive organizations are filtered out of CurrentUser.organizations.
+    await this.currentUserCacheService.invalidateAll();
     await this.auditLogsService.write({
       action: AUDIT_ACTIONS.ORGANIZATION_STATUS_UPDATE,
       entityType: AUDIT_ENTITY_TYPES.ORGANIZATION,

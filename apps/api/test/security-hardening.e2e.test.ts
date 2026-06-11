@@ -13,7 +13,6 @@ import { Test } from "@nestjs/testing";
 import { UserStatus } from "@prisma/client";
 
 import { createProjectKitSdk } from "../../../packages/sdk/src/create-project-kit-sdk";
-import { configureApp } from "../src/common/security/app-security";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -25,6 +24,9 @@ const databaseUrl = `postgresql://postgres:postgres@127.0.0.1:5432/${databaseNam
 const allowedOrigin = "http://localhost:5173";
 const configEncryptionKey = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=";
 const { AppModule } = require("../dist/src/app.module");
+// configureApp must come from the same compiled output as AppModule so that
+// app.get(AuthCsrfService) resolves the same class identity registered in DI.
+const { configureApp } = require("../dist/src/common/security/app-security");
 const { PrismaService } = require("../dist/src/infrastructure/prisma/prisma.service");
 
 let app: INestApplication;
