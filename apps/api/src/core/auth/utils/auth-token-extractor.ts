@@ -2,7 +2,12 @@ import type { IncomingHttpHeaders } from "node:http";
 
 export function extractBearerTokenFromHeaders(
   headers: IncomingHttpHeaders | Record<string, string | string[] | undefined>,
+  bearerEnabled = true,
 ): string | null {
+  if (!bearerEnabled) {
+    return null;
+  }
+
   const authorization = headers.authorization;
   const value = Array.isArray(authorization)
     ? authorization[0]

@@ -35,6 +35,12 @@ let adminToken = "";
 let adminOrganizationId = "";
 let ipCounter = 0;
 
+function getCookieHeader(headers: Headers): string {
+  const cookie = headers.get("set-cookie");
+  assert.ok(cookie);
+  return cookie;
+}
+
 function decodeJwtPayload(token: string): Record<string, unknown> {
   const [, payload] = token.split(".");
   assert.ok(payload);
@@ -42,13 +48,15 @@ function decodeJwtPayload(token: string): Record<string, unknown> {
 }
 
 function getSetCookie(headers: Headers): string {
-  const cookie = headers.get("set-cookie");
-  assert.ok(cookie);
-  return cookie;
+  return getCookieHeader(headers);
 }
 
 function extractCookiePair(setCookieHeader: string): string {
   return setCookieHeader.split(";")[0] ?? setCookieHeader;
+}
+
+function mergeCookies(...cookiePairs: Array<string | undefined>): string {
+  return cookiePairs.filter(Boolean).join("; ");
 }
 
 function runCommand(
@@ -69,6 +77,30 @@ function runCommand(
   });
 }
 
+function dropDatabase(name: string): void {
+  runCommand(
+    "psql",
+    [
+      "-h",
+      "127.0.0.1",
+      "-p",
+      "5432",
+      "-U",
+      "postgres",
+      "-d",
+      "postgres",
+      "-c",
+      `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${name}' AND pid <> pg_backend_pid();`,
+    ],
+    repoRoot,
+  );
+  runCommand(
+    "dropdb",
+    ["--if-exists", "-h", "127.0.0.1", "-p", "5432", "-U", "postgres", name],
+    repoRoot,
+  );
+}
+
 function nextIp(prefix: string): string {
   ipCounter += 1;
   return `203.0.113.${(ipCounter % 200) + 1}`;
@@ -84,6 +116,7 @@ async function apiRequest<T>(
     forwardedFor,
     origin,
     cookie,
+    csrfToken,
   }: {
     body?: unknown;
     token?: string;
@@ -91,6 +124,7 @@ async function apiRequest<T>(
     forwardedFor?: string;
     origin?: string;
     cookie?: string;
+    csrfToken?: string;
   } = {},
 ): Promise<{ status: number; data: T; headers: Headers }> {
   const response = await fetch(`${baseUrl}${path}`, {
@@ -103,6 +137,7 @@ async function apiRequest<T>(
       ...(forwardedFor ? { "x-forwarded-for": forwardedFor } : {}),
       ...(origin ? { Origin: origin } : {}),
       ...(cookie ? { Cookie: cookie } : {}),
+      ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
@@ -112,6 +147,22 @@ async function apiRequest<T>(
     status: response.status,
     data: (text ? JSON.parse(text) : undefined) as T,
     headers: response.headers,
+  };
+}
+
+async function issueCsrf(cookie?: string): Promise<{ csrfToken: string; csrfCookie: string }> {
+  const response = await apiRequest<{
+    csrfToken: string;
+    headerName: string;
+    cookieName: string;
+  }>("GET", "/auth/csrf", {
+    cookie,
+  });
+
+  assert.equal(response.status, 200);
+  return {
+    csrfToken: response.data.csrfToken,
+    csrfCookie: extractCookiePair(getCookieHeader(response.headers)),
   };
 }
 
@@ -132,11 +183,7 @@ async function loginAdmin(): Promise<void> {
 }
 
 before(async () => {
-  runCommand(
-    "dropdb",
-    ["--if-exists", "-h", "127.0.0.1", "-p", "5432", "-U", "postgres", databaseName],
-    repoRoot,
-  );
+  dropDatabase(databaseName);
   runCommand("createdb", ["-h", "127.0.0.1", "-p", "5432", "-U", "postgres", databaseName], repoRoot);
   runCommand("pnpm", ["exec", "prisma", "migrate", "deploy"]);
 
@@ -171,11 +218,7 @@ before(async () => {
 after(async () => {
   await app?.close();
   await prisma?.$disconnect();
-  runCommand(
-    "dropdb",
-    ["--if-exists", "-h", "127.0.0.1", "-p", "5432", "-U", "postgres", databaseName],
-    repoRoot,
-  );
+  dropDatabase(databaseName);
 });
 
 test("installer status is minimal before and after setup", async () => {
@@ -270,7 +313,72 @@ test("cookie auth works, bearer fallback remains available, and removed debug en
   assert.equal(permissionsCheckResponse.status, 404);
 });
 
-test("logout revokes the current token, clears cookie, and protected endpoints reject the old token", async () => {
+test("cookie-auth mutating requests require CSRF while GET stays exempt", async () => {
+  const loginResponse = await apiRequest<{ accessToken: string; user: { organizations: Array<{ id: string }> } }>(
+    "POST",
+    "/auth/login",
+    {
+      body: {
+        email: "admin@example.com",
+        password: "AdminPassword123!",
+      },
+    },
+  );
+  const authCookie = extractCookiePair(getSetCookie(loginResponse.headers));
+  const organizationId = loginResponse.data.user.organizations[0]?.id ?? "";
+  assert.ok(organizationId);
+
+  const meViaCookie = await apiRequest<{ id: string }>("GET", "/auth/me", {
+    cookie: authCookie,
+  });
+  assert.equal(meViaCookie.status, 200);
+
+  const missingCsrf = await apiRequest<{ message: string }>(
+    "PATCH",
+    "/notification-connectors/smtp_email",
+    {
+      cookie: authCookie,
+      organizationId,
+      body: {
+        status: "ENABLED",
+        config: {
+          host: "smtp.example.com",
+          port: 587,
+          secure: false,
+          username: "smtp-user",
+          password: "SuperSecret123!",
+          from: "no-reply@example.com",
+        },
+      },
+    },
+  );
+  assert.equal(missingCsrf.status, 403);
+
+  const { csrfToken, csrfCookie } = await issueCsrf(authCookie);
+  const withCsrf = await apiRequest<{ config: { password: string } }>(
+    "PATCH",
+    "/notification-connectors/smtp_email",
+    {
+      cookie: mergeCookies(authCookie, csrfCookie),
+      csrfToken,
+      organizationId,
+      body: {
+        status: "ENABLED",
+        config: {
+          host: "smtp.example.com",
+          port: 587,
+          secure: false,
+          username: "smtp-user",
+          password: "SuperSecret123!",
+          from: "no-reply@example.com",
+        },
+      },
+    },
+  );
+  assert.equal(withCsrf.status, 200);
+});
+
+test("logout revokes the current token, clears auth/csrf cookies, and protected endpoints reject the old token", async () => {
   const loginResponse = await apiRequest<{ accessToken: string }>("POST", "/auth/login", {
     body: {
       email: "admin@example.com",
@@ -279,9 +387,16 @@ test("logout revokes the current token, clears cookie, and protected endpoints r
   });
   const authCookie = extractCookiePair(getSetCookie(loginResponse.headers));
 
-  const logoutResponse = await apiRequest<{ success: true }>("POST", "/auth/logout", {
-    token: loginResponse.data.accessToken,
+  const missingCsrfLogout = await apiRequest<{ message: string }>("POST", "/auth/logout", {
     cookie: authCookie,
+  });
+  assert.equal(missingCsrfLogout.status, 403);
+
+  const { csrfToken, csrfCookie } = await issueCsrf(authCookie);
+
+  const logoutResponse = await apiRequest<{ success: true }>("POST", "/auth/logout", {
+    cookie: mergeCookies(authCookie, csrfCookie),
+    csrfToken,
   });
   assert.equal(logoutResponse.status, 200);
   assert.deepEqual(logoutResponse.data, { success: true });
@@ -289,11 +404,71 @@ test("logout revokes the current token, clears cookie, and protected endpoints r
   const clearedCookie = getSetCookie(logoutResponse.headers);
   assert.match(clearedCookie, /Max-Age=0/);
   assert.match(clearedCookie, /HttpOnly/);
+  assert.match(clearedCookie, /XSRF-TOKEN=/);
 
   const meAfterLogout = await apiRequest<{ message: string }>("GET", "/auth/me", {
     token: loginResponse.data.accessToken,
   });
   assert.equal(meAfterLogout.status, 401);
+});
+
+test("bearer requests remain exempt from CSRF when AUTH_BEARER_ENABLED=true", async () => {
+  const response = await apiRequest<{ config: { password: string } }>(
+    "PATCH",
+    "/notification-connectors/smtp_email",
+    {
+      token: adminToken,
+      organizationId: adminOrganizationId,
+      body: {
+        status: "ENABLED",
+        config: {
+          host: "smtp-bearer.example.com",
+          port: 587,
+          secure: false,
+          username: "smtp-user",
+          password: "SuperSecret123!",
+          from: "no-reply@example.com",
+        },
+      },
+    },
+  );
+
+  assert.equal(response.status, 200);
+});
+
+test("bearer requests are rejected when AUTH_BEARER_ENABLED=false", async () => {
+  const originalBearerEnabled = process.env.AUTH_BEARER_ENABLED;
+  let isolatedApp: INestApplication | undefined;
+
+  try {
+    process.env.AUTH_BEARER_ENABLED = "false";
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    isolatedApp = moduleRef.createNestApplication();
+    configureApp(isolatedApp);
+    await isolatedApp.listen(0, "127.0.0.1");
+    const address = isolatedApp.getHttpServer().address();
+    assert.ok(address && typeof address === "object" && "port" in address);
+    const isolatedBaseUrl = `http://127.0.0.1:${address.port}/api`;
+
+    const response = await fetch(`${isolatedBaseUrl}/auth/me`, {
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${adminToken}`,
+      },
+    });
+
+    assert.equal(response.status, 401);
+  } finally {
+    if (originalBearerEnabled === undefined) {
+      delete process.env.AUTH_BEARER_ENABLED;
+    } else {
+      process.env.AUTH_BEARER_ENABLED = originalBearerEnabled;
+    }
+    await isolatedApp?.close();
+  }
 });
 
 test("blocked users fail JWT strategy validation even with a signed token", async () => {
@@ -459,7 +634,7 @@ test("installer setup rejects repeat calls and concurrent retries without creati
     await isolatedApp?.close();
     await isolatedPrisma?.$disconnect();
     process.env.DATABASE_URL = databaseUrl;
-    runCommand("dropdb", ["--if-exists", "-h", "127.0.0.1", "-p", "5432", "-U", "postgres", dbName], repoRoot);
+    dropDatabase(dbName);
   }
 });
 
@@ -520,6 +695,6 @@ test("installer setup is rate-limited by IP before installation completes", asyn
     await isolatedApp?.close();
     await isolatedPrisma?.$disconnect();
     process.env.DATABASE_URL = databaseUrl;
-    runCommand("dropdb", ["--if-exists", "-h", "127.0.0.1", "-p", "5432", "-U", "postgres", dbName], repoRoot);
+    dropDatabase(dbName);
   }
 });

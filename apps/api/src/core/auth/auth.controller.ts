@@ -19,8 +19,9 @@ import { CurrentOrganization } from "../organization-context/decorators/current-
 import { OrganizationGuard } from "../organization-context/guards/organization.guard";
 import { CurrentOrganization as CurrentOrganizationType } from "../organization-context/types/current-organization.type";
 import { AuthCookieService } from "./auth-cookie.service";
+import { AuthCsrfService } from "./auth-csrf.service";
 import { LogoutResponseDto } from "./dto/logout-response.dto";
-import { extractBearerTokenFromHeaders } from "./utils/auth-token-extractor";
+import { AuthTransportService } from "./auth-transport.service";
 
 const FIFTEEN_MINUTES_IN_MS = 15 * 60 * 1000;
 const LOGIN_RATE_LIMIT = {
@@ -44,6 +45,8 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly authCookieService: AuthCookieService,
+    private readonly authCsrfService: AuthCsrfService,
+    private readonly authTransportService: AuthTransportService,
   ) {}
 
   @Post("login")
@@ -117,6 +120,22 @@ export class AuthController {
     return this.authService.getEffectivePermissions(user, organization);
   }
 
+  @Get("csrf")
+  getCsrfToken(
+    @Res({ passthrough: true })
+    res: {
+      setHeader(name: string, value: string | string[]): void;
+    },
+  ): { csrfToken: string; headerName: string; cookieName: string } {
+    const csrfToken = this.authCsrfService.generateToken();
+    res.setHeader("Set-Cookie", this.authCsrfService.buildCsrfCookie(csrfToken));
+    return {
+      csrfToken,
+      headerName: this.authCsrfService.getHeaderName(),
+      cookieName: this.authCsrfService.getCookieName(),
+    };
+  }
+
   @Post("logout")
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
@@ -131,17 +150,17 @@ export class AuthController {
       ip?: string;
     },
   ): Promise<LogoutResponseDto> {
-    const accessToken =
-      this.authCookieService.extractTokenFromCookieHeader(
-        Array.isArray(req.headers.cookie) ? req.headers.cookie[0] : req.headers.cookie,
-      ) ?? extractBearerTokenFromHeaders(req.headers);
+    const accessToken = this.authTransportService.extractAccessToken(req.headers);
 
     if (!accessToken) {
       throw new UnauthorizedException();
     }
 
     await this.authService.logout(accessToken, getRequestMetadata(req));
-    res.setHeader("Set-Cookie", this.authCookieService.buildClearedAuthCookie());
+    res.setHeader("Set-Cookie", [
+      this.authCookieService.buildClearedAuthCookie(),
+      this.authCsrfService.buildClearedCsrfCookie(),
+    ]);
     return { success: true };
   }
 }

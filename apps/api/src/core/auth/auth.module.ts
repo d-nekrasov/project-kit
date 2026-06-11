@@ -15,7 +15,9 @@ import { AuthRateLimitModule } from "./auth-rate-limit.module";
 import { AuthPasswordResetMailService } from "./auth-password-reset-mail.service";
 import { AuthController } from "./auth.controller";
 import { AuthCookieService } from "./auth-cookie.service";
+import { AuthCsrfService } from "./auth-csrf.service";
 import { AuthService } from "./auth.service";
+import { AuthTransportService } from "./auth-transport.service";
 import { AuthRateLimitGuard } from "./guards/auth-rate-limit.guard";
 import { selectTokenBlacklistStore } from "./select-token-blacklist-store";
 import { JwtStrategy } from "./strategies/jwt.strategy";
@@ -70,6 +72,8 @@ import { TokenBlacklistService } from "./token-blacklist.service";
   providers: [
     AuthService,
     AuthCookieService,
+    AuthCsrfService,
+    AuthTransportService,
     JwtStrategy,
     AuthPasswordResetMailService,
     EmailSmtpNotificationConnector,

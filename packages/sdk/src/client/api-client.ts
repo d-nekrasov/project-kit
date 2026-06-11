@@ -9,6 +9,9 @@ export class ApiClient {
   private readonly onUnauthorized?: ApiClientOptions['onUnauthorized'];
   private readonly fetchImpl: typeof fetch;
   private readonly credentials: RequestCredentials;
+  private readonly csrfEndpoint?: string;
+  private csrfToken: string | null = null;
+  private csrfHeaderName = 'X-CSRF-Token';
 
   constructor(options: ApiClientOptions) {
     this.baseUrl = options.baseUrl.replace(/\/$/, '');
@@ -17,6 +20,7 @@ export class ApiClient {
     this.onUnauthorized = options.onUnauthorized;
     this.fetchImpl = options.fetchImpl ?? globalThis.fetch.bind(globalThis);
     this.credentials = options.credentials ?? 'include';
+    this.csrfEndpoint = options.csrf?.endpoint;
   }
 
   get<T>(path: string, options?: RequestOptions): Promise<T> {
@@ -60,6 +64,12 @@ export class ApiClient {
       }
     }
 
+    const shouldUseCsrf = this.shouldUseCsrf(method, headers, options);
+    if (shouldUseCsrf) {
+      const csrfToken = await this.ensureCsrfToken(false);
+      headers[this.csrfHeaderName] = csrfToken;
+    }
+
     const url = `${this.baseUrl}${path}${buildQueryString(options.query)}`;
     let response: Response;
     try {
@@ -93,6 +103,16 @@ export class ApiClient {
     }
 
     const data = await this.parseErrorData(response);
+    if (
+      response.status === 403 &&
+      shouldUseCsrf &&
+      !options._csrfRetried &&
+      this.isCsrfError(data)
+    ) {
+      await this.ensureCsrfToken(true);
+      return this.request<T>(method, path, { ...options, _csrfRetried: true });
+    }
+
     const message = this.resolveErrorMessage(data, response.statusText);
     const error = new ApiError({
       status: response.status,
@@ -106,6 +126,62 @@ export class ApiClient {
     }
 
     throw error;
+  }
+
+  private shouldUseCsrf(
+    method: string,
+    headers: Record<string, string>,
+    options: RequestOptions,
+  ): boolean {
+    if (!this.csrfEndpoint || options.skipCsrf || isSafeMethod(method)) {
+      return false;
+    }
+
+    return !Boolean(headers.Authorization);
+  }
+
+  private async ensureCsrfToken(forceRefresh: boolean): Promise<string> {
+    if (!this.csrfEndpoint) {
+      throw new Error('CSRF endpoint is not configured');
+    }
+
+    if (!forceRefresh && this.csrfToken) {
+      return this.csrfToken;
+    }
+
+    const response = await this.fetchImpl(`${this.baseUrl}${this.csrfEndpoint}`, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json'
+      },
+      credentials: this.credentials
+    });
+
+    if (!response.ok) {
+      const data = await this.parseErrorData(response);
+      const message = this.resolveErrorMessage(data, response.statusText);
+      throw new ApiError({
+        status: response.status,
+        statusText: response.statusText,
+        message,
+        data
+      });
+    }
+
+    const payload = (await response.json()) as {
+      csrfToken?: unknown;
+      headerName?: unknown;
+    };
+    if (typeof payload.csrfToken !== 'string' || payload.csrfToken.length === 0) {
+      throw new Error('CSRF endpoint did not return a valid token');
+    }
+
+    this.csrfToken = payload.csrfToken;
+    if (typeof payload.headerName === 'string' && payload.headerName.length > 0) {
+      this.csrfHeaderName = payload.headerName;
+    }
+
+    return this.csrfToken;
   }
 
   private async parseErrorData(response: Response): Promise<unknown> {
@@ -136,4 +212,18 @@ export class ApiClient {
 
     return statusText || 'Request failed';
   }
+
+  private isCsrfError(data: unknown): boolean {
+    if (!data || typeof data !== 'object') {
+      return false;
+    }
+
+    const message = (data as { message?: unknown }).message;
+    return typeof message === 'string' && message.toLowerCase().includes('csrf');
+  }
+}
+
+function isSafeMethod(method: string): boolean {
+  const normalizedMethod = method.toUpperCase();
+  return normalizedMethod === 'GET' || normalizedMethod === 'HEAD' || normalizedMethod === 'OPTIONS';
 }

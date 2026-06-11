@@ -5,6 +5,9 @@ export type ApiClientOptions = {
   onUnauthorized?: () => void | Promise<void>;
   fetchImpl?: typeof fetch;
   credentials?: RequestCredentials;
+  csrf?: {
+    endpoint?: string;
+  };
 };
 
 export type RequestOptions = {
@@ -13,4 +16,6 @@ export type RequestOptions = {
   headers?: Record<string, string>;
   skipAuth?: boolean;
   skipOrganization?: boolean;
+  skipCsrf?: boolean;
+  _csrfRetried?: boolean;
 };

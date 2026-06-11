@@ -59,6 +59,12 @@ export type LogoutResponse = {
   success: true;
 };
 
+export type AuthCsrfResponse = {
+  csrfToken: string;
+  headerName: string;
+  cookieName: string;
+};
+
 export type AuthPermissionsResponse = {
   permissions: string[];
   systemRoles: string[];

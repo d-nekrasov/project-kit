@@ -85,6 +85,30 @@ function runCommand(command: string, args: string[], cwd = apiDir): void {
   });
 }
 
+function dropDatabase(name: string): void {
+  runCommand(
+    "psql",
+    [
+      "-h",
+      "127.0.0.1",
+      "-p",
+      "5432",
+      "-U",
+      "postgres",
+      "-d",
+      "postgres",
+      "-c",
+      `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${name}' AND pid <> pg_backend_pid();`,
+    ],
+    repoRoot,
+  );
+  runCommand(
+    "dropdb",
+    ["--if-exists", "-h", "127.0.0.1", "-p", "5432", "-U", "postgres", name],
+    repoRoot,
+  );
+}
+
 function hashToken(token: string): string {
   return createHash("sha256").update(token, "utf8").digest("hex");
 }
@@ -180,7 +204,7 @@ async function createUser(options?: {
 }
 
 before(async () => {
-  runCommand("dropdb", ["--if-exists", "-h", "127.0.0.1", "-p", "5432", "-U", "postgres", databaseName], repoRoot);
+  dropDatabase(databaseName);
   runCommand("createdb", ["-h", "127.0.0.1", "-p", "5432", "-U", "postgres", databaseName], repoRoot);
   runCommand("pnpm", ["exec", "prisma", "migrate", "deploy"]);
 
@@ -265,7 +289,7 @@ before(async () => {
 after(async () => {
   await app?.close();
   await prisma?.$disconnect();
-  runCommand("dropdb", ["--if-exists", "-h", "127.0.0.1", "-p", "5432", "-U", "postgres", databaseName], repoRoot);
+  dropDatabase(databaseName);
 });
 
 beforeEach(() => {

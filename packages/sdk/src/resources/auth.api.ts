@@ -1,5 +1,6 @@
 import type { ApiClient } from '../client/api-client';
 import type {
+  AuthCsrfResponse,
   AuthPermissionsResponse,
   AuthResponse,
   CurrentUser,
@@ -46,6 +47,14 @@ export class AuthApi {
 
   me(): Promise<CurrentUser> {
     return this.client.get<CurrentUser>('/auth/me');
+  }
+
+  csrf(): Promise<AuthCsrfResponse> {
+    return this.client.get<AuthCsrfResponse>('/auth/csrf', {
+      skipAuth: true,
+      skipOrganization: true,
+      skipCsrf: true
+    });
   }
 
   logout(): Promise<LogoutResponse> {

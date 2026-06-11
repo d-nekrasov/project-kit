@@ -23,8 +23,11 @@ function createStrategy(options?: { revoked?: boolean }) {
       },
     } as never,
     {
-      extractTokenFromCookieHeader(): string | undefined {
-        return undefined;
+      extractAccessToken(headers: { authorization?: string }): string | null {
+        const authorization = headers.authorization;
+        return authorization?.startsWith("Bearer ")
+          ? authorization.slice("Bearer ".length)
+          : null;
       },
     } as never,
     {

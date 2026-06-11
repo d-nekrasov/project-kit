@@ -40,7 +40,7 @@ afterEach(() => {
   localStorageMock.clear();
 });
 
-test('auth storage keeps only organization context and removes legacy access tokens', () => {
+test('auth storage keeps only organization context and never preserves access tokens in localStorage', () => {
   localStorage.setItem('project_kit_access_token', 'legacy-token');
   setActiveOrganizationId('org-1');
 

@@ -22,6 +22,107 @@ test('SDK sends credentials for cookie auth requests', async () => {
   assert.equal(capturedCredentials, 'include');
 });
 
+test('SDK fetches CSRF token before mutating cookie-auth requests and sends the header', async () => {
+  const calls: Array<{ url: string; method: string; csrfHeader: string | null }> = [];
+
+  const sdk = createProjectKitSdk({
+    baseUrl: 'http://localhost:3000/api',
+    csrf: {
+      endpoint: '/auth/csrf'
+    },
+    fetchImpl: async (input, init) => {
+      const url = String(input);
+      const method = init?.method ?? 'GET';
+      const headers = new Headers(init?.headers);
+      calls.push({
+        url,
+        method,
+        csrfHeader: headers.get('X-CSRF-Token')
+      });
+
+      if (url.endsWith('/auth/csrf')) {
+        return new Response(
+          JSON.stringify({
+            csrfToken: 'csrf-token-1',
+            headerName: 'X-CSRF-Token',
+            cookieName: 'XSRF-TOKEN'
+          }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+      }
+
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+  });
+
+  await sdk.auth.logout();
+
+  assert.equal(calls.length, 2);
+  assert.equal(calls[0]?.url, 'http://localhost:3000/api/auth/csrf');
+  assert.equal(calls[0]?.method, 'GET');
+  assert.equal(calls[1]?.url, 'http://localhost:3000/api/auth/logout');
+  assert.equal(calls[1]?.method, 'POST');
+  assert.equal(calls[1]?.csrfHeader, 'csrf-token-1');
+});
+
+test('SDK retries a mutating request once after a CSRF 403 by refreshing the token', async () => {
+  let logoutAttempts = 0;
+  let csrfCalls = 0;
+
+  const sdk = createProjectKitSdk({
+    baseUrl: 'http://localhost:3000/api',
+    csrf: {
+      endpoint: '/auth/csrf'
+    },
+    fetchImpl: async (input, init) => {
+      const url = String(input);
+      const headers = new Headers(init?.headers);
+
+      if (url.endsWith('/auth/csrf')) {
+        csrfCalls += 1;
+        return new Response(
+          JSON.stringify({
+            csrfToken: `csrf-token-${csrfCalls}`,
+            headerName: 'X-CSRF-Token',
+            cookieName: 'XSRF-TOKEN'
+          }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+      }
+
+      logoutAttempts += 1;
+      if (logoutAttempts === 1) {
+        assert.equal(headers.get('X-CSRF-Token'), 'csrf-token-1');
+        return new Response(JSON.stringify({ message: 'Invalid CSRF token' }), {
+          status: 403,
+          statusText: 'Forbidden',
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+
+      assert.equal(headers.get('X-CSRF-Token'), 'csrf-token-2');
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+  });
+
+  await sdk.auth.logout();
+
+  assert.equal(csrfCalls, 2);
+  assert.equal(logoutAttempts, 2);
+});
+
 test('skipAuth requests do not trigger unauthorized handler', async () => {
   let unauthorizedCalls = 0;
 

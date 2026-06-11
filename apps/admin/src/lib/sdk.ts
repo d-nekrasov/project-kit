@@ -7,6 +7,9 @@ export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:30
 
 export const sdk = createProjectKitSdk({
   baseUrl: API_BASE_URL,
+  csrf: {
+    endpoint: '/auth/csrf'
+  },
   getOrganizationId: getActiveOrganizationId,
   onUnauthorized: () => {
     queryClient.clear();

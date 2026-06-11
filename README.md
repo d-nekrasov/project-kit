@@ -54,7 +54,7 @@ Routes:
 - `/notification-settings`
 
 The admin app uses `@project-kit/sdk` for all API calls.
-The SDK receives the access token and active organization id from admin auth storage.
+The SDK uses cookie-auth with `credentials: 'include'`, obtains CSRF tokens automatically for mutating browser requests, and reads only the active organization id from admin auth storage.
 Admin routes and sidebar items are filtered by effective permissions from `GET /api/auth/permissions`.
 TanStack Query cache is cleared on login, logout, unauthorized responses, and active organization changes.
 
@@ -267,7 +267,9 @@ User actions are stored separately in Audit Logs.
 `packages/sdk` contains a framework-agnostic TypeScript API client for Project Kit.
 It handles:
 - base API URL;
-- Authorization header;
+- cookie-auth credentials;
+- optional Authorization header for explicit Bearer clients;
+- automatic CSRF token bootstrap for mutating cookie-auth requests;
 - active organization header;
 - query serialization;
 - JSON request/response handling;
@@ -281,14 +283,16 @@ import { createProjectKitSdk } from '@project-kit/sdk';
 
 const sdk = createProjectKitSdk({
   baseUrl: 'http://localhost:3000/api',
-  getAccessToken: () => localStorage.getItem('accessToken'),
+  csrf: {
+    endpoint: '/auth/csrf'
+  },
   getOrganizationId: () => localStorage.getItem('activeOrganizationId'),
   onUnauthorized: () => {
-    localStorage.removeItem('accessToken');
+    localStorage.removeItem('activeOrganizationId');
   }
 });
 
-const { accessToken, user } = await sdk.auth.login({
+const { user } = await sdk.auth.login({
   email: 'admin@example.com',
   password: 'password123'
 });
@@ -299,7 +303,7 @@ const users = await sdk.users.list({
 });
 ```
 
-The SDK does not store tokens itself. The application decides where to store access token and active organization id.
+The SDK does not store tokens itself. Browser apps can rely on `httpOnly` cookies and keep only non-secret context such as the active organization id in storage.
 
 ## Quick start
 
@@ -325,6 +329,9 @@ Password reset email delivery also depends on the global `smtp_email` notificati
 
 Production hardening env:
 - `APP_ENV=development|test|production`: selects environment-specific behavior. `development` and `test` may use in-memory auth infrastructure by default; `production` requires Redis.
+- `AUTH_COOKIE_NAME`, `AUTH_COOKIE_SECURE`, `AUTH_COOKIE_SAME_SITE`: control the auth cookie name and browser attributes. `AUTH_COOKIE_SECURE` defaults to `true` in production.
+- `CSRF_COOKIE_NAME`, `CSRF_HEADER_NAME`: configure the double-submit CSRF cookie/header pair used for cookie-auth mutating requests.
+- `AUTH_BEARER_ENABLED`: enables or disables `Authorization: Bearer` fallback. It defaults to `true` in `development`/`test` and `false` in `production`.
 - `TRUST_PROXY=false|true|loopback|1`: configures Express `trust proxy`. When enabled behind nginx/traefik, `req.ip` is derived from trusted proxy hops instead of trusting raw `X-Forwarded-For`.
 - `MULTI_INSTANCE=true|false`: marks that the API is expected to run on multiple instances. This still matters for cross-instance SSE fan-out, but not for auth Redis requirements.
 - `REDIS_ENABLED=true|false` and `REDIS_URL=redis://...`: enable shared Redis infrastructure for auth rate limiting, JWT token blacklist, and realtime notification fan-out.
@@ -392,7 +399,16 @@ Effective permissions for the active organization:
 
 `GET /api/auth/permissions`
 
-Authorization header:
+CSRF bootstrap for browser cookie-auth:
+
+`GET /api/auth/csrf`
+
+Browser auth:
+- session JWT is stored in an `httpOnly` cookie;
+- mutating cookie-auth requests must send `X-CSRF-Token` matching the readable CSRF cookie;
+- `GET`, `HEAD`, and `OPTIONS` do not require CSRF.
+
+Optional Bearer header when `AUTH_BEARER_ENABLED=true`:
 
 `Authorization: Bearer <accessToken>`
 
@@ -413,6 +429,8 @@ curl http://localhost:3000/api/auth/permissions \
   -H "Authorization: Bearer <accessToken>" \
   -H "x-organization-id: <organizationId>"
 ```
+
+See [docs/auth-cookie-csrf.md](/Users/nekrasov/Documents/Projects/project-kit/docs/auth-cookie-csrf.md) for the cookie-auth CSRF model and Bearer fallback policy.
 
 ### Password recovery flow
 
