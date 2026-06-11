@@ -545,6 +545,127 @@ test("SMTP connector passwords are encrypted at rest, masked in API responses, a
   assert.equal(updatedConfig.password, storedConfig.password);
 });
 
+test("saving SMTP connector secrets without CONFIG_ENCRYPTION_KEY returns a clear error", async () => {
+  const dbName = `project_kit_security_no_key_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`;
+  const dbUrl = `postgresql://postgres:postgres@127.0.0.1:5432/${dbName}?schema=public`;
+  let isolatedApp: INestApplication | undefined;
+  let isolatedPrisma: InstanceType<typeof PrismaService> | undefined;
+
+  runCommand("createdb", ["-h", "127.0.0.1", "-p", "5432", "-U", "postgres", dbName], repoRoot);
+  runCommand("pnpm", ["exec", "prisma", "migrate", "deploy"], apiDir, {
+    DATABASE_URL: dbUrl,
+  });
+
+  try {
+    process.env.DATABASE_URL = dbUrl;
+    process.env.APP_ENV = "development";
+    process.env.ALLOWED_ORIGINS = allowedOrigin;
+    delete process.env.CONFIG_ENCRYPTION_KEY;
+    process.env.JWT_SECRET = "test-secret";
+    process.env.JWT_ACCESS_EXPIRES_IN = "15m";
+    process.env.AUTH_PASSWORD_RESET_TOKEN_TTL_MINUTES = "30";
+    process.env.AUTH_PASSWORD_RESET_URL = "http://localhost:3001/reset-password";
+    process.env.CASBIN_MODEL_PATH = resolve(apiDir, "src/infrastructure/casbin/model.conf");
+    process.env.TRUST_PROXY = "1";
+    process.env.MULTI_INSTANCE = "false";
+    process.env.REDIS_ENABLED = "false";
+
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    isolatedApp = moduleRef.createNestApplication();
+    configureApp(isolatedApp);
+    await isolatedApp.listen(0, "127.0.0.1");
+
+    const address = isolatedApp.getHttpServer().address();
+    assert.ok(address && typeof address === "object" && "port" in address);
+    const isolatedBaseUrl = `http://127.0.0.1:${address.port}/api`;
+    isolatedPrisma = isolatedApp.get(PrismaService);
+
+    const setupResponse = await fetch(`${isolatedBaseUrl}/installer/setup`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "x-forwarded-for": "198.51.100.51",
+      },
+      body: JSON.stringify({
+        appName: "Project Kit",
+        organizationName: "Default Organization",
+        organizationSlug: "default",
+        adminEmail: "admin@example.com",
+        adminPassword: "AdminPassword123!",
+        adminName: "Admin",
+      }),
+    });
+    assert.equal(setupResponse.status, 201);
+
+    const loginResponse = await fetch(`${isolatedBaseUrl}/auth/login`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Origin: allowedOrigin,
+      },
+      body: JSON.stringify({
+        email: "admin@example.com",
+        password: "AdminPassword123!",
+      }),
+    });
+    assert.equal(loginResponse.status, 201);
+    const loginData = (await loginResponse.json()) as {
+      accessToken: string;
+      user: { organizations: Array<{ id: string }> };
+    };
+    const isolatedAdminOrganizationId = loginData.user.organizations[0]?.id ?? "";
+    assert.ok(isolatedAdminOrganizationId);
+
+    const response = await fetch(`${isolatedBaseUrl}/notification-connectors/smtp_email`, {
+      method: "PATCH",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${loginData.accessToken}`,
+        "x-organization-id": isolatedAdminOrganizationId,
+      },
+      body: JSON.stringify({
+        config: {
+          host: "smtp.example.com",
+          port: 587,
+          secure: false,
+          username: "smtp-user",
+          password: "SuperSecret123!",
+          from: "no-reply@example.com",
+        },
+      }),
+    });
+
+    assert.equal(response.status, 503);
+    assert.match(
+      await response.text(),
+      /CONFIG_ENCRYPTION_KEY is not configured\. Set it before saving SMTP or other sensitive connector secrets\./,
+    );
+    assert.equal(await isolatedPrisma.notificationConnector.count(), 2);
+  } finally {
+    await isolatedApp?.close();
+    await isolatedPrisma?.$disconnect();
+    process.env.DATABASE_URL = databaseUrl;
+    process.env.APP_ENV = "development";
+    process.env.ALLOWED_ORIGINS = allowedOrigin;
+    process.env.CONFIG_ENCRYPTION_KEY = configEncryptionKey;
+    process.env.JWT_SECRET = "test-secret";
+    process.env.JWT_ACCESS_EXPIRES_IN = "15m";
+    process.env.AUTH_PASSWORD_RESET_TOKEN_TTL_MINUTES = "30";
+    process.env.AUTH_PASSWORD_RESET_URL = "http://localhost:3001/reset-password";
+    process.env.CASBIN_MODEL_PATH = resolve(apiDir, "src/infrastructure/casbin/model.conf");
+    process.env.TRUST_PROXY = "1";
+    process.env.MULTI_INSTANCE = "false";
+    process.env.REDIS_ENABLED = "false";
+    dropDatabase(dbName);
+  }
+});
+
 test("installer setup rejects repeat calls and concurrent retries without creating duplicates", async () => {
   const repeated = await apiRequest<{ message: string }>("POST", "/installer/setup", {
     body: {

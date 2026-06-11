@@ -305,17 +305,52 @@ const users = await sdk.users.list({
 
 The SDK does not store tokens itself. Browser apps can rely on `httpOnly` cookies and keep only non-secret context such as the active organization id in storage.
 
-## Quick start
+## Local development
+
+Default dev flow keeps Docker limited to infrastructure and runs the apps directly from the workspace.
 
 1. `pnpm install`
 2. `docker compose up -d`
-3. `pnpm --filter api prisma:generate`
-4. `pnpm --filter api prisma:migrate dev`
-5. `pnpm --filter api start:dev`
+3. `cp apps/api/.env.example apps/api/.env`
+4. `cp apps/admin/.env.example apps/admin/.env`
+5. `pnpm --filter api prisma:generate`
+6. `pnpm --filter api prisma:migrate dev`
+7. `pnpm --filter api start:dev`
+8. `pnpm --filter admin dev`
 
-To start the API from the project root via `pnpm`, run:
+`docker compose up -d` currently starts only:
+- `postgres`
+- `redis`
 
-`pnpm --filter api start:dev`
+API and Admin are started separately in dev:
+- API: `pnpm --filter api start:dev`
+- Admin: `pnpm --filter admin dev`
+
+Admin expects the API at `http://localhost:3000/api` by default.
+
+## Infrastructure only
+
+`docker compose up -d` is the intended infrastructure-only command for local development. It brings up Postgres and Redis, but does not build or run the API/Admin applications.
+
+Use this mode when you want:
+- fast local iteration with Nest/Vite watch mode;
+- easy debugging from the host machine;
+- optional Redis, because `REDIS_ENABLED=false` keeps auth rate limits and JWT blacklist in-memory in `development` and `test`.
+
+To start only selected infra services explicitly:
+- `docker compose up -d postgres`
+- `docker compose up -d redis`
+- `docker compose up -d postgres redis`
+
+## Full docker run
+
+There is no supported full app Docker Compose profile in this branch yet.
+
+Reason:
+- the repository does not currently contain Dockerfiles for `api` or `admin`;
+- adding a partial app profile would be misleading and harder to maintain than the current explicit host-based dev flow.
+
+If a full containerized app flow is added later, keep `docker compose up -d` as infra-only and expose the application containers behind an explicit profile such as `--profile app`.
 
 ### API environment
 
@@ -329,19 +364,29 @@ Password reset email delivery also depends on the global `smtp_email` notificati
 
 Production hardening env:
 - `APP_ENV=development|test|production`: selects environment-specific behavior. `development` and `test` may use in-memory auth infrastructure by default; `production` requires Redis.
+- `ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000`: recommended dev default for Admin and alternate local frontends. Production must set explicit trusted origins and cannot rely on a wildcard.
 - `AUTH_COOKIE_NAME`, `AUTH_COOKIE_SECURE`, `AUTH_COOKIE_SAME_SITE`: control the auth cookie name and browser attributes. `AUTH_COOKIE_SECURE` defaults to `true` in production.
 - `CSRF_COOKIE_NAME`, `CSRF_HEADER_NAME`: configure the double-submit CSRF cookie/header pair used for cookie-auth mutating requests.
 - `AUTH_BEARER_ENABLED`: enables or disables `Authorization: Bearer` fallback. It defaults to `true` in `development`/`test` and `false` in `production`.
 - `TRUST_PROXY=false|true|loopback|1`: configures Express `trust proxy`. When enabled behind nginx/traefik, `req.ip` is derived from trusted proxy hops instead of trusting raw `X-Forwarded-For`.
 - `MULTI_INSTANCE=true|false`: marks that the API is expected to run on multiple instances. This still matters for cross-instance SSE fan-out, but not for auth Redis requirements.
-- `REDIS_ENABLED=true|false` and `REDIS_URL=redis://...`: enable shared Redis infrastructure for auth rate limiting, JWT token blacklist, and realtime notification fan-out.
-- `CONFIG_ENCRYPTION_KEY`: required 32-byte raw string or base64-encoded 32-byte key used to encrypt notification connector secrets such as SMTP passwords and webhook tokens.
+- `REDIS_ENABLED=true|false` and `REDIS_URL=redis://127.0.0.1:6379`: enable shared Redis infrastructure for auth rate limiting, JWT token blacklist, and realtime notification fan-out. Recommended dev default is `REDIS_ENABLED=false`.
+- `CONFIG_ENCRYPTION_KEY`: required 32-byte raw string or base64-encoded 32-byte key used to encrypt notification connector secrets such as SMTP passwords and webhook tokens. Generate one with `openssl rand -base64 32`.
 - `SSE_MAX_CLIENTS`, `SSE_MAX_CLIENTS_PER_USER`, `SSE_HEARTBEAT_INTERVAL_MS`: protect the SSE registry from unbounded growth.
 
 Recommended local bootstrap:
-- `docker compose up -d postgres redis`
+- `docker compose up -d`
 - `cp apps/api/.env.example apps/api/.env`
+- keep `APP_ENV=development`
+- keep `ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000`
 - leave `REDIS_ENABLED=false` for a simple dev/test setup that uses in-memory auth rate limiting and token blacklist, or set `REDIS_ENABLED=true` to test shared Redis-backed rate limits, logout invalidation, and SSE pub/sub locally.
+- set `CONFIG_ENCRYPTION_KEY` before configuring SMTP or any other sensitive connector secret, for example:
+
+```bash
+openssl rand -base64 32
+```
+
+If `CONFIG_ENCRYPTION_KEY` changes after encrypted connector secrets were already saved, existing secrets cannot be decrypted until they are rotated or re-encrypted with the original key.
 
 Production guidance:
 - auth rate limiting and JWT token blacklist use Redis in production, and the API fails fast during bootstrap if `APP_ENV=production` without `REDIS_ENABLED=true` and a valid `REDIS_URL`;

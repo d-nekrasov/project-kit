@@ -9,6 +9,7 @@ import { ConfigEncryptionService } from "../src/common/security/config-encryptio
 import { EmailSmtpNotificationConnector } from "../src/core/notifications/connectors/email-smtp-notification.connector";
 
 const configEncryptionKey = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=";
+const rotatedConfigEncryptionKey = "abcdefghijklmnopqrstuvwxyzABCDEF";
 
 test("EmailSmtpNotificationConnector decrypts SMTP passwords only inside backend runtime", async () => {
   const configEncryptionService = new ConfigEncryptionService(
@@ -50,4 +51,41 @@ test("EmailSmtpNotificationConnector decrypts SMTP passwords only inside backend
   } finally {
     nodemailer.createTransport = originalCreateTransport;
   }
+});
+
+test("EmailSmtpNotificationConnector returns a clear error when encrypted SMTP secrets cannot be decrypted", async () => {
+  const originalService = new ConfigEncryptionService(
+    new ConfigService({
+      APP_ENV: "test",
+      CONFIG_ENCRYPTION_KEY: configEncryptionKey,
+    }),
+  );
+  const rotatedService = new ConfigEncryptionService(
+    new ConfigService({
+      APP_ENV: "test",
+      CONFIG_ENCRYPTION_KEY: rotatedConfigEncryptionKey,
+    }),
+  );
+  const connector = new EmailSmtpNotificationConnector(rotatedService);
+
+  const result = await connector.send({
+    channel: NotificationChannel.EMAIL,
+    to: "user@example.com",
+    subject: "Hello",
+    body: "Body",
+    config: {
+      host: "smtp.example.com",
+      port: 587,
+      secure: false,
+      username: "smtp-user",
+      password: originalService.encrypt("SuperSecret123!"),
+      from: "no-reply@example.com",
+    },
+  });
+
+  assert.equal(result.ok, false);
+  assert.match(
+    result.error ?? "",
+    /Failed to decrypt sensitive connector config/,
+  );
 });

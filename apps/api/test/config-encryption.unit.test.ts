@@ -6,6 +6,7 @@ import { ConfigService } from "@nestjs/config";
 import { ConfigEncryptionService } from "../src/common/security/config-encryption.service";
 
 const configEncryptionKey = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=";
+const rotatedConfigEncryptionKey = "abcdefghijklmnopqrstuvwxyzABCDEF";
 
 test("ConfigEncryptionService encrypts and decrypts values", () => {
   const service = new ConfigEncryptionService(
@@ -30,5 +31,40 @@ test("ConfigEncryptionService requires a valid key in production", () => {
         }),
       ),
     /CONFIG_ENCRYPTION_KEY is required/,
+  );
+});
+
+test("ConfigEncryptionService reports a clear error when encrypting without CONFIG_ENCRYPTION_KEY", () => {
+  const service = new ConfigEncryptionService(
+    new ConfigService({
+      APP_ENV: "development",
+    }),
+  );
+
+  assert.throws(
+    () => service.encrypt("SuperSecret123!"),
+    /CONFIG_ENCRYPTION_KEY is required to store or read sensitive connector config/,
+  );
+});
+
+test("ConfigEncryptionService reports a clear error when encrypted values cannot be decrypted with the current key", () => {
+  const originalService = new ConfigEncryptionService(
+    new ConfigService({
+      APP_ENV: "test",
+      CONFIG_ENCRYPTION_KEY: configEncryptionKey,
+    }),
+  );
+  const rotatedService = new ConfigEncryptionService(
+    new ConfigService({
+      APP_ENV: "test",
+      CONFIG_ENCRYPTION_KEY: rotatedConfigEncryptionKey,
+    }),
+  );
+
+  const encrypted = originalService.encrypt("SuperSecret123!");
+
+  assert.throws(
+    () => rotatedService.decrypt(encrypted),
+    /Failed to decrypt sensitive connector config/,
   );
 });

@@ -1,6 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import nodemailer from "nodemailer";
-import { ConfigEncryptionService } from "../../../common/security/config-encryption.service";
+import {
+  ConfigDecryptionError,
+  ConfigEncryptionService,
+  MissingConfigEncryptionKeyError,
+} from "../../../common/security/config-encryption.service";
 import { SmtpConnectorConfig } from "../types/notification.types";
 import {
   NotificationConnector,
@@ -15,7 +19,19 @@ export class EmailSmtpNotificationConnector implements NotificationConnector {
   ) {}
 
   async send(input: NotificationConnectorSendInput): Promise<NotificationConnectorSendResult> {
-    const config = this.decryptConfig((input.config ?? {}) as SmtpConnectorConfig);
+    let config: SmtpConnectorConfig;
+    try {
+      config = this.decryptConfig((input.config ?? {}) as SmtpConnectorConfig);
+    } catch (error) {
+      if (
+        error instanceof MissingConfigEncryptionKeyError ||
+        error instanceof ConfigDecryptionError
+      ) {
+        return { ok: false, error: error.message };
+      }
+      throw error;
+    }
+
     if (!input.to) {
       return { ok: false, error: 'Recipient email is missing' };
     }

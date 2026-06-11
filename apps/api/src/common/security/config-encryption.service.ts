@@ -4,6 +4,26 @@ import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 
 const ENCRYPTION_ALGORITHM = "aes-256-gcm";
 const ENCRYPTED_VALUE_PREFIX = "enc:v1";
+const MISSING_KEY_MESSAGE =
+  "CONFIG_ENCRYPTION_KEY is required to store or read sensitive connector config.";
+const INVALID_KEY_FORMAT_MESSAGE =
+  "CONFIG_ENCRYPTION_KEY must be base64-encoded 32 bytes or a raw 32-byte string.";
+const DECRYPTION_FAILED_MESSAGE =
+  "Failed to decrypt sensitive connector config. CONFIG_ENCRYPTION_KEY is missing, invalid, or no longer matches the stored encrypted secrets.";
+
+export class MissingConfigEncryptionKeyError extends Error {
+  constructor(message = MISSING_KEY_MESSAGE) {
+    super(message);
+    this.name = "MissingConfigEncryptionKeyError";
+  }
+}
+
+export class ConfigDecryptionError extends Error {
+  constructor(message = DECRYPTION_FAILED_MESSAGE) {
+    super(message);
+    this.name = "ConfigDecryptionError";
+  }
+}
 
 @Injectable()
 export class ConfigEncryptionService {
@@ -20,10 +40,9 @@ export class ConfigEncryptionService {
     );
 
     if (!this.key) {
-      const message =
-        "CONFIG_ENCRYPTION_KEY is required and must decode to 32 bytes.";
+      const message = "CONFIG_ENCRYPTION_KEY is required and must decode to 32 bytes.";
       if (this.isProduction) {
-        throw new Error(message);
+        throw new MissingConfigEncryptionKeyError(message);
       }
       this.logger.warn(message);
     }
@@ -52,19 +71,27 @@ export class ConfigEncryptionService {
       return value;
     }
 
-    const [, , ivBase64, tagBase64, encryptedBase64] = value.split(":");
-    const decipher = createDecipheriv(
-      ENCRYPTION_ALGORITHM,
-      this.getKeyOrThrow(),
-      Buffer.from(ivBase64, "base64"),
-    );
-    decipher.setAuthTag(Buffer.from(tagBase64, "base64"));
+    try {
+      const [, , ivBase64, tagBase64, encryptedBase64] = value.split(":");
+      const decipher = createDecipheriv(
+        ENCRYPTION_ALGORITHM,
+        this.getKeyOrThrow(),
+        Buffer.from(ivBase64, "base64"),
+      );
+      decipher.setAuthTag(Buffer.from(tagBase64, "base64"));
 
-    const decrypted = Buffer.concat([
-      decipher.update(Buffer.from(encryptedBase64, "base64")),
-      decipher.final(),
-    ]);
-    return decrypted.toString("utf8");
+      const decrypted = Buffer.concat([
+        decipher.update(Buffer.from(encryptedBase64, "base64")),
+        decipher.final(),
+      ]);
+      return decrypted.toString("utf8");
+    } catch (error) {
+      if (error instanceof MissingConfigEncryptionKeyError) {
+        throw error;
+      }
+
+      throw new ConfigDecryptionError();
+    }
   }
 
   isEncrypted(value: string): boolean {
@@ -73,9 +100,7 @@ export class ConfigEncryptionService {
 
   private getKeyOrThrow(): Buffer {
     if (!this.key) {
-      throw new Error(
-        "CONFIG_ENCRYPTION_KEY is required to store or read sensitive connector config.",
-      );
+      throw new MissingConfigEncryptionKeyError();
     }
     return this.key;
   }
@@ -100,8 +125,6 @@ export class ConfigEncryptionService {
       return utf8Buffer;
     }
 
-    throw new Error(
-      "CONFIG_ENCRYPTION_KEY must be base64-encoded 32 bytes or a raw 32-byte string.",
-    );
+    throw new Error(INVALID_KEY_FORMAT_MESSAGE);
   }
 }

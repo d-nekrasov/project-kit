@@ -114,3 +114,49 @@ test('NotificationConnectorsService preserves existing secret when password is u
   assert.equal(getStoredConfig().password, originalPassword);
   assert.equal(getStoredConfig().host, "smtp2.example.com");
 });
+
+test("NotificationConnectorsService returns a clear error when saving sensitive config without CONFIG_ENCRYPTION_KEY", async () => {
+  const prisma = {
+    notificationConnector: {
+      findUnique: async () => ({
+        id: "connector-1",
+        code: "smtp_email",
+        channel: NotificationChannel.EMAIL,
+        status: NotificationConnectorStatus.ENABLED,
+        config: {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }),
+      update: async () => {
+        throw new Error("update should not be called");
+      },
+    },
+  };
+
+  const service = new NotificationConnectorsService(
+    prisma as any,
+    { write: async () => undefined } as any,
+    new ConfigEncryptionService(
+      new ConfigService({
+        APP_ENV: "development",
+      }),
+    ),
+  );
+
+  await assert.rejects(
+    service.update(
+      "smtp_email",
+      {
+        config: {
+          password: "SuperSecret123!",
+        },
+      },
+      {
+        id: "user-1",
+        systemRoles: ["super_admin"],
+      } as any,
+      { id: "org-1" } as any,
+    ),
+    /CONFIG_ENCRYPTION_KEY is not configured\. Set it before saving SMTP or other sensitive connector secrets\./,
+  );
+});

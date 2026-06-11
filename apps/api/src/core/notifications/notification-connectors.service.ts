@@ -1,6 +1,9 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { NotificationConnector, NotificationConnectorStatus, Prisma } from '@prisma/client';
-import { ConfigEncryptionService } from '../../common/security/config-encryption.service';
+import {
+  ConfigEncryptionService,
+  MissingConfigEncryptionKeyError
+} from '../../common/security/config-encryption.service';
 import { RequestMetadata } from '../../common/utils/request-metadata.util';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } from '../audit-logs/constants/audit-actions.constants';
@@ -43,7 +46,19 @@ export class NotificationConnectorsService {
     if (!existing) {
       throw new NotFoundException('Notification connector not found');
     }
-    const config = dto.config ? this.mergeConfig(existing.config, dto.config) : existing.config;
+    let config: Prisma.JsonValue = existing.config;
+    if (dto.config) {
+      try {
+        config = this.mergeConfig(existing.config, dto.config) as Prisma.JsonValue;
+      } catch (error) {
+        if (error instanceof MissingConfigEncryptionKeyError) {
+          throw new ServiceUnavailableException(
+            "CONFIG_ENCRYPTION_KEY is not configured. Set it before saving SMTP or other sensitive connector secrets.",
+          );
+        }
+        throw error;
+      }
+    }
 
     const updated = await this.prisma.notificationConnector.update({
       where: { code },
