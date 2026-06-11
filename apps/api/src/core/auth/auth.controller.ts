@@ -128,13 +128,18 @@ export class AuthController {
   }
 
   @Get("csrf")
+  @UseGuards(JwtAuthGuard)
   getCsrfToken(
     @Res({ passthrough: true })
     res: {
       setHeader(name: string, value: string | string[]): void;
     },
+    @Req()
+    req: {
+      headers: Record<string, string | string[] | undefined>;
+    },
   ): { csrfToken: string; headerName: string; cookieName: string } {
-    const csrfToken = this.authCsrfService.generateToken();
+    const csrfToken = this.authCsrfService.issueTokenForRequest(req.headers);
     res.setHeader("Set-Cookie", this.authCsrfService.buildCsrfCookie(csrfToken));
     return {
       csrfToken,

@@ -4,13 +4,37 @@ import { test } from "node:test";
 import { ForbiddenException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 
+import { JwtService } from "@nestjs/jwt";
+
 import {
   buildCorsOptions,
   createCsrfMiddleware,
   parseAllowedOrigins,
 } from "../src/common/security/app-security";
+import { AuthCookieService } from "../src/core/auth/auth-cookie.service";
 import { AuthCsrfService } from "../src/core/auth/auth-csrf.service";
 import { AuthTransportService } from "../src/core/auth/auth-transport.service";
+
+const JWT_SECRET = "unit-test-secret-unit-test-secret-0000";
+
+function buildRealCsrfService(): {
+  csrfService: AuthCsrfService;
+  jwtService: JwtService;
+} {
+  const configService = new ConfigService({
+    APP_ENV: "development",
+    JWT_SECRET,
+  });
+  const jwtService = new JwtService({ secret: JWT_SECRET });
+  return {
+    jwtService,
+    csrfService: new AuthCsrfService(
+      configService,
+      jwtService,
+      new AuthTransportService(configService, new AuthCookieService(configService)),
+    ),
+  };
+}
 
 test("parseAllowedOrigins splits comma-separated values safely", () => {
   assert.deepEqual(
@@ -64,7 +88,7 @@ test("buildCorsOptions fails closed in production when ALLOWED_ORIGINS is missin
 type MiddlewareHeaders = Record<string, string | string[] | undefined>;
 
 function buildCsrfServiceMock(excludedPaths: Set<string>) {
-  const realCsrfService = new AuthCsrfService(new ConfigService({}));
+  const { csrfService: realCsrfService } = buildRealCsrfService();
   return {
     isSafeMethod: (method?: string) => realCsrfService.isSafeMethod(method),
     isExcludedPath: (path?: string) => Boolean(path && excludedPaths.has(path)),
@@ -120,26 +144,45 @@ test("csrf middleware rejects cookie-transport requests without a valid token", 
   assert.ok(error instanceof ForbiddenException);
 });
 
-test("csrf middleware accepts cookie-transport requests with matching token", () => {
-  const middleware = createCsrfMiddleware(
-    buildCsrfServiceMock(new Set()),
-    { detectTransport: () => "cookie" as const },
-  );
+test("csrf middleware accepts cookie-transport requests with a session-bound token", () => {
+  const { csrfService, jwtService } = buildRealCsrfService();
+  const accessToken = jwtService.sign({
+    sub: "user-1",
+    jti: "session-1",
+    email: "user@example.com",
+    systemRoles: [],
+    organizations: [],
+  });
+  const csrfToken = csrfService.generateToken("session-1");
+  const middleware = createCsrfMiddleware(csrfService, {
+    detectTransport: () => "cookie" as const,
+  });
 
   const error = runMiddleware(middleware, {
     method: "POST",
     path: "/api/users",
     headers: {
-      cookie: "project_kit_auth=token; XSRF-TOKEN=csrf-value",
-      "x-csrf-token": "csrf-value",
+      cookie: `project_kit_auth=${accessToken}; XSRF-TOKEN=${csrfToken}`,
+      "x-csrf-token": csrfToken,
     },
   });
 
   assert.equal(error, undefined);
+
+  const foreignSessionToken = csrfService.generateToken("other-session");
+  const mismatchError = runMiddleware(middleware, {
+    method: "POST",
+    path: "/api/users",
+    headers: {
+      cookie: `project_kit_auth=${accessToken}; XSRF-TOKEN=${foreignSessionToken}`,
+      "x-csrf-token": foreignSessionToken,
+    },
+  });
+  assert.ok(mismatchError instanceof ForbiddenException);
 });
 
 test("csrf middleware excluded paths come from AuthCsrfService", () => {
-  const csrfService = new AuthCsrfService(new ConfigService({}));
+  const { csrfService } = buildRealCsrfService();
   const transportService = { detectTransport: () => "cookie" as const };
   const request = {
     method: "POST",

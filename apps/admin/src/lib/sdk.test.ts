@@ -195,6 +195,34 @@ test('SDK reuses a single CSRF fetch for concurrent mutating requests', async ()
   );
 });
 
+test('SDK does not fetch a CSRF token for unauthenticated (skipAuth) mutations like login', async () => {
+  const urls: string[] = [];
+
+  const sdk = createProjectKitSdk({
+    baseUrl: 'http://localhost:3000/api',
+    csrf: {
+      endpoint: '/auth/csrf'
+    },
+    fetchImpl: async (input) => {
+      urls.push(String(input));
+      return new Response(
+        JSON.stringify({ expiresIn: 900, user: { organizations: [] } }),
+        {
+          status: 201,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+  });
+
+  await sdk.auth.login({
+    email: 'admin@example.com',
+    password: 'AdminPassword123!'
+  });
+
+  assert.deepEqual(urls, ['http://localhost:3000/api/auth/login']);
+});
+
 test('skipAuth requests do not trigger unauthorized handler', async () => {
   let unauthorizedCalls = 0;
 

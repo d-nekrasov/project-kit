@@ -347,6 +347,131 @@ test("cookie auth works, bearer fallback remains available, and removed debug en
   assert.equal(permissionsCheckResponse.status, 404);
 });
 
+test("csrf endpoint requires authentication and issues session-bound tokens", async () => {
+  const unauthenticated = await apiRequest("GET", "/auth/csrf");
+  assert.equal(unauthenticated.status, 401);
+
+  const loginResponse = await apiRequest<{ user: unknown }>("POST", "/auth/login", {
+    forwardedFor: nextIp("login-csrf-endpoint"),
+    body: {
+      email: "admin@example.com",
+      password: "AdminPassword123!",
+    },
+  });
+  const authCookie = extractCookiePair(getSetCookie(loginResponse.headers));
+
+  const { csrfToken } = await issueCsrf(authCookie);
+  // Формат signed double-submit: <random>.<hmac>, обе части base64url.
+  assert.match(csrfToken, /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);
+});
+
+test("relogin invalidates the previous session's CSRF token and a fresh token succeeds", async () => {
+  const firstLogin = await apiRequest<{ user: { organizations: Array<{ id: string }> } }>(
+    "POST",
+    "/auth/login",
+    {
+      forwardedFor: nextIp("login-csrf-relogin-1"),
+      body: {
+        email: "admin@example.com",
+        password: "AdminPassword123!",
+      },
+    },
+  );
+  const firstAuthCookie = extractCookiePair(getSetCookie(firstLogin.headers));
+  const organizationId = firstLogin.data.user.organizations[0]?.id ?? "";
+  assert.ok(organizationId);
+
+  const oldCsrf = await issueCsrf(firstAuthCookie);
+
+  const secondLogin = await apiRequest("POST", "/auth/login", {
+    forwardedFor: nextIp("login-csrf-relogin-2"),
+    body: {
+      email: "admin@example.com",
+      password: "AdminPassword123!",
+    },
+  });
+  const secondAuthCookie = extractCookiePair(getSetCookie(secondLogin.headers));
+
+  const connectorBody = {
+    status: "ENABLED",
+    config: {
+      host: "smtp.example.com",
+      port: 587,
+      secure: false,
+      username: "smtp-user",
+      password: "SuperSecret123!",
+      from: "no-reply@example.com",
+    },
+  };
+
+  // Токен выдан для jti первой сессии — со второй сессией он невалиден.
+  const staleCsrfAttempt = await apiRequest<{ message: string }>(
+    "PATCH",
+    "/notification-connectors/smtp_email",
+    {
+      cookie: mergeCookies(secondAuthCookie, oldCsrf.csrfCookie),
+      csrfToken: oldCsrf.csrfToken,
+      organizationId,
+      body: connectorBody,
+    },
+  );
+  assert.equal(staleCsrfAttempt.status, 403);
+  assert.equal(staleCsrfAttempt.data.message, "Invalid CSRF token");
+
+  // Перезапрос токена (как делает SDK при 403 "Invalid CSRF token") чинит запрос.
+  const freshCsrf = await issueCsrf(secondAuthCookie);
+  const retried = await apiRequest(
+    "PATCH",
+    "/notification-connectors/smtp_email",
+    {
+      cookie: mergeCookies(secondAuthCookie, freshCsrf.csrfCookie),
+      csrfToken: freshCsrf.csrfToken,
+      organizationId,
+      body: connectorBody,
+    },
+  );
+  assert.equal(retried.status, 200);
+});
+
+test("tampered CSRF tokens are rejected", async () => {
+  const loginResponse = await apiRequest<{ user: { organizations: Array<{ id: string }> } }>(
+    "POST",
+    "/auth/login",
+    {
+      forwardedFor: nextIp("login-csrf-tampered"),
+      body: {
+        email: "admin@example.com",
+        password: "AdminPassword123!",
+      },
+    },
+  );
+  const authCookie = extractCookiePair(getSetCookie(loginResponse.headers));
+  const organizationId = loginResponse.data.user.organizations[0]?.id ?? "";
+
+  const { csrfToken } = await issueCsrf(authCookie);
+  const [random, hmac] = csrfToken.split(".");
+  const tamperedTokens = [
+    `${random}.AAAA${hmac?.slice(4)}`,
+    csrfToken.slice(0, -2),
+    random ?? "",
+    "",
+  ];
+
+  for (const tampered of tamperedTokens) {
+    const response = await apiRequest<{ message: string }>(
+      "PATCH",
+      "/notification-connectors/smtp_email",
+      {
+        cookie: mergeCookies(authCookie, `XSRF-TOKEN=${tampered}`),
+        csrfToken: tampered,
+        organizationId,
+        body: { status: "ENABLED" },
+      },
+    );
+    assert.equal(response.status, 403, `expected 403 for token ${JSON.stringify(tampered)}`);
+  }
+});
+
 test("cookie-auth mutating requests require CSRF while GET stays exempt", async () => {
   const loginResponse = await apiRequest<{ user: { organizations: Array<{ id: string }> } }>(
     "POST",
