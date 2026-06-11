@@ -9,6 +9,7 @@ import { Prisma, RoleType } from '@prisma/client';
 import { CasbinService } from '../../infrastructure/casbin/casbin.service';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { RequestMetadata } from '../../common/utils/request-metadata.util';
+import { CurrentUserCacheService } from '../auth/current-user-cache.service';
 import { CurrentUser } from '../auth/types/current-user.type';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } from '../audit-logs/constants/audit-actions.constants';
@@ -41,7 +42,8 @@ export class RolesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly casbinService: CasbinService,
-    private readonly auditLogsService: AuditLogsService
+    private readonly auditLogsService: AuditLogsService,
+    private readonly currentUserCacheService: CurrentUserCacheService
   ) {}
 
   async findAll(
@@ -271,6 +273,9 @@ export class RolesService {
     });
 
     await this.casbinService.reloadRolePolicies(role.id);
+    // Selecting all users of the role is an extra query on a hot admin path;
+    // dropping the whole short-lived cache is cheaper and just as correct.
+    await this.currentUserCacheService.invalidateAll();
     await this.auditLogsService.write({
       action: AUDIT_ACTIONS.ROLE_PERMISSIONS_UPDATE,
       entityType: AUDIT_ENTITY_TYPES.ROLE,
