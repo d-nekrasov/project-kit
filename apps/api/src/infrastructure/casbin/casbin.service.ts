@@ -94,14 +94,26 @@ export class CasbinService implements OnModuleInit {
         this.userSystemGroupingKeys.clear();
 
       const roles = await this.prisma.role.findMany({
-        include: {
+        select: {
+          id: true,
+          code: true,
+          type: true,
+          organizationId: true,
           permissions: {
-            include: {
-              permission: true
+            select: {
+              permission: {
+                select: { code: true }
+              }
             }
           }
         }
       });
+
+      // casbin addPolicies/addGroupingPolicies reject the whole batch if any
+      // rule duplicates an existing one and do not dedupe within the batch,
+      // so collect unique rules while filling the caches.
+      const policyRules: string[][] = [];
+      const seenPolicyKeys = new Set<string>();
 
       for (const role of roles) {
         const domain = role.type === RoleType.SYSTEM ? '*' : role.organizationId;
@@ -109,45 +121,88 @@ export class CasbinService implements OnModuleInit {
           continue;
         }
 
+        const rolePolicies = this.rolePolicyKeys.get(role.id) ?? [];
         for (const rolePermission of role.permissions) {
           const { resource, action } = parsePermissionCode(rolePermission.permission.code);
-          await this.addPolicyTracked(role.id, role.code, domain, resource, action);
+          const key = this.makePolicyKey(role.code, domain, resource, action);
+          if (rolePolicies.includes(key)) {
+            continue;
+          }
+
+          rolePolicies.push(key);
+          this.rolePolicyKeys.set(role.id, rolePolicies);
+          if (!seenPolicyKeys.has(key)) {
+            seenPolicyKeys.add(key);
+            policyRules.push([`role:${role.code}`, domain, resource, action]);
+          }
         }
       }
 
+      const groupingRules: string[][] = [];
+      const seenGroupingKeys = new Set<string>();
+
       const userSystemRoles = await this.prisma.userSystemRole.findMany({
-        include: { role: true }
+        select: {
+          userId: true,
+          role: {
+            select: { code: true, type: true }
+          }
+        }
       });
       for (const userSystemRole of userSystemRoles) {
         if (userSystemRole.role.type !== RoleType.SYSTEM) {
           continue;
         }
 
-        await this.addGroupingTracked(
+        this.collectGroupingRule(
           userSystemRole.userId,
           userSystemRole.userId,
           userSystemRole.role.code,
           'system',
-          'system'
+          'system',
+          groupingRules,
+          seenGroupingKeys
         );
       }
 
       const userOrganizations = await this.prisma.userOrganization.findMany({
         where: { status: UserStatus.ACTIVE },
-        include: { role: true }
+        select: {
+          userId: true,
+          organizationId: true,
+          role: {
+            select: { code: true, type: true }
+          }
+        }
       });
       for (const membership of userOrganizations) {
         if (membership.role.type !== RoleType.ORGANIZATION) {
           continue;
         }
 
-        await this.addGroupingTracked(
+        this.collectGroupingRule(
           this.makeUserOrganizationCacheKey(membership.userId, membership.organizationId),
           membership.userId,
           membership.role.code,
           membership.organizationId,
-          'organization'
+          'organization',
+          groupingRules,
+          seenGroupingKeys
         );
+      }
+
+      if (policyRules.length > 0) {
+        const added = await enforcer.addPolicies(policyRules);
+        if (!added) {
+          throw new Error('Failed to add Casbin policies in batch');
+        }
+      }
+
+      if (groupingRules.length > 0) {
+        const added = await enforcer.addGroupingPolicies(groupingRules);
+        if (!added) {
+          throw new Error('Failed to add Casbin grouping policies in batch');
+        }
       }
 
         this.isReady = true;
@@ -437,6 +492,33 @@ export class CasbinService implements OnModuleInit {
     }
 
     this.rolePolicyKeys.delete(roleId);
+  }
+
+  private collectGroupingRule(
+    cacheKey: string,
+    userId: string,
+    roleCode: string,
+    domain: string,
+    target: 'organization' | 'system',
+    rules: string[][],
+    seenKeys: Set<string>
+  ): void {
+    const map =
+      target === 'organization' ? this.userOrganizationGroupingKeys : this.userSystemGroupingKeys;
+
+    const groupingKeys = map.get(cacheKey) ?? [];
+    const key = this.makeGroupingKey(userId, roleCode, domain);
+
+    if (groupingKeys.includes(key)) {
+      return;
+    }
+
+    groupingKeys.push(key);
+    map.set(cacheKey, groupingKeys);
+    if (!seenKeys.has(key)) {
+      seenKeys.add(key);
+      rules.push([userId, `role:${roleCode}`, domain]);
+    }
   }
 
   private async addGroupingTracked(
