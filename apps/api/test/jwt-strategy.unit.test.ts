@@ -36,7 +36,7 @@ function createStrategy(options?: { revoked?: boolean }) {
         return options?.revoked ?? false;
       },
     } as never,
-    new ConfigService({ JWT_SECRET: "test-secret" }),
+    new ConfigService({ JWT_SECRET: "test-secret-test-secret-test-secret-0000" }),
   );
 
   return { strategy, blacklistCalls, currentUser };

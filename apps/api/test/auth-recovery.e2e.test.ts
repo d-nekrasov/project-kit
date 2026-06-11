@@ -211,7 +211,7 @@ before(async () => {
   runCommand("pnpm", ["exec", "prisma", "migrate", "deploy"]);
 
   process.env.DATABASE_URL = databaseUrl;
-  process.env.JWT_SECRET = "test-secret";
+  process.env.JWT_SECRET = "test-secret-test-secret-test-secret-0000";
   process.env.JWT_ACCESS_EXPIRES_IN = "15m";
   process.env.AUTH_PASSWORD_RESET_TOKEN_TTL_MINUTES = "30";
   process.env.AUTH_PASSWORD_RESET_URL = baseResetUrl;

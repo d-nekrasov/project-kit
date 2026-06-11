@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
 import { ConfigEncryptionModule } from "../../common/security/config-encryption.module";
+import { validateJwtSecret } from "../../common/security/jwt-secret.util";
 import { CasbinModule } from "../../infrastructure/casbin/casbin.module";
 import { PrismaModule } from "../../infrastructure/prisma/prisma.module";
 import { RedisModule } from "../../infrastructure/redis/redis.module";
@@ -51,16 +52,9 @@ import { TokenBlacklistService } from "./token-blacklist.service";
         ).toLowerCase();
         const isProd = appEnv === "production";
 
-        if (!secret) {
-          throw new Error("JWT_SECRET is required");
-        }
-        if (isProd && secret === "change_me") {
-          throw new Error("JWT_SECRET must be changed in production");
-        }
-        if (!isProd && secret === "change_me") {
-          logger.warn(
-            'JWT_SECRET is set to insecure default value "change_me".',
-          );
+        const { warnings } = validateJwtSecret(secret, isProd);
+        for (const warning of warnings) {
+          logger.warn(warning);
         }
 
         return {

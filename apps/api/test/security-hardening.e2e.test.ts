@@ -197,7 +197,7 @@ before(async () => {
   process.env.APP_ENV = "development";
   process.env.ALLOWED_ORIGINS = allowedOrigin;
   process.env.CONFIG_ENCRYPTION_KEY = configEncryptionKey;
-  process.env.JWT_SECRET = "test-secret";
+  process.env.JWT_SECRET = "test-secret-test-secret-test-secret-0000";
   process.env.JWT_ACCESS_EXPIRES_IN = "15m";
   process.env.AUTH_PASSWORD_RESET_TOKEN_TTL_MINUTES = "30";
   process.env.AUTH_PASSWORD_RESET_URL = "http://localhost:3001/reset-password";
@@ -620,7 +620,7 @@ test("saving SMTP connector secrets without CONFIG_ENCRYPTION_KEY returns a clea
     process.env.APP_ENV = "development";
     process.env.ALLOWED_ORIGINS = allowedOrigin;
     delete process.env.CONFIG_ENCRYPTION_KEY;
-    process.env.JWT_SECRET = "test-secret";
+    process.env.JWT_SECRET = "test-secret-test-secret-test-secret-0000";
     process.env.JWT_ACCESS_EXPIRES_IN = "15m";
     process.env.AUTH_PASSWORD_RESET_TOKEN_TTL_MINUTES = "30";
     process.env.AUTH_PASSWORD_RESET_URL = "http://localhost:3001/reset-password";
@@ -714,7 +714,7 @@ test("saving SMTP connector secrets without CONFIG_ENCRYPTION_KEY returns a clea
     process.env.APP_ENV = "development";
     process.env.ALLOWED_ORIGINS = allowedOrigin;
     process.env.CONFIG_ENCRYPTION_KEY = configEncryptionKey;
-    process.env.JWT_SECRET = "test-secret";
+    process.env.JWT_SECRET = "test-secret-test-secret-test-secret-0000";
     process.env.JWT_ACCESS_EXPIRES_IN = "15m";
     process.env.AUTH_PASSWORD_RESET_TOKEN_TTL_MINUTES = "30";
     process.env.AUTH_PASSWORD_RESET_URL = "http://localhost:3001/reset-password";
