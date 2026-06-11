@@ -24,6 +24,10 @@ export class ApiClient {
     this.csrfEndpoint = options.csrf?.endpoint;
   }
 
+  get usesBearerTransport(): boolean {
+    return Boolean(this.getAccessToken);
+  }
+
   get<T>(path: string, options?: RequestOptions): Promise<T> {
     return this.request<T>('GET', path, options);
   }

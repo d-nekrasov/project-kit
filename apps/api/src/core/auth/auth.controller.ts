@@ -66,7 +66,14 @@ export class AuthController {
   ): Promise<AuthResponseDto> {
     return this.authService.login(dto, getRequestMetadata(req)).then((result) => {
       res.setHeader("Set-Cookie", this.authCookieService.buildAuthCookie(result.accessToken));
-      return result;
+
+      if (this.authTransportService.isBearerResponseRequested(req.headers)) {
+        return result;
+      }
+
+      // Cookie-режим: токен доставляется только HttpOnly-кукой,
+      // expiresIn оставляем для клиентских UX-таймеров.
+      return { expiresIn: result.expiresIn, user: result.user };
     });
   }
 

@@ -119,6 +119,7 @@ async function apiRequest<T>(
     origin,
     cookie,
     csrfToken,
+    authTransport,
   }: {
     body?: unknown;
     token?: string;
@@ -127,6 +128,7 @@ async function apiRequest<T>(
     origin?: string;
     cookie?: string;
     csrfToken?: string;
+    authTransport?: string;
   } = {},
 ): Promise<{ status: number; data: T; headers: Headers }> {
   const response = await fetch(`${baseUrl}${path}`, {
@@ -140,6 +142,7 @@ async function apiRequest<T>(
       ...(origin ? { Origin: origin } : {}),
       ...(cookie ? { Cookie: cookie } : {}),
       ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
+      ...(authTransport ? { "X-Auth-Transport": authTransport } : {}),
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
@@ -179,6 +182,7 @@ async function loginAdmin(): Promise<void> {
     password: "AdminPassword123!",
   });
 
+  assert.ok(response.accessToken, "bearer-configured SDK must receive accessToken in login body");
   adminToken = response.accessToken;
   adminOrganizationId = response.user.organizations[0]?.id ?? "";
   assert.ok(adminOrganizationId);
@@ -264,11 +268,37 @@ test("allowed origins receive CORS headers, disallowed origins do not, and helme
   assert.equal(deniedResponse.headers.get("access-control-allow-origin"), null);
 });
 
-test("login issues jti-bearing JWT and sets an httpOnly auth cookie", async () => {
+test("cookie-mode login omits the access token from the body and sets an httpOnly auth cookie", async () => {
+  const response = await apiRequest<{
+    accessToken?: string;
+    tokenType?: string;
+    user: { organizations: Array<{ id: string }> };
+  }>("POST", "/auth/login", {
+    forwardedFor: nextIp("login-cookie-mode"),
+    body: {
+      email: "admin@example.com",
+      password: "AdminPassword123!",
+    },
+  });
+
+  assert.equal(response.status, 201);
+  assert.equal(response.data.accessToken, undefined);
+  assert.equal(response.data.tokenType, undefined);
+  assert.ok(response.data.user);
+
+  const setCookie = getSetCookie(response.headers);
+  assert.match(setCookie, /HttpOnly/);
+  assert.match(setCookie, /SameSite=Strict/);
+  assert.doesNotMatch(setCookie, /Secure/);
+});
+
+test("bearer-requested login issues jti-bearing JWT in the body and still sets an httpOnly auth cookie", async () => {
   const response = await apiRequest<{
     accessToken: string;
     user: { organizations: Array<{ id: string }> };
   }>("POST", "/auth/login", {
+    authTransport: "bearer",
+    forwardedFor: nextIp("login-bearer-mode"),
     body: {
       email: "admin@example.com",
       password: "AdminPassword123!",
@@ -287,6 +317,8 @@ test("login issues jti-bearing JWT and sets an httpOnly auth cookie", async () =
 
 test("cookie auth works, bearer fallback remains available, and removed debug endpoints return 404", async () => {
   const loginResponse = await apiRequest<{ accessToken: string }>("POST", "/auth/login", {
+    authTransport: "bearer",
+    forwardedFor: nextIp("login-fallback"),
     body: {
       email: "admin@example.com",
       password: "AdminPassword123!",
@@ -316,10 +348,11 @@ test("cookie auth works, bearer fallback remains available, and removed debug en
 });
 
 test("cookie-auth mutating requests require CSRF while GET stays exempt", async () => {
-  const loginResponse = await apiRequest<{ accessToken: string; user: { organizations: Array<{ id: string }> } }>(
+  const loginResponse = await apiRequest<{ user: { organizations: Array<{ id: string }> } }>(
     "POST",
     "/auth/login",
     {
+      forwardedFor: nextIp("login-csrf"),
       body: {
         email: "admin@example.com",
         password: "AdminPassword123!",
@@ -382,6 +415,8 @@ test("cookie-auth mutating requests require CSRF while GET stays exempt", async 
 
 test("logout revokes the current token, clears auth/csrf cookies, and protected endpoints reject the old token", async () => {
   const loginResponse = await apiRequest<{ accessToken: string }>("POST", "/auth/login", {
+    authTransport: "bearer",
+    forwardedFor: nextIp("login-logout"),
     body: {
       email: "admin@example.com",
       password: "AdminPassword123!",
@@ -463,6 +498,28 @@ test("bearer requests are rejected when AUTH_BEARER_ENABLED=false", async () => 
     });
 
     assert.equal(response.status, 401);
+
+    // Клиентский запрос bearer-ответа не может пересилить серверную политику.
+    const loginResponse = await fetch(`${isolatedBaseUrl}/auth/login`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "X-Auth-Transport": "bearer",
+      },
+      body: JSON.stringify({
+        email: "admin@example.com",
+        password: "AdminPassword123!",
+      }),
+    });
+    assert.equal(loginResponse.status, 201);
+    const loginData = (await loginResponse.json()) as {
+      accessToken?: string;
+      user?: unknown;
+    };
+    assert.equal(loginData.accessToken, undefined);
+    assert.ok(loginData.user);
+    assert.match(loginResponse.headers.get("set-cookie") ?? "", /HttpOnly/);
   } finally {
     if (originalBearerEnabled === undefined) {
       delete process.env.AUTH_BEARER_ENABLED;
@@ -609,6 +666,7 @@ test("saving SMTP connector secrets without CONFIG_ENCRYPTION_KEY returns a clea
         Accept: "application/json",
         "Content-Type": "application/json",
         Origin: allowedOrigin,
+        "X-Auth-Transport": "bearer",
       },
       body: JSON.stringify({
         email: "admin@example.com",

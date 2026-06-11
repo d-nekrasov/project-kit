@@ -277,6 +277,7 @@ before(async () => {
     password: "AdminPassword123!",
   });
 
+  assert.ok(adminLogin.accessToken, "bearer-configured SDK must receive accessToken in login body");
   adminToken = adminLogin.accessToken;
   adminOrganizationId = adminLogin.user.organizations[0]?.id ?? "";
   assert.ok(adminOrganizationId, "Admin organization id is required for tests");
