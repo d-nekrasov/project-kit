@@ -12,6 +12,7 @@ export class ApiClient {
   private readonly csrfEndpoint?: string;
   private csrfToken: string | null = null;
   private csrfHeaderName = 'X-CSRF-Token';
+  private csrfTokenPromise: Promise<string> | null = null;
 
   constructor(options: ApiClientOptions) {
     this.baseUrl = options.baseUrl.replace(/\/$/, '');
@@ -149,6 +150,23 @@ export class ApiClient {
       return this.csrfToken;
     }
 
+    if (!forceRefresh && this.csrfTokenPromise) {
+      return this.csrfTokenPromise;
+    }
+
+    const nextTokenPromise = this.fetchCsrfToken();
+    this.csrfTokenPromise = nextTokenPromise;
+
+    try {
+      return await nextTokenPromise;
+    } finally {
+      if (this.csrfTokenPromise === nextTokenPromise) {
+        this.csrfTokenPromise = null;
+      }
+    }
+  }
+
+  private async fetchCsrfToken(): Promise<string> {
     const response = await this.fetchImpl(`${this.baseUrl}${this.csrfEndpoint}`, {
       method: 'GET',
       headers: {

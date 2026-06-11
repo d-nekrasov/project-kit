@@ -2,9 +2,12 @@ import assert from 'node:assert/strict';
 import { afterEach, test } from 'node:test';
 
 import {
+  clearRecentLogout,
   clearAuthStorage,
   clearActiveOrganizationId,
+  consumeRecentLogout,
   getActiveOrganizationId,
+  markRecentLogout,
   removeLegacyAccessToken,
   setActiveOrganizationId
 } from './auth-storage';
@@ -30,14 +33,21 @@ class LocalStorageMock {
 }
 
 const localStorageMock = new LocalStorageMock();
+const sessionStorageMock = new LocalStorageMock();
 
 Object.defineProperty(globalThis, 'localStorage', {
   value: localStorageMock,
   configurable: true
 });
 
+Object.defineProperty(globalThis, 'sessionStorage', {
+  value: sessionStorageMock,
+  configurable: true
+});
+
 afterEach(() => {
   localStorageMock.clear();
+  sessionStorageMock.clear();
 });
 
 test('auth storage keeps only organization context and never preserves access tokens in localStorage', () => {
@@ -60,4 +70,16 @@ test('active organization id can be cleared independently', () => {
   clearActiveOrganizationId();
 
   assert.equal(getActiveOrganizationId(), null);
+});
+
+test('recent logout marker is consumed once', () => {
+  assert.equal(consumeRecentLogout(), false);
+
+  markRecentLogout();
+  assert.equal(consumeRecentLogout(), true);
+  assert.equal(consumeRecentLogout(), false);
+
+  markRecentLogout();
+  clearRecentLogout();
+  assert.equal(consumeRecentLogout(), false);
 });

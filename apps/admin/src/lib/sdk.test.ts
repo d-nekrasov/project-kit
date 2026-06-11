@@ -123,6 +123,78 @@ test('SDK retries a mutating request once after a CSRF 403 by refreshing the tok
   assert.equal(logoutAttempts, 2);
 });
 
+test('SDK reuses a single CSRF fetch for concurrent mutating requests', async () => {
+  const calls: Array<{ url: string; method: string; csrfHeader: string | null }> = [];
+  let csrfCalls = 0;
+  let releaseCsrfFetch: (() => void) | null = null;
+  const csrfFetchBlocked = new Promise<void>((resolve) => {
+    releaseCsrfFetch = resolve;
+  });
+
+  const sdk = createProjectKitSdk({
+    baseUrl: 'http://localhost:3000/api',
+    csrf: {
+      endpoint: '/auth/csrf'
+    },
+    fetchImpl: async (input, init) => {
+      const url = String(input);
+      const method = init?.method ?? 'GET';
+      const headers = new Headers(init?.headers);
+
+      calls.push({
+        url,
+        method,
+        csrfHeader: headers.get('X-CSRF-Token')
+      });
+
+      if (url.endsWith('/auth/csrf')) {
+        csrfCalls += 1;
+        await csrfFetchBlocked;
+
+        return new Response(
+          JSON.stringify({
+            csrfToken: 'shared-csrf-token',
+            headerName: 'X-CSRF-Token',
+            cookieName: 'XSRF-TOKEN'
+          }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+      }
+
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+  });
+
+  const firstRequest = sdk.client.post<{ success: true }>('/concurrent-a');
+  const secondRequest = sdk.client.post<{ success: true }>('/concurrent-b');
+
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  assert.equal(csrfCalls, 1);
+  releaseCsrfFetch?.();
+
+  await Promise.all([firstRequest, secondRequest]);
+
+  assert.equal(csrfCalls, 1);
+  assert.equal(
+    calls.filter((call) => call.url.endsWith('/auth/csrf')).length,
+    1
+  );
+
+  const mutatingCalls = calls.filter((call) => !call.url.endsWith('/auth/csrf'));
+  assert.equal(mutatingCalls.length, 2);
+  assert.deepEqual(
+    mutatingCalls.map((call) => call.csrfHeader),
+    ['shared-csrf-token', 'shared-csrf-token']
+  );
+});
+
 test('skipAuth requests do not trigger unauthorized handler', async () => {
   let unauthorizedCalls = 0;
 

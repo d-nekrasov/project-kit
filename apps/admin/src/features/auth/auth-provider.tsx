@@ -1,16 +1,20 @@
-import { useCallback, useEffect, useMemo, useState, type PropsWithChildren } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type PropsWithChildren } from 'react';
 
 import type { CurrentUser } from '@project-kit/sdk';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { AuthContext, type AuthContextValue } from '@/features/auth/auth-context';
 import {
+  clearRecentLogout,
   clearActiveOrganizationId,
   clearAuthStorage,
+  consumeRecentLogout,
   getActiveOrganizationId,
+  markRecentLogout,
   removeLegacyAccessToken,
   setActiveOrganizationId
 } from '@/features/auth/auth-storage';
+import { isPublicAuthPath } from '@/lib/auth-redirect';
 import { sdk } from '@/lib/sdk';
 
 function resolveOrganization(user: CurrentUser, savedOrganizationId: string | null): string | null {
@@ -34,6 +38,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [activeOrganizationId, setActiveOrganizationIdState] = useState<string | null>(
     getActiveOrganizationId()
   );
+  const hasBootstrappedRef = useRef(false);
 
   const refreshPermissions = useCallback(async () => {
     const organizationId = getActiveOrganizationId();
@@ -84,6 +89,18 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, [queryClient, refreshPermissions]);
 
   useEffect(() => {
+    if (hasBootstrappedRef.current) {
+      return;
+    }
+
+    hasBootstrappedRef.current = true;
+
+    if (typeof window !== 'undefined' && isPublicAuthPath(window.location.pathname)) {
+      consumeRecentLogout();
+      setIsLoading(false);
+      return;
+    }
+
     void refreshMe();
   }, [refreshMe]);
 
@@ -96,6 +113,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       try {
         const result = await sdk.auth.login({ email, password });
         removeLegacyAccessToken();
+        clearRecentLogout();
 
         const orgId = resolveOrganization(result.user, getActiveOrganizationId());
         if (orgId) {
@@ -124,6 +142,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
     queryClient.clear();
     clearAuthStorage();
+    markRecentLogout();
     setUser(null);
     setActiveOrganizationIdState(null);
     setPermissions([]);
