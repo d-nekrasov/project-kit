@@ -104,6 +104,6 @@ import { TokenBlacklistService } from "./token-blacklist.service";
     },
     TokenBlacklistService,
   ],
-  exports: [AuthService],
+  exports: [AuthService, AuthCsrfService, AuthTransportService],
 })
 export class AuthModule {}
