@@ -27,6 +27,7 @@ import { ValidateResetPasswordTokenResponseDto } from "./dto/validate-reset-pass
 import { CurrentUser } from "./types/current-user.type";
 import { JwtPayload } from "./types/jwt-payload.type";
 import { CurrentOrganization } from "../organization-context/types/current-organization.type";
+import { CurrentUserCacheService } from "./current-user-cache.service";
 import { TokenBlacklistService } from "./token-blacklist.service";
 
 const INVALID_CREDENTIALS_MESSAGE = "Invalid email or password";
@@ -59,6 +60,7 @@ export class AuthService {
     private readonly auditLogsService: AuditLogsService,
     private readonly authPasswordResetMailService: AuthPasswordResetMailService,
     private readonly tokenBlacklistService: TokenBlacklistService,
+    private readonly currentUserCacheService: CurrentUserCacheService,
   ) {}
 
   async login(
@@ -136,6 +138,7 @@ export class AuthService {
     }
 
     await this.tokenBlacklistService.revoke(payload.jti, expiresAt);
+    await this.currentUserCacheService.invalidate(payload.sub);
 
     await this.auditLogsService.write({
       action: AUDIT_ACTIONS.AUTH_LOGOUT,
@@ -150,7 +153,16 @@ export class AuthService {
   }
 
   async getCurrentUserById(userId: string): Promise<CurrentUser> {
-    return this.buildCurrentUser(userId);
+    const cachedUser = await this.currentUserCacheService.get(userId);
+    if (cachedUser) {
+      return cachedUser;
+    }
+
+    // buildCurrentUser throws for missing/inactive users, so only active
+    // users ever reach the cache.
+    const currentUser = await this.buildCurrentUser(userId);
+    await this.currentUserCacheService.set(userId, currentUser);
+    return currentUser;
   }
 
   async forgotPassword(
@@ -315,6 +327,8 @@ export class AuthService {
       }
       throw error;
     }
+
+    await this.currentUserCacheService.invalidate(activePasswordResetToken.userId);
 
     await this.auditLogsService.write({
       action: AUDIT_ACTIONS.AUTH_PASSWORD_RESET_COMPLETED,

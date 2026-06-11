@@ -19,7 +19,6 @@ import * as argon2 from "argon2";
 
 import { createProjectKitSdk } from "../../../packages/sdk/src/create-project-kit-sdk";
 import { ApiError } from "../../../packages/sdk/src/client/api-error";
-import { configureApp } from "../src/common/security/app-security";
 
 type SentEmail = {
   to: string;
@@ -58,6 +57,9 @@ const configEncryptionKey = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=";
 const databaseName = `project_kit_recovery_${Date.now()}_${Math.random().toString(16).slice(2, 10)}`;
 const databaseUrl = `postgresql://postgres:postgres@127.0.0.1:5432/${databaseName}?schema=public`;
 const { AppModule } = require("../dist/src/app.module");
+// configureApp must come from the same compiled output as AppModule so that
+// app.get(AuthCsrfService) resolves the same class identity registered in DI.
+const { configureApp } = require("../dist/src/common/security/app-security");
 const {
   EmailSmtpNotificationConnector,
 } = require("../dist/src/core/notifications/connectors/email-smtp-notification.connector");

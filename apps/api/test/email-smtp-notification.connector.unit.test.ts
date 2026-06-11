@@ -2,22 +2,21 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { NotificationChannel } from "@prisma/client";
-import { ConfigService } from "@nestjs/config";
 import nodemailer from "nodemailer";
 
-import { ConfigEncryptionService } from "../src/common/security/config-encryption.service";
 import { EmailSmtpNotificationConnector } from "../src/core/notifications/connectors/email-smtp-notification.connector";
+import {
+  createConfigEncryptionService,
+  generateConfigEncryptionKey,
+} from "./helpers/config-encryption";
 
-const configEncryptionKey = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=";
-const rotatedConfigEncryptionKey = "abcdefghijklmnopqrstuvwxyzABCDEF";
+const configEncryptionKey = generateConfigEncryptionKey();
+const rotatedConfigEncryptionKey = generateConfigEncryptionKey();
 
 test("EmailSmtpNotificationConnector decrypts SMTP passwords only inside backend runtime", async () => {
-  const configEncryptionService = new ConfigEncryptionService(
-    new ConfigService({
-      APP_ENV: "test",
-      CONFIG_ENCRYPTION_KEY: configEncryptionKey,
-    }),
-  );
+  const configEncryptionService = createConfigEncryptionService({
+    configEncryptionKey,
+  });
   const connector = new EmailSmtpNotificationConnector(configEncryptionService);
   const encryptedPassword = configEncryptionService.encrypt("SuperSecret123!");
 
@@ -54,18 +53,12 @@ test("EmailSmtpNotificationConnector decrypts SMTP passwords only inside backend
 });
 
 test("EmailSmtpNotificationConnector returns a clear error when encrypted SMTP secrets cannot be decrypted", async () => {
-  const originalService = new ConfigEncryptionService(
-    new ConfigService({
-      APP_ENV: "test",
-      CONFIG_ENCRYPTION_KEY: configEncryptionKey,
-    }),
-  );
-  const rotatedService = new ConfigEncryptionService(
-    new ConfigService({
-      APP_ENV: "test",
-      CONFIG_ENCRYPTION_KEY: rotatedConfigEncryptionKey,
-    }),
-  );
+  const originalService = createConfigEncryptionService({
+    configEncryptionKey,
+  });
+  const rotatedService = createConfigEncryptionService({
+    configEncryptionKey: rotatedConfigEncryptionKey,
+  });
   const connector = new EmailSmtpNotificationConnector(rotatedService);
 
   const result = await connector.send({

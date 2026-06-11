@@ -31,6 +31,11 @@ test("AuthService.logout adds jti to blacklist until token expiration", async ()
         revoked.push({ jti, expiresAt });
       },
     } as never,
+    {
+      async invalidate(): Promise<void> {
+        return undefined;
+      },
+    } as never,
   );
 
   await service.logout("access-token");
@@ -61,6 +66,11 @@ test("AuthService.logout rejects tokens without jti", async () => {
     {
       async revoke(): Promise<void> {
         throw new Error("should not be called");
+      },
+    } as never,
+    {
+      async invalidate(): Promise<void> {
+        return undefined;
       },
     } as never,
   );

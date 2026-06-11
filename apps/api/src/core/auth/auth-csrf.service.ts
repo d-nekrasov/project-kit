@@ -1,6 +1,8 @@
 import { ForbiddenException, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { randomBytes } from "node:crypto";
+import { parseDurationToMs } from "../../common/utils/duration.util";
+import { extractCookieValue } from "./utils/cookie-value.util";
 
 const DEFAULT_CSRF_COOKIE_NAME = "XSRF-TOKEN";
 const DEFAULT_CSRF_HEADER_NAME = "X-CSRF-Token";
@@ -137,22 +139,6 @@ export class AuthCsrfService {
   }
 }
 
-function extractCookieValue(cookieHeader: string | undefined, name: string): string | null {
-  if (!cookieHeader) {
-    return null;
-  }
-
-  const cookies = cookieHeader.split(";");
-  for (const cookie of cookies) {
-    const [rawName, ...rawValue] = cookie.trim().split("=");
-    if (rawName === name) {
-      return decodeURIComponent(rawValue.join("="));
-    }
-  }
-
-  return null;
-}
-
 function capitalizeSameSite(value: SameSiteValue): "Strict" | "Lax" | "None" {
   if (value === "lax") {
     return "Lax";
@@ -161,32 +147,4 @@ function capitalizeSameSite(value: SameSiteValue): "Strict" | "Lax" | "None" {
     return "None";
   }
   return "Strict";
-}
-
-function parseDurationToMs(value: string): number {
-  const normalized = value.trim();
-  if (!normalized) {
-    return 15 * 60 * 1000;
-  }
-
-  if (/^\d+$/.test(normalized)) {
-    return Number.parseInt(normalized, 10) * 1000;
-  }
-
-  const match = normalized.match(/^(\d+)(ms|s|m|h|d)$/i);
-  if (!match) {
-    return 15 * 60 * 1000;
-  }
-
-  const amount = Number.parseInt(match[1], 10);
-  const unit = match[2].toLowerCase();
-  const multipliers: Record<string, number> = {
-    ms: 1,
-    s: 1000,
-    m: 60 * 1000,
-    h: 60 * 60 * 1000,
-    d: 24 * 60 * 60 * 1000,
-  };
-
-  return amount * multipliers[unit];
 }

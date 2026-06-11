@@ -21,6 +21,7 @@ import {
   AUDIT_ACTIONS,
   AUDIT_ENTITY_TYPES
 } from '../audit-logs/constants/audit-actions.constants';
+import { CurrentUserCacheService } from '../auth/current-user-cache.service';
 import { CurrentUser } from '../auth/types/current-user.type';
 import { NOTIFICATION_EVENTS } from '../notifications/constants/notification-events.constants';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -56,7 +57,8 @@ export class UsersService {
     private readonly casbinService: CasbinService,
     private readonly auditLogsService: AuditLogsService,
     private readonly notificationsService: NotificationsService,
-    private readonly systemLogsService: SystemLogsService
+    private readonly systemLogsService: SystemLogsService,
+    private readonly currentUserCacheService: CurrentUserCacheService
   ) {}
 
   async findAll(
@@ -146,6 +148,7 @@ export class UsersService {
       include: USER_INCLUDE
     });
 
+    await this.currentUserCacheService.invalidate(currentUser.id);
     const changedFields = [dto.name !== undefined ? 'name' : null].filter(
       Boolean
     );
@@ -381,6 +384,7 @@ export class UsersService {
         targetOrganizationId
       );
     }
+    await this.currentUserCacheService.invalidate(userId);
     const changedFields = [
       dto.name !== undefined ? 'name' : null,
       dto.roleId ? 'roleId' : null,
@@ -510,6 +514,7 @@ export class UsersService {
       data: { status },
       include: USER_INCLUDE
     });
+    await this.currentUserCacheService.invalidate(userId);
     await this.auditLogsService.write({
       action: AUDIT_ACTIONS.USER_STATUS_UPDATE,
       entityType: AUDIT_ENTITY_TYPES.USER,
@@ -757,6 +762,7 @@ export class UsersService {
         )
       )
     );
+    await this.currentUserCacheService.invalidate(userId);
     await this.auditLogsService.write({
       action: AUDIT_ACTIONS.USER_ORGANIZATIONS_UPDATE,
       entityType: AUDIT_ENTITY_TYPES.USER,
@@ -860,6 +866,7 @@ export class UsersService {
     });
 
     await this.casbinService.reloadUserOrganizationRole(userId, organizationId);
+    await this.currentUserCacheService.invalidate(userId);
     await this.auditLogsService.write({
       action: AUDIT_ACTIONS.USER_ORGANIZATION_REMOVE,
       entityType: AUDIT_ENTITY_TYPES.USER,
