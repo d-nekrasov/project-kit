@@ -1,17 +1,20 @@
-import { useCallback, useEffect, useMemo, useState, type PropsWithChildren } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type PropsWithChildren } from 'react';
 
 import type { CurrentUser } from '@project-kit/sdk';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { AuthContext, type AuthContextValue } from '@/features/auth/auth-context';
 import {
+  clearRecentLogout,
   clearActiveOrganizationId,
   clearAuthStorage,
-  getAccessToken,
+  consumeRecentLogout,
   getActiveOrganizationId,
-  setAccessToken,
+  markRecentLogout,
+  removeLegacyAccessToken,
   setActiveOrganizationId
 } from '@/features/auth/auth-storage';
+import { isPublicAuthPath } from '@/lib/auth-redirect';
 import { sdk } from '@/lib/sdk';
 
 function resolveOrganization(user: CurrentUser, savedOrganizationId: string | null): string | null {
@@ -35,12 +38,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [activeOrganizationId, setActiveOrganizationIdState] = useState<string | null>(
     getActiveOrganizationId()
   );
+  const hasBootstrappedRef = useRef(false);
 
   const refreshPermissions = useCallback(async () => {
-    const token = getAccessToken();
     const organizationId = getActiveOrganizationId();
 
-    if (!token || !organizationId) {
+    if (!organizationId) {
       setPermissions([]);
       setIsPermissionsLoading(false);
       return;
@@ -58,15 +61,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, []);
 
   const refreshMe = useCallback(async () => {
-    const token = getAccessToken();
-    if (!token) {
-      setUser(null);
-      setActiveOrganizationIdState(null);
-      setPermissions([]);
-      setIsPermissionsLoading(false);
-      setIsLoading(false);
-      return;
-    }
+    removeLegacyAccessToken();
 
     try {
       const nextUser = await sdk.auth.me();
@@ -94,6 +89,18 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, [queryClient, refreshPermissions]);
 
   useEffect(() => {
+    if (hasBootstrappedRef.current) {
+      return;
+    }
+
+    hasBootstrappedRef.current = true;
+
+    if (typeof window !== 'undefined' && isPublicAuthPath(window.location.pathname)) {
+      consumeRecentLogout();
+      setIsLoading(false);
+      return;
+    }
+
     void refreshMe();
   }, [refreshMe]);
 
@@ -105,7 +112,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
       try {
         const result = await sdk.auth.login({ email, password });
-        setAccessToken(result.accessToken);
+        removeLegacyAccessToken();
+        clearRecentLogout();
 
         const orgId = resolveOrganization(result.user, getActiveOrganizationId());
         if (orgId) {
@@ -125,9 +133,16 @@ export function AuthProvider({ children }: PropsWithChildren) {
     [queryClient, refreshPermissions]
   );
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try {
+      await sdk.auth.logout();
+    } catch {
+      // Clear local state even if the server-side session is already gone.
+    }
+
     queryClient.clear();
     clearAuthStorage();
+    markRecentLogout();
     setUser(null);
     setActiveOrganizationIdState(null);
     setPermissions([]);
@@ -150,7 +165,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     () => ({
       user,
       isLoading,
-      isAuthenticated: Boolean(user && getAccessToken()),
+      isAuthenticated: Boolean(user),
       permissions,
       isPermissionsLoading,
       activeOrganizationId,

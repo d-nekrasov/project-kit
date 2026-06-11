@@ -78,9 +78,9 @@ export function UserMenu() {
             />
           ) : null}
           <DropdownMenuItem
-            onClick={() => {
+            onClick={async () => {
               setOpen(false);
-              auth.logout();
+              await auth.logout();
               navigate('/login');
             }}
           >

@@ -2,6 +2,12 @@ import type { NotificationStatus } from '@prisma/client';
 
 export type NotificationSseResponse = {
   write(chunk: string): unknown;
+  on?(event: "close" | "error" | "finish", listener: () => void): unknown;
+  flushHeaders?(): void;
+  status?(code: number): unknown;
+  setHeader?(name: string, value: string): unknown;
+  writableEnded?: boolean;
+  destroyed?: boolean;
 };
 
 export type NotificationSseClient = {
@@ -9,6 +15,12 @@ export type NotificationSseClient = {
   userId: string;
   response: NotificationSseResponse;
   createdAt: Date;
+  heartbeat: NodeJS.Timeout;
+  cleanup: () => void;
+};
+
+export type NotificationSseRequest = {
+  on(event: "close" | "error" | "aborted", listener: () => void): unknown;
 };
 
 export type NotificationStreamTokenPayload = {

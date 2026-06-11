@@ -206,12 +206,10 @@ export function Select({
   const currentValue = String(isControlled ? value ?? '' : internalValue);
   const hasEmptyOption = options.some((option) => option.value === '');
   const emptyOption = options.find((option) => option.value === '');
-  const rootValue = currentValue === '' ? (hasEmptyOption ? EMPTY_VALUE_SENTINEL : undefined) : currentValue;
+  const rootValue = currentValue === '' ? EMPTY_VALUE_SENTINEL : currentValue;
   const rootDefaultValue = !isControlled
     ? String(defaultValue ?? '') === ''
-      ? hasEmptyOption
-        ? EMPTY_VALUE_SENTINEL
-        : undefined
+      ? EMPTY_VALUE_SENTINEL
       : String(defaultValue)
     : undefined;
 
@@ -254,6 +252,11 @@ export function Select({
         <SelectValue placeholder={emptyOption ? emptyOption.label : 'Select...'} />
       </SelectTrigger>
       <SelectContent>
+        {!hasEmptyOption ? (
+          <SelectItem value={EMPTY_VALUE_SENTINEL} disabled className="hidden">
+            Select...
+          </SelectItem>
+        ) : null}
         {groups.map((group, groupIndex) => (
           <SelectGroup key={`${String(group.label ?? 'group')}-${groupIndex}`}>
             {group.label ? <SelectLabel>{group.label}</SelectLabel> : null}
