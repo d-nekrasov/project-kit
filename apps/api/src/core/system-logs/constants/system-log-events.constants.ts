@@ -13,5 +13,8 @@ export const SYSTEM_LOG_EVENTS = {
   NOTIFICATION_NO_RECIPIENTS: 'notification.no_recipients',
   NOTIFICATION_DELIVERY_FAILED: 'notification.delivery_failed',
   NOTIFICATION_CONNECTOR_FAILED: 'notification.connector_failed',
-  NOTIFICATION_TEMPLATE_RENDER_FAILED: 'notification.template_render_failed'
+  NOTIFICATION_TEMPLATE_RENDER_FAILED: 'notification.template_render_failed',
+  DATA_RETENTION_RUN_COMPLETED: 'data_retention.run_completed',
+  DATA_RETENTION_STEP_FAILED: 'data_retention.step_failed',
+  DATA_RETENTION_RUN_FAILED: 'data_retention.run_failed'
 } as const;

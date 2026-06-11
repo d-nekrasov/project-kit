@@ -10,5 +10,6 @@ export const SYSTEM_LOG_SOURCES = {
   USERS: 'users',
   ROLES: 'roles',
   ORGANIZATIONS: 'organizations',
-  NOTIFICATIONS: 'notifications'
+  NOTIFICATIONS: 'notifications',
+  DATA_RETENTION: 'data_retention'
 } as const;
