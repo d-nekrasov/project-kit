@@ -2,12 +2,14 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { NotificationChannel, NotificationConnectorStatus } from "@prisma/client";
-import { ConfigService } from "@nestjs/config";
 
-import { ConfigEncryptionService } from "../src/common/security/config-encryption.service";
 import { NotificationConnectorsService } from "../src/core/notifications/notification-connectors.service";
+import {
+  createConfigEncryptionService,
+  generateConfigEncryptionKey,
+} from "./helpers/config-encryption";
 
-const configEncryptionKey = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=";
+const configEncryptionKey = generateConfigEncryptionKey();
 
 function createServiceHarness() {
   let storedConfig: Record<string, unknown> = {
@@ -55,12 +57,7 @@ function createServiceHarness() {
   const service = new NotificationConnectorsService(
     prisma as any,
     { write: async () => undefined } as any,
-    new ConfigEncryptionService(
-      new ConfigService({
-        APP_ENV: "test",
-        CONFIG_ENCRYPTION_KEY: configEncryptionKey,
-      }),
-    ),
+    createConfigEncryptionService({ configEncryptionKey }),
   );
 
   return {
@@ -136,11 +133,7 @@ test("NotificationConnectorsService returns a clear error when saving sensitive 
   const service = new NotificationConnectorsService(
     prisma as any,
     { write: async () => undefined } as any,
-    new ConfigEncryptionService(
-      new ConfigService({
-        APP_ENV: "development",
-      }),
-    ),
+    createConfigEncryptionService({ appEnv: "development" }),
   );
 
   await assert.rejects(

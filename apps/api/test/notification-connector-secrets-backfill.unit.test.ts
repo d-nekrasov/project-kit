@@ -1,20 +1,17 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { ConfigService } from "@nestjs/config";
-
 import { ConfigEncryptionService } from "../src/common/security/config-encryption.service";
 import { backfillNotificationConnectorSecrets } from "../src/core/notifications/notification-connector-secrets-backfill";
+import {
+  createConfigEncryptionService,
+  generateConfigEncryptionKey,
+} from "./helpers/config-encryption";
 
-const configEncryptionKey = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=";
+const configEncryptionKey = generateConfigEncryptionKey();
 
 function createEncryptionService(): ConfigEncryptionService {
-  return new ConfigEncryptionService(
-    new ConfigService({
-      APP_ENV: "test",
-      CONFIG_ENCRYPTION_KEY: configEncryptionKey,
-    }),
-  );
+  return createConfigEncryptionService({ configEncryptionKey });
 }
 
 test("notification connector secret backfill encrypts plaintext secrets and is idempotent", async () => {

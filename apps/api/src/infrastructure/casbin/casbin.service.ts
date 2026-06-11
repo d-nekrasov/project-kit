@@ -7,6 +7,7 @@ import { SystemLogsService } from '../../core/system-logs/system-logs.service';
 import { parsePermissionCode } from '../../core/permissions/utils/parse-permission-code';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
+import { CasbinPolicyEvent, CasbinPolicyWatcher } from './casbin-watcher';
 
 @Injectable()
 export class CasbinService implements OnModuleInit {
@@ -21,12 +22,14 @@ export class CasbinService implements OnModuleInit {
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
     @Inject(forwardRef(() => SystemLogsService))
-    private readonly systemLogsService: SystemLogsService
+    private readonly systemLogsService: SystemLogsService,
+    private readonly policyWatcher: CasbinPolicyWatcher
   ) {}
 
   async onModuleInit(): Promise<void> {
     await this.initializeEnforcer();
-    await this.reloadAllPolicies();
+    await this.reloadAllPoliciesLocal();
+    await this.policyWatcher.start((event) => this.applyRemotePolicyEvent(event));
   }
 
   async loadPolicies(): Promise<void> {
@@ -38,6 +41,49 @@ export class CasbinService implements OnModuleInit {
   }
 
   async reloadAllPolicies(): Promise<void> {
+    await this.reloadAllPoliciesLocal();
+    await this.policyWatcher.publishPolicyEvent({ type: 'reload_all' });
+  }
+
+  async reloadRolePolicies(roleId: string): Promise<void> {
+    await this.reloadRolePoliciesLocal(roleId);
+    await this.policyWatcher.publishPolicyEvent({ type: 'reload_role', roleId });
+  }
+
+  async reloadUserOrganizationRole(userId: string, organizationId: string): Promise<void> {
+    await this.reloadUserOrganizationRoleLocal(userId, organizationId);
+    await this.policyWatcher.publishPolicyEvent({ type: 'reload_user_org', userId, organizationId });
+  }
+
+  async reloadUserSystemRoles(userId: string): Promise<void> {
+    await this.reloadUserSystemRolesLocal(userId);
+    await this.policyWatcher.publishPolicyEvent({ type: 'reload_user_system', userId });
+  }
+
+  private async applyRemotePolicyEvent(event: CasbinPolicyEvent): Promise<void> {
+    switch (event.type) {
+      case 'reload_all':
+        await this.reloadAllPoliciesLocal();
+        return;
+      case 'reload_role':
+        if (event.roleId) {
+          await this.reloadRolePoliciesLocal(event.roleId);
+        }
+        return;
+      case 'reload_user_org':
+        if (event.userId && event.organizationId) {
+          await this.reloadUserOrganizationRoleLocal(event.userId, event.organizationId);
+        }
+        return;
+      case 'reload_user_system':
+        if (event.userId) {
+          await this.reloadUserSystemRolesLocal(event.userId);
+        }
+        return;
+    }
+  }
+
+  private async reloadAllPoliciesLocal(): Promise<void> {
     try {
       await this.enqueuePolicyUpdate(async () => {
         const enforcer = await this.ensureEnforcer();
@@ -118,7 +164,7 @@ export class CasbinService implements OnModuleInit {
     }
   }
 
-  async reloadRolePolicies(roleId: string): Promise<void> {
+  private async reloadRolePoliciesLocal(roleId: string): Promise<void> {
     try {
       await this.enqueuePolicyUpdate(async () => {
         await this.ensureEnforcer();
@@ -161,7 +207,7 @@ export class CasbinService implements OnModuleInit {
     }
   }
 
-  async reloadUserOrganizationRole(userId: string, organizationId: string): Promise<void> {
+  private async reloadUserOrganizationRoleLocal(userId: string, organizationId: string): Promise<void> {
     try {
       await this.enqueuePolicyUpdate(async () => {
         await this.ensureEnforcer();
@@ -207,7 +253,7 @@ export class CasbinService implements OnModuleInit {
     }
   }
 
-  async reloadUserSystemRoles(userId: string): Promise<void> {
+  private async reloadUserSystemRolesLocal(userId: string): Promise<void> {
     try {
       await this.enqueuePolicyUpdate(async () => {
         await this.ensureEnforcer();
@@ -308,7 +354,7 @@ export class CasbinService implements OnModuleInit {
     await this.policyUpdateQueue;
 
     if (!this.isReady) {
-      await this.reloadAllPolicies();
+      await this.reloadAllPoliciesLocal();
       await this.policyUpdateQueue;
     }
 

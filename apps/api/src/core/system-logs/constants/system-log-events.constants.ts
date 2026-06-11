@@ -1,6 +1,9 @@
 export const SYSTEM_LOG_EVENTS = {
   CASBIN_RELOAD_FAILED: 'casbin.reload_failed',
   CASBIN_ENFORCE_FAILED: 'casbin.enforce_failed',
+  CASBIN_WATCHER_PUBLISH_FAILED: 'casbin.watcher_publish_failed',
+  CASBIN_WATCHER_EVENT_FAILED: 'casbin.watcher_event_failed',
+  CASBIN_WATCHER_RESYNC_FAILED: 'casbin.watcher_resync_failed',
   AUDIT_WRITE_FAILED: 'audit.write_failed',
   INSTALLER_SETUP_FAILED: 'installer.setup_failed',
   INSTALLER_POLICY_RELOAD_FAILED: 'installer.policy_reload_failed',
