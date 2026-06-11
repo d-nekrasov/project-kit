@@ -7,17 +7,7 @@ import { NotificationResponseDto } from './dto/notification-response.dto';
 import { NotificationStreamTokenResponseDto } from './dto/notification-stream-token-response.dto';
 import { NotificationsRealtimeService } from './notifications-realtime.service';
 import { NotificationsService } from './notifications.service';
-
-type NotificationStreamRequest = {
-  on(event: 'close', listener: () => void): unknown;
-};
-
-type NotificationStreamResponse = {
-  status(code: number): unknown;
-  setHeader(name: string, value: string): unknown;
-  flushHeaders?: () => void;
-  write(chunk: string): unknown;
-};
+import type { NotificationSseRequest, NotificationSseResponse } from './types/notification-realtime.types';
 
 @Controller('notifications')
 export class NotificationsController {
@@ -36,35 +26,18 @@ export class NotificationsController {
   @Get('stream')
   async stream(
     @Query('token') token: string | undefined,
-    @Req() request: NotificationStreamRequest,
-    @Res() response: NotificationStreamResponse
+    @Req() request: NotificationSseRequest,
+    @Res() response: NotificationSseResponse
   ): Promise<void> {
     const { userId } = await this.notificationsService.validateStreamToken(token);
 
-    response.status(200);
-    response.setHeader('Content-Type', 'text/event-stream');
-    response.setHeader('Cache-Control', 'no-cache, no-transform');
-    response.setHeader('Connection', 'keep-alive');
-    response.setHeader('X-Accel-Buffering', 'no');
+    response.status?.(200);
+    response.setHeader?.('Content-Type', 'text/event-stream');
+    response.setHeader?.('Cache-Control', 'no-cache, no-transform');
+    response.setHeader?.('Connection', 'keep-alive');
+    response.setHeader?.('X-Accel-Buffering', 'no');
     response.flushHeaders?.();
-
-    const clientId = this.notificationsRealtimeService.addClient(userId, response);
-    response.write('event: connected\n');
-    response.write('data: {"connected":true}\n\n');
-
-    const keepAlive = setInterval(() => {
-      try {
-        response.write(': keep-alive\n\n');
-      } catch {
-        clearInterval(keepAlive);
-        this.notificationsRealtimeService.removeClient(userId, clientId);
-      }
-    }, 25_000);
-
-    request.on('close', () => {
-      clearInterval(keepAlive);
-      this.notificationsRealtimeService.removeClient(userId, clientId);
-    });
+    await this.notificationsRealtimeService.registerClient(userId, request, response);
   }
 
   @Get('my')

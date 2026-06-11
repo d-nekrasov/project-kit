@@ -1,13 +1,13 @@
 import type { ApiClient } from '../client/api-client';
 import type {
-  AuthContextResponse,
+  AuthCsrfResponse,
   AuthPermissionsResponse,
   AuthResponse,
   CurrentUser,
   ForgotPasswordDto,
   ForgotPasswordResponse,
   LoginDto,
-  PermissionsCheckResponse,
+  LogoutResponse,
   ResetPasswordDto,
   ResetPasswordResponse,
   ValidateResetPasswordTokenDto,
@@ -49,17 +49,19 @@ export class AuthApi {
     return this.client.get<CurrentUser>('/auth/me');
   }
 
+  csrf(): Promise<AuthCsrfResponse> {
+    return this.client.get<AuthCsrfResponse>('/auth/csrf', {
+      skipAuth: true,
+      skipOrganization: true,
+      skipCsrf: true
+    });
+  }
+
+  logout(): Promise<LogoutResponse> {
+    return this.client.post<LogoutResponse>('/auth/logout');
+  }
+
   permissions(): Promise<AuthPermissionsResponse> {
     return this.client.get<AuthPermissionsResponse>('/auth/permissions');
-  }
-
-  // TODO: remove when diagnostics module is introduced.
-  context(): Promise<AuthContextResponse> {
-    return this.client.get<AuthContextResponse>('/auth/context');
-  }
-
-  // TODO: remove when diagnostics module is introduced.
-  permissionsCheck(): Promise<PermissionsCheckResponse> {
-    return this.client.get<PermissionsCheckResponse>('/auth/permissions-check');
   }
 }

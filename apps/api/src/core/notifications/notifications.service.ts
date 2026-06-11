@@ -264,7 +264,7 @@ export class NotificationsService implements OnModuleInit {
       where: { recipientUserId: currentUser.id, status: NotificationStatus.UNREAD },
       data: { status: NotificationStatus.READ, readAt: new Date() }
     });
-    this.notificationsRealtimeService.sendToUser(currentUser.id, 'notifications.read_all', { unreadCount: 0 });
+    await this.notificationsRealtimeService.publishToUser(currentUser.id, 'notifications.read_all', { unreadCount: 0 });
     return { updated: result.count };
   }
 
@@ -392,7 +392,7 @@ export class NotificationsService implements OnModuleInit {
 
   private async pushNotificationCreated(recipientUserId: string, notification: CreatedNotification): Promise<void> {
     const unreadCount = await this.getUnreadCountForUser(recipientUserId);
-    this.notificationsRealtimeService.sendToUser(recipientUserId, 'notification.created', {
+    await this.notificationsRealtimeService.publishToUser(recipientUserId, 'notification.created', {
       notification,
       unreadCount
     });
@@ -400,7 +400,7 @@ export class NotificationsService implements OnModuleInit {
 
   private async pushNotificationRead(recipientUserId: string, notificationId: string): Promise<void> {
     const unreadCount = await this.getUnreadCountForUser(recipientUserId);
-    this.notificationsRealtimeService.sendToUser(recipientUserId, 'notification.read', {
+    await this.notificationsRealtimeService.publishToUser(recipientUserId, 'notification.read', {
       notificationId,
       unreadCount
     });

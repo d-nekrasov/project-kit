@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+import { ConfigEncryptionModule } from '../../common/security/config-encryption.module';
 import { CasbinModule } from '../../infrastructure/casbin/casbin.module';
 import { PrismaModule } from '../../infrastructure/prisma/prisma.module';
+import { RedisModule } from '../../infrastructure/redis/redis.module';
 import { AuditLogsModule } from '../audit-logs/audit-logs.module';
 import { OrganizationContextModule } from '../organization-context/organization-context.module';
 import { PermissionsModule } from '../permissions/permissions.module';
@@ -19,8 +21,10 @@ import { NotificationsService } from './notifications.service';
 
 @Module({
   imports: [
+    ConfigEncryptionModule,
     PrismaModule,
     CasbinModule,
+    RedisModule,
     SystemLogsModule,
     AuditLogsModule,
     OrganizationContextModule,

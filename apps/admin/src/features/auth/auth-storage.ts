@@ -1,17 +1,6 @@
-const ACCESS_TOKEN_KEY = 'project_kit_access_token';
+const LEGACY_ACCESS_TOKEN_KEY = 'project_kit_access_token';
 const ACTIVE_ORGANIZATION_ID_KEY = 'project_kit_active_organization_id';
-
-export function getAccessToken(): string | null {
-  return localStorage.getItem(ACCESS_TOKEN_KEY);
-}
-
-export function setAccessToken(token: string): void {
-  localStorage.setItem(ACCESS_TOKEN_KEY, token);
-}
-
-export function clearAccessToken(): void {
-  localStorage.removeItem(ACCESS_TOKEN_KEY);
-}
+const RECENT_LOGOUT_KEY = 'project_kit_recent_logout';
 
 export function getActiveOrganizationId(): string | null {
   return localStorage.getItem(ACTIVE_ORGANIZATION_ID_KEY);
@@ -26,6 +15,39 @@ export function clearActiveOrganizationId(): void {
 }
 
 export function clearAuthStorage(): void {
-  clearAccessToken();
+  localStorage.removeItem(LEGACY_ACCESS_TOKEN_KEY);
   clearActiveOrganizationId();
+}
+
+export function removeLegacyAccessToken(): void {
+  localStorage.removeItem(LEGACY_ACCESS_TOKEN_KEY);
+}
+
+export function markRecentLogout(): void {
+  if (typeof sessionStorage === 'undefined') {
+    return;
+  }
+
+  sessionStorage.setItem(RECENT_LOGOUT_KEY, '1');
+}
+
+export function clearRecentLogout(): void {
+  if (typeof sessionStorage === 'undefined') {
+    return;
+  }
+
+  sessionStorage.removeItem(RECENT_LOGOUT_KEY);
+}
+
+export function consumeRecentLogout(): boolean {
+  if (typeof sessionStorage === 'undefined') {
+    return false;
+  }
+
+  const hasRecentLogout = sessionStorage.getItem(RECENT_LOGOUT_KEY) === '1';
+  if (hasRecentLogout) {
+    sessionStorage.removeItem(RECENT_LOGOUT_KEY);
+  }
+
+  return hasRecentLogout;
 }

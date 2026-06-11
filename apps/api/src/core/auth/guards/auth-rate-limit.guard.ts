@@ -3,6 +3,7 @@ import {
   ExecutionContext,
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
@@ -11,7 +12,7 @@ import {
   AUTH_RATE_LIMIT_OPTIONS,
   AuthRateLimitOptions,
 } from "../decorators/auth-rate-limit.decorator";
-import { AuthRateLimitStore } from "../auth-rate-limit.store";
+import { RATE_LIMIT_STORE, type RateLimitStore } from "../auth-rate-limit.store";
 
 type RequestLike = {
   headers: Record<string, string | string[] | undefined>;
@@ -22,10 +23,11 @@ type RequestLike = {
 export class AuthRateLimitGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
-    private readonly authRateLimitStore: AuthRateLimitStore,
+    @Inject(RATE_LIMIT_STORE)
+    private readonly authRateLimitStore: RateLimitStore,
   ) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const options = this.reflector.getAllAndOverride<AuthRateLimitOptions>(
       AUTH_RATE_LIMIT_OPTIONS,
       [context.getHandler(), context.getClass()],
@@ -37,14 +39,13 @@ export class AuthRateLimitGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest<RequestLike>();
     const ip = getRequestMetadata(request).ip ?? "unknown";
-    const key = `${options.key}:${ip}`;
-    const allowed = this.authRateLimitStore.consume(
+    const key = `project-kit:rate-limit:${options.key}:${ip}`;
+    const count = await this.authRateLimitStore.increment(
       key,
-      options.limit,
       options.ttlMs,
     );
 
-    if (!allowed) {
+    if (count > options.limit) {
       throw new HttpException(
         "Too many requests. Please try again later.",
         HttpStatus.TOO_MANY_REQUESTS,

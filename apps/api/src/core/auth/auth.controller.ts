@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, Post, Req, Res, UnauthorizedException, UseGuards } from "@nestjs/common";
 import { getRequestMetadata } from "../../common/utils/request-metadata.util";
 import { AuthService } from "./auth.service";
 import { CurrentUser } from "./decorators/current-user.decorator";
@@ -18,10 +18,17 @@ import { CurrentUser as CurrentUserType } from "./types/current-user.type";
 import { CurrentOrganization } from "../organization-context/decorators/current-organization.decorator";
 import { OrganizationGuard } from "../organization-context/guards/organization.guard";
 import { CurrentOrganization as CurrentOrganizationType } from "../organization-context/types/current-organization.type";
-import { Permissions } from "../permissions/decorators/permissions.decorator";
-import { PermissionsGuard } from "../permissions/guards/permissions.guard";
+import { AuthCookieService } from "./auth-cookie.service";
+import { AuthCsrfService } from "./auth-csrf.service";
+import { LogoutResponseDto } from "./dto/logout-response.dto";
+import { AuthTransportService } from "./auth-transport.service";
 
 const FIFTEEN_MINUTES_IN_MS = 15 * 60 * 1000;
+const LOGIN_RATE_LIMIT = {
+  key: "login",
+  limit: 5,
+  ttlMs: FIFTEEN_MINUTES_IN_MS,
+};
 const FORGOT_PASSWORD_RATE_LIMIT = {
   key: "forgot-password",
   limit: 5,
@@ -35,18 +42,32 @@ const RESET_PASSWORD_RATE_LIMIT = {
 
 @Controller("auth")
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly authCookieService: AuthCookieService,
+    private readonly authCsrfService: AuthCsrfService,
+    private readonly authTransportService: AuthTransportService,
+  ) {}
 
   @Post("login")
+  @UseGuards(AuthRateLimitGuard)
+  @AuthRateLimit(LOGIN_RATE_LIMIT)
   login(
     @Body() dto: LoginDto,
+    @Res({ passthrough: true })
+    res: {
+      setHeader(name: string, value: string | string[]): void;
+    },
     @Req()
     req: {
       headers: Record<string, string | string[] | undefined>;
       ip?: string;
     },
   ): Promise<AuthResponseDto> {
-    return this.authService.login(dto, getRequestMetadata(req));
+    return this.authService.login(dto, getRequestMetadata(req)).then((result) => {
+      res.setHeader("Set-Cookie", this.authCookieService.buildAuthCookie(result.accessToken));
+      return result;
+    });
   }
 
   @Post("forgot-password")
@@ -99,21 +120,47 @@ export class AuthController {
     return this.authService.getEffectivePermissions(user, organization);
   }
 
-  // TODO: remove or move to diagnostics controller.
-  @Get("context")
-  @UseGuards(JwtAuthGuard, OrganizationGuard)
-  context(
-    @CurrentUser("id") userId: string,
-    @CurrentOrganization() organization: CurrentOrganizationType,
-  ): { userId: string; organization: CurrentOrganizationType } {
-    return { userId, organization };
+  @Get("csrf")
+  getCsrfToken(
+    @Res({ passthrough: true })
+    res: {
+      setHeader(name: string, value: string | string[]): void;
+    },
+  ): { csrfToken: string; headerName: string; cookieName: string } {
+    const csrfToken = this.authCsrfService.generateToken();
+    res.setHeader("Set-Cookie", this.authCsrfService.buildCsrfCookie(csrfToken));
+    return {
+      csrfToken,
+      headerName: this.authCsrfService.getHeaderName(),
+      cookieName: this.authCsrfService.getCookieName(),
+    };
   }
 
-  // TODO: remove or move to diagnostics controller
-  @Get("permissions-check")
-  @UseGuards(JwtAuthGuard, OrganizationGuard, PermissionsGuard)
-  @Permissions("users.read")
-  permissionsCheck(): { allowed: boolean; permission: string } {
-    return { allowed: true, permission: "users.read" };
+  @Post("logout")
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  async logout(
+    @Res({ passthrough: true })
+    res: {
+      setHeader(name: string, value: string | string[]): void;
+    },
+    @Req()
+    req: {
+      headers: Record<string, string | string[] | undefined>;
+      ip?: string;
+    },
+  ): Promise<LogoutResponseDto> {
+    const accessToken = this.authTransportService.extractAccessToken(req.headers);
+
+    if (!accessToken) {
+      throw new UnauthorizedException();
+    }
+
+    await this.authService.logout(accessToken, getRequestMetadata(req));
+    res.setHeader("Set-Cookie", [
+      this.authCookieService.buildClearedAuthCookie(),
+      this.authCsrfService.buildClearedCsrfCookie(),
+    ]);
+    return { success: true };
   }
 }

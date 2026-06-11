@@ -55,18 +55,14 @@ export type AuthResponse = {
   user: CurrentUser;
 };
 
-export type AuthContextResponse = {
-  userId: string;
-  organization: {
-    id: string;
-    slug: string;
-    role: string;
-  };
+export type LogoutResponse = {
+  success: true;
 };
 
-export type PermissionsCheckResponse = {
-  allowed: boolean;
-  permission: string;
+export type AuthCsrfResponse = {
+  csrfToken: string;
+  headerName: string;
+  cookieName: string;
 };
 
 export type AuthPermissionsResponse = {

@@ -54,7 +54,7 @@ Routes:
 - `/notification-settings`
 
 The admin app uses `@project-kit/sdk` for all API calls.
-The SDK receives the access token and active organization id from admin auth storage.
+The SDK uses cookie-auth with `credentials: 'include'`, obtains CSRF tokens automatically for mutating browser requests, and reads only the active organization id from admin auth storage.
 Admin routes and sidebar items are filtered by effective permissions from `GET /api/auth/permissions`.
 TanStack Query cache is cleared on login, logout, unauthorized responses, and active organization changes.
 
@@ -267,7 +267,9 @@ User actions are stored separately in Audit Logs.
 `packages/sdk` contains a framework-agnostic TypeScript API client for Project Kit.
 It handles:
 - base API URL;
-- Authorization header;
+- cookie-auth credentials;
+- optional Authorization header for explicit Bearer clients;
+- automatic CSRF token bootstrap for mutating cookie-auth requests;
 - active organization header;
 - query serialization;
 - JSON request/response handling;
@@ -281,14 +283,16 @@ import { createProjectKitSdk } from '@project-kit/sdk';
 
 const sdk = createProjectKitSdk({
   baseUrl: 'http://localhost:3000/api',
-  getAccessToken: () => localStorage.getItem('accessToken'),
+  csrf: {
+    endpoint: '/auth/csrf'
+  },
   getOrganizationId: () => localStorage.getItem('activeOrganizationId'),
   onUnauthorized: () => {
-    localStorage.removeItem('accessToken');
+    localStorage.removeItem('activeOrganizationId');
   }
 });
 
-const { accessToken, user } = await sdk.auth.login({
+const { user } = await sdk.auth.login({
   email: 'admin@example.com',
   password: 'password123'
 });
@@ -299,19 +303,54 @@ const users = await sdk.users.list({
 });
 ```
 
-The SDK does not store tokens itself. The application decides where to store access token and active organization id.
+The SDK does not store tokens itself. Browser apps can rely on `httpOnly` cookies and keep only non-secret context such as the active organization id in storage.
 
-## Quick start
+## Local development
+
+Default dev flow keeps Docker limited to infrastructure and runs the apps directly from the workspace.
 
 1. `pnpm install`
 2. `docker compose up -d`
-3. `pnpm --filter api prisma:generate`
-4. `pnpm --filter api prisma:migrate dev`
-5. `pnpm --filter api start:dev`
+3. `cp apps/api/.env.example apps/api/.env`
+4. `cp apps/admin/.env.example apps/admin/.env`
+5. `pnpm --filter api prisma:generate`
+6. `pnpm --filter api prisma:migrate dev`
+7. `pnpm --filter api start:dev`
+8. `pnpm --filter admin dev`
 
-To start the API from the project root via `pnpm`, run:
+`docker compose up -d` currently starts only:
+- `postgres`
+- `redis`
 
-`pnpm --filter api start:dev`
+API and Admin are started separately in dev:
+- API: `pnpm --filter api start:dev`
+- Admin: `pnpm --filter admin dev`
+
+Admin expects the API at `http://localhost:3000/api` by default.
+
+## Infrastructure only
+
+`docker compose up -d` is the intended infrastructure-only command for local development. It brings up Postgres and Redis, but does not build or run the API/Admin applications.
+
+Use this mode when you want:
+- fast local iteration with Nest/Vite watch mode;
+- easy debugging from the host machine;
+- optional Redis, because `REDIS_ENABLED=false` keeps auth rate limits and JWT blacklist in-memory in `development` and `test`.
+
+To start only selected infra services explicitly:
+- `docker compose up -d postgres`
+- `docker compose up -d redis`
+- `docker compose up -d postgres redis`
+
+## Full docker run
+
+There is no supported full app Docker Compose profile in this branch yet.
+
+Reason:
+- the repository does not currently contain Dockerfiles for `api` or `admin`;
+- adding a partial app profile would be misleading and harder to maintain than the current explicit host-based dev flow.
+
+If a full containerized app flow is added later, keep `docker compose up -d` as infra-only and expose the application containers behind an explicit profile such as `--profile app`.
 
 ### API environment
 
@@ -322,6 +361,39 @@ Recovery flow uses:
 - `AUTH_PASSWORD_RESET_TOKEN_TTL_MINUTES`: reset token lifetime in minutes
 
 Password reset email delivery also depends on the global `smtp_email` notification connector being enabled and configured.
+
+Production hardening env:
+- `APP_ENV=development|test|production`: selects environment-specific behavior. `development` and `test` may use in-memory auth infrastructure by default; `production` requires Redis.
+- `ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000`: recommended dev default for Admin and alternate local frontends. Production must set explicit trusted origins and cannot rely on a wildcard.
+- `AUTH_COOKIE_NAME`, `AUTH_COOKIE_SECURE`, `AUTH_COOKIE_SAME_SITE`: control the auth cookie name and browser attributes. `AUTH_COOKIE_SECURE` defaults to `true` in production.
+- `CSRF_COOKIE_NAME`, `CSRF_HEADER_NAME`: configure the double-submit CSRF cookie/header pair used for cookie-auth mutating requests.
+- `AUTH_BEARER_ENABLED`: enables or disables `Authorization: Bearer` fallback. It defaults to `true` in `development`/`test` and `false` in `production`.
+- `TRUST_PROXY=false|true|loopback|1`: configures Express `trust proxy`. When enabled behind nginx/traefik, `req.ip` is derived from trusted proxy hops instead of trusting raw `X-Forwarded-For`.
+- `MULTI_INSTANCE=true|false`: marks that the API is expected to run on multiple instances. This still matters for cross-instance SSE fan-out, but not for auth Redis requirements.
+- `REDIS_ENABLED=true|false` and `REDIS_URL=redis://127.0.0.1:6379`: enable shared Redis infrastructure for auth rate limiting, JWT token blacklist, and realtime notification fan-out. Recommended dev default is `REDIS_ENABLED=false`.
+- `CONFIG_ENCRYPTION_KEY`: required 32-byte raw string or base64-encoded 32-byte key used to encrypt notification connector secrets such as SMTP passwords and webhook tokens. Generate one with `openssl rand -base64 32`.
+- `SSE_MAX_CLIENTS`, `SSE_MAX_CLIENTS_PER_USER`, `SSE_HEARTBEAT_INTERVAL_MS`: protect the SSE registry from unbounded growth.
+
+Recommended local bootstrap:
+- `docker compose up -d`
+- `cp apps/api/.env.example apps/api/.env`
+- keep `APP_ENV=development`
+- keep `ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000`
+- leave `REDIS_ENABLED=false` for a simple dev/test setup that uses in-memory auth rate limiting and token blacklist, or set `REDIS_ENABLED=true` to test shared Redis-backed rate limits, logout invalidation, and SSE pub/sub locally.
+- set `CONFIG_ENCRYPTION_KEY` before configuring SMTP or any other sensitive connector secret, for example:
+
+```bash
+openssl rand -base64 32
+```
+
+If `CONFIG_ENCRYPTION_KEY` changes after encrypted connector secrets were already saved, existing secrets cannot be decrypted until they are rotated or re-encrypted with the original key.
+
+Production guidance:
+- auth rate limiting and JWT token blacklist use Redis in production, and the API fails fast during bootstrap if `APP_ENV=production` without `REDIS_ENABLED=true` and a valid `REDIS_URL`;
+- there is no silent in-memory fallback for auth in production;
+- when `APP_ENV=production` and `MULTI_INSTANCE=true`, the same Redis instance is also used for cross-instance SSE delivery;
+- before a production deploy that includes notification connectors, set `CONFIG_ENCRYPTION_KEY` and run `pnpm --filter api prisma:backfill-notification-connector-secrets` to migrate any existing plaintext connector secrets in `NotificationConnector.config`;
+- never trust `X-Forwarded-For` directly in application code. Configure `TRUST_PROXY` and use `req.ip`.
 
 ## Installer
 
@@ -372,7 +444,16 @@ Effective permissions for the active organization:
 
 `GET /api/auth/permissions`
 
-Authorization header:
+CSRF bootstrap for browser cookie-auth:
+
+`GET /api/auth/csrf`
+
+Browser auth:
+- session JWT is stored in an `httpOnly` cookie;
+- mutating cookie-auth requests must send `X-CSRF-Token` matching the readable CSRF cookie;
+- `GET`, `HEAD`, and `OPTIONS` do not require CSRF.
+
+Optional Bearer header when `AUTH_BEARER_ENABLED=true`:
 
 `Authorization: Bearer <accessToken>`
 
@@ -393,6 +474,8 @@ curl http://localhost:3000/api/auth/permissions \
   -H "Authorization: Bearer <accessToken>" \
   -H "x-organization-id: <organizationId>"
 ```
+
+See [docs/auth-cookie-csrf.md](/Users/nekrasov/Documents/Projects/project-kit/docs/auth-cookie-csrf.md) for the cookie-auth CSRF model and Bearer fallback policy.
 
 ### Password recovery flow
 
@@ -801,7 +884,7 @@ Own notification endpoints require only `Authorization: Bearer <accessToken>`:
 - `PATCH /api/notifications/:id/read`
 - `PATCH /api/notifications/read-all`
 
-The admin notification bell uses SSE for realtime updates. Polling is only a fallback while SSE is disconnected, at most once per minute, plus normal focus/reconnect sync. The SSE registry is in memory for the single API instance MVP; multi-instance production should add Redis pub/sub or another broker. Sound alerts are controlled by a local browser preference on `/notifications`; the browser may require prior user interaction before allowing playback.
+The admin notification bell uses SSE for realtime updates. Polling is only a fallback while SSE is disconnected, at most once per minute, plus normal focus/reconnect sync. The API now enforces global/per-user SSE connection caps, cleans up clients on close/error, sends heartbeat pings, and can fan out events across instances through Redis pub/sub when Redis is enabled. Sound alerts are controlled by a local browser preference on `/notifications`; the browser may require prior user interaction before allowing playback.
 
 Connector and template management requires `Authorization`, `x-organization-id`, `notifications.manage`, and `super_admin`:
 - `GET /api/notification-connectors`

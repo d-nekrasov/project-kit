@@ -21,6 +21,7 @@ function createServiceHarness() {
   }> = [];
 
   const tx = {
+    $executeRaw: async () => 1,
     installation: {
       findFirst: async () => null,
       create: async () => ({ id: 'installation-1' }),

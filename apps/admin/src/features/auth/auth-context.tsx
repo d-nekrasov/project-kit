@@ -13,7 +13,7 @@ export type AuthState = {
 
 export type AuthContextValue = AuthState & {
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   refreshMe: () => Promise<void>;
   refreshPermissions: () => Promise<void>;
   setActiveOrganization: (id: string) => Promise<void>;

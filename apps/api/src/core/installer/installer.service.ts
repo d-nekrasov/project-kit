@@ -70,16 +70,7 @@ export class InstallerService {
       orderBy: { createdAt: 'desc' }
     });
 
-    if (!installation) {
-      return { installed: false };
-    }
-
-    return {
-      installed: true,
-      installedAt: installation.installedAt ?? undefined,
-      appName: installation.appName ?? undefined,
-      version: installation.version ?? undefined
-    };
+    return { installed: Boolean(installation) };
   }
 
   async setup(dto: SetupInstallerDto) {
@@ -105,6 +96,8 @@ export class InstallerService {
 
     try {
       const setupResult = await this.prisma.$transaction(async (tx) => {
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('installer.setup'))`;
+
         const installationCheck = await tx.installation.findFirst({ where: { installed: true } });
         if (installationCheck) {
           throw new ConflictException('System is already installed');
