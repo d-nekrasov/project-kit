@@ -39,6 +39,13 @@ const RESET_PASSWORD_RATE_LIMIT = {
   limit: 10,
   ttlMs: FIFTEEN_MINUTES_IN_MS,
 };
+// Лимит выше, чем у reset-password: админка вызывает validate при каждом
+// открытии/обновлении страницы сброса (в dev StrictMode — дважды).
+const RESET_PASSWORD_VALIDATE_RATE_LIMIT = {
+  key: "reset-password-validate",
+  limit: 20,
+  ttlMs: FIFTEEN_MINUTES_IN_MS,
+};
 
 @Controller("auth")
 export class AuthController {
@@ -106,6 +113,8 @@ export class AuthController {
   }
 
   @Post("reset-password/validate")
+  @UseGuards(AuthRateLimitGuard)
+  @AuthRateLimit(RESET_PASSWORD_VALIDATE_RATE_LIMIT)
   validateResetPasswordToken(
     @Body() dto: ValidateResetPasswordTokenDto,
   ): Promise<ValidateResetPasswordTokenResponseDto> {

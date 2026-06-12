@@ -776,6 +776,86 @@ test("login is rate-limited separately and does not consume forgot/reset passwor
   assert.equal(resetResponse.status, 400);
 });
 
+test("reset-password/validate is rate-limited at route level with its own budget", async () => {
+  const validateIp = nextIp("validate-limit");
+
+  for (let index = 0; index < 20; index += 1) {
+    const response = await apiRequest<{ valid: boolean; reason?: string }>(
+      "POST",
+      "/auth/reset-password/validate",
+      {
+        body: { token: "validate-rate-limit-token" },
+        forwardedFor: validateIp,
+      },
+    );
+    assert.equal(response.status, 201);
+    assert.deepEqual(response.data, { valid: false, reason: "invalid" });
+  }
+
+  const blockedValidate = await apiRequest<{ message: string }>(
+    "POST",
+    "/auth/reset-password/validate",
+    {
+      body: { token: "validate-rate-limit-token" },
+      forwardedFor: validateIp,
+    },
+  );
+  assert.equal(blockedValidate.status, 429);
+  assert.equal(blockedValidate.data.message, "Too many requests. Please try again later.");
+
+  // Исчерпанный бюджет validate не блокирует reset-password с того же IP.
+  const resetAfterValidateLimit = await apiRequest<{ message: string }>(
+    "POST",
+    "/auth/reset-password",
+    {
+      body: {
+        token: "validate-separate-budget",
+        password: "Password123!",
+        passwordConfirmation: "Password123!",
+      },
+      forwardedFor: validateIp,
+    },
+  );
+  assert.equal(resetAfterValidateLimit.status, 400);
+});
+
+test("reset-password budget does not consume reset-password/validate budget", async () => {
+  const resetIp = nextIp("validate-isolation");
+
+  for (let index = 0; index < 10; index += 1) {
+    const response = await apiRequest<{ message: string }>("POST", "/auth/reset-password", {
+      body: {
+        token: "validate-isolation-token",
+        password: "Password123!",
+        passwordConfirmation: "Password123!",
+      },
+      forwardedFor: resetIp,
+    });
+    assert.equal(response.status, 400);
+  }
+
+  const blockedReset = await apiRequest<{ message: string }>("POST", "/auth/reset-password", {
+    body: {
+      token: "validate-isolation-token",
+      password: "Password123!",
+      passwordConfirmation: "Password123!",
+    },
+    forwardedFor: resetIp,
+  });
+  assert.equal(blockedReset.status, 429);
+
+  const validateResponse = await apiRequest<{ valid: boolean; reason?: string }>(
+    "POST",
+    "/auth/reset-password/validate",
+    {
+      body: { token: "validate-isolation-token" },
+      forwardedFor: resetIp,
+    },
+  );
+  assert.equal(validateResponse.status, 201);
+  assert.deepEqual(validateResponse.data, { valid: false, reason: "invalid" });
+});
+
 test("SDK auth recovery methods match backend contract end-to-end", async () => {
   const publicSdk = createProjectKitSdk({
     baseUrl,
