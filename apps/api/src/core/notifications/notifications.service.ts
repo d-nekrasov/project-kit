@@ -10,6 +10,7 @@ import {
   UserStatus
 } from '@prisma/client';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
+import { TokenBlacklistService } from '../auth/token-blacklist.service';
 import { CurrentUser } from '../auth/types/current-user.type';
 import { SYSTEM_LOG_EVENTS } from '../system-logs/constants/system-log-events.constants';
 import { SYSTEM_LOG_SOURCES } from '../system-logs/constants/system-log-sources.constants';
@@ -61,7 +62,8 @@ export class NotificationsService implements OnModuleInit {
     private readonly inAppConnector: InAppNotificationConnector,
     private readonly emailConnector: EmailSmtpNotificationConnector,
     private readonly jwtService: JwtService,
-    private readonly notificationsRealtimeService: NotificationsRealtimeService
+    private readonly notificationsRealtimeService: NotificationsRealtimeService,
+    private readonly tokenBlacklistService: TokenBlacklistService
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -155,11 +157,16 @@ export class NotificationsService implements OnModuleInit {
     }
   }
 
-  async createStreamToken(currentUser: CurrentUser): Promise<NotificationStreamTokenResponseDto> {
+  async createStreamToken(currentUser: CurrentUser, sessionJti: string | undefined): Promise<NotificationStreamTokenResponseDto> {
+    if (!sessionJti) {
+      throw new UnauthorizedException('Notification stream token requires an authenticated session');
+    }
+
     const expiresAt = new Date(Date.now() + NOTIFICATION_STREAM_TOKEN_TTL_SECONDS * 1000);
     const payload: NotificationStreamTokenPayload = {
       sub: currentUser.id,
-      purpose: 'notification_stream'
+      purpose: 'notification_stream',
+      parentJti: sessionJti
     };
     const token = await this.jwtService.signAsync(payload, {
       expiresIn: NOTIFICATION_STREAM_TOKEN_TTL_SECONDS
@@ -172,7 +179,7 @@ export class NotificationsService implements OnModuleInit {
     };
   }
 
-  async validateStreamToken(token: string | undefined): Promise<{ userId: string }> {
+  async validateStreamToken(token: string | undefined): Promise<{ userId: string; parentJti: string }> {
     if (!token) {
       throw new UnauthorizedException('Notification stream token is required');
     }
@@ -184,7 +191,11 @@ export class NotificationsService implements OnModuleInit {
       throw new UnauthorizedException('Notification stream token is invalid');
     }
 
-    if (payload.purpose !== 'notification_stream' || !payload.sub) {
+    if (payload.purpose !== 'notification_stream' || !payload.sub || !payload.parentJti) {
+      throw new UnauthorizedException('Notification stream token is invalid');
+    }
+
+    if (await this.tokenBlacklistService.isRevoked(payload.parentJti)) {
       throw new UnauthorizedException('Notification stream token is invalid');
     }
 
@@ -197,7 +208,7 @@ export class NotificationsService implements OnModuleInit {
       throw new UnauthorizedException('Notification stream token is invalid');
     }
 
-    return { userId: user.id };
+    return { userId: user.id, parentJti: payload.parentJti };
   }
 
   async findMy(

@@ -5,6 +5,7 @@ import { UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 
 import { AuthService } from "../src/core/auth/auth.service";
+import { RealtimeEventsService } from "../src/core/realtime-events/realtime-events.service";
 
 test("AuthService.logout adds jti to blacklist until token expiration", async () => {
   const revoked: Array<{ jti: string; expiresAt: Date }> = [];
@@ -36,6 +37,7 @@ test("AuthService.logout adds jti to blacklist until token expiration", async ()
         return undefined;
       },
     } as never,
+    new RealtimeEventsService(),
   );
 
   await service.logout("access-token");
@@ -43,6 +45,47 @@ test("AuthService.logout adds jti to blacklist until token expiration", async ()
   assert.deepEqual(revoked, [
     { jti: "logout-jti", expiresAt: new Date(123_000) },
   ]);
+});
+
+test("AuthService.logout emits a session revoked event so SSE streams close", async () => {
+  const realtimeEvents = new RealtimeEventsService();
+  const disconnectedJtis: string[] = [];
+  realtimeEvents.onSessionRevoked((jti) => disconnectedJtis.push(jti));
+
+  const service = new AuthService(
+    {} as never,
+    {
+      async verifyAsync() {
+        return {
+          sub: "user-1",
+          jti: "logout-jti",
+          exp: 123,
+        };
+      },
+    } as never,
+    new ConfigService({}),
+    {
+      async write(): Promise<void> {
+        return undefined;
+      },
+    } as never,
+    {} as never,
+    {
+      async revoke(): Promise<void> {
+        return undefined;
+      },
+    } as never,
+    {
+      async invalidate(): Promise<void> {
+        return undefined;
+      },
+    } as never,
+    realtimeEvents,
+  );
+
+  await service.logout("access-token");
+
+  assert.deepEqual(disconnectedJtis, ["logout-jti"]);
 });
 
 test("AuthService.logout rejects tokens without jti", async () => {
@@ -73,6 +116,7 @@ test("AuthService.logout rejects tokens without jti", async () => {
         return undefined;
       },
     } as never,
+    new RealtimeEventsService(),
   );
 
   await assert.rejects(service.logout("access-token"), UnauthorizedException);

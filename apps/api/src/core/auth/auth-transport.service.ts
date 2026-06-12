@@ -8,6 +8,9 @@ type HeadersLike = IncomingHttpHeaders | Record<string, string | string[] | unde
 
 export type AuthTransport = "cookie" | "bearer" | "none";
 
+export const AUTH_TRANSPORT_HEADER = "x-auth-transport";
+export const AUTH_TRANSPORT_BEARER = "bearer";
+
 @Injectable()
 export class AuthTransportService {
   constructor(
@@ -25,6 +28,16 @@ export class AuthTransportService {
       this.configService.get<string>("APP_ENV") ?? "development"
     ).toLowerCase();
     return appEnv !== "production";
+  }
+
+  isBearerResponseRequested(headers: HeadersLike): boolean {
+    if (!this.isBearerEnabled()) {
+      return false;
+    }
+
+    const rawValue = headers[AUTH_TRANSPORT_HEADER];
+    const value = Array.isArray(rawValue) ? rawValue[0] : rawValue;
+    return value?.trim().toLowerCase() === AUTH_TRANSPORT_BEARER;
   }
 
   detectTransport(headers: HeadersLike): AuthTransport {

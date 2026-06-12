@@ -26,6 +26,7 @@ import { CurrentUser } from '../auth/types/current-user.type';
 import { NOTIFICATION_EVENTS } from '../notifications/constants/notification-events.constants';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotifyDto } from '../notifications/types/notification.types';
+import { RealtimeEventsService } from '../realtime-events/realtime-events.service';
 import { SYSTEM_LOG_EVENTS } from '../system-logs/constants/system-log-events.constants';
 import { SYSTEM_LOG_SOURCES } from '../system-logs/constants/system-log-sources.constants';
 import { SystemLogsService } from '../system-logs/system-logs.service';
@@ -58,7 +59,8 @@ export class UsersService {
     private readonly auditLogsService: AuditLogsService,
     private readonly notificationsService: NotificationsService,
     private readonly systemLogsService: SystemLogsService,
-    private readonly currentUserCacheService: CurrentUserCacheService
+    private readonly currentUserCacheService: CurrentUserCacheService,
+    private readonly realtimeEventsService: RealtimeEventsService
   ) {}
 
   async findAll(
@@ -515,6 +517,9 @@ export class UsersService {
       include: USER_INCLUDE
     });
     await this.currentUserCacheService.invalidate(userId);
+    if (status !== UserStatus.ACTIVE) {
+      this.realtimeEventsService.emitUserDeactivated(userId);
+    }
     await this.auditLogsService.write({
       action: AUDIT_ACTIONS.USER_STATUS_UPDATE,
       entityType: AUDIT_ENTITY_TYPES.USER,

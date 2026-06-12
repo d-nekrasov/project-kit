@@ -119,6 +119,7 @@ async function apiRequest<T>(
     origin,
     cookie,
     csrfToken,
+    authTransport,
   }: {
     body?: unknown;
     token?: string;
@@ -127,6 +128,7 @@ async function apiRequest<T>(
     origin?: string;
     cookie?: string;
     csrfToken?: string;
+    authTransport?: string;
   } = {},
 ): Promise<{ status: number; data: T; headers: Headers }> {
   const response = await fetch(`${baseUrl}${path}`, {
@@ -140,6 +142,7 @@ async function apiRequest<T>(
       ...(origin ? { Origin: origin } : {}),
       ...(cookie ? { Cookie: cookie } : {}),
       ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
+      ...(authTransport ? { "X-Auth-Transport": authTransport } : {}),
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
@@ -179,6 +182,7 @@ async function loginAdmin(): Promise<void> {
     password: "AdminPassword123!",
   });
 
+  assert.ok(response.accessToken, "bearer-configured SDK must receive accessToken in login body");
   adminToken = response.accessToken;
   adminOrganizationId = response.user.organizations[0]?.id ?? "";
   assert.ok(adminOrganizationId);
@@ -193,7 +197,7 @@ before(async () => {
   process.env.APP_ENV = "development";
   process.env.ALLOWED_ORIGINS = allowedOrigin;
   process.env.CONFIG_ENCRYPTION_KEY = configEncryptionKey;
-  process.env.JWT_SECRET = "test-secret";
+  process.env.JWT_SECRET = "test-secret-test-secret-test-secret-0000";
   process.env.JWT_ACCESS_EXPIRES_IN = "15m";
   process.env.AUTH_PASSWORD_RESET_TOKEN_TTL_MINUTES = "30";
   process.env.AUTH_PASSWORD_RESET_URL = "http://localhost:3001/reset-password";
@@ -264,11 +268,37 @@ test("allowed origins receive CORS headers, disallowed origins do not, and helme
   assert.equal(deniedResponse.headers.get("access-control-allow-origin"), null);
 });
 
-test("login issues jti-bearing JWT and sets an httpOnly auth cookie", async () => {
+test("cookie-mode login omits the access token from the body and sets an httpOnly auth cookie", async () => {
+  const response = await apiRequest<{
+    accessToken?: string;
+    tokenType?: string;
+    user: { organizations: Array<{ id: string }> };
+  }>("POST", "/auth/login", {
+    forwardedFor: nextIp("login-cookie-mode"),
+    body: {
+      email: "admin@example.com",
+      password: "AdminPassword123!",
+    },
+  });
+
+  assert.equal(response.status, 201);
+  assert.equal(response.data.accessToken, undefined);
+  assert.equal(response.data.tokenType, undefined);
+  assert.ok(response.data.user);
+
+  const setCookie = getSetCookie(response.headers);
+  assert.match(setCookie, /HttpOnly/);
+  assert.match(setCookie, /SameSite=Strict/);
+  assert.doesNotMatch(setCookie, /Secure/);
+});
+
+test("bearer-requested login issues jti-bearing JWT in the body and still sets an httpOnly auth cookie", async () => {
   const response = await apiRequest<{
     accessToken: string;
     user: { organizations: Array<{ id: string }> };
   }>("POST", "/auth/login", {
+    authTransport: "bearer",
+    forwardedFor: nextIp("login-bearer-mode"),
     body: {
       email: "admin@example.com",
       password: "AdminPassword123!",
@@ -287,6 +317,8 @@ test("login issues jti-bearing JWT and sets an httpOnly auth cookie", async () =
 
 test("cookie auth works, bearer fallback remains available, and removed debug endpoints return 404", async () => {
   const loginResponse = await apiRequest<{ accessToken: string }>("POST", "/auth/login", {
+    authTransport: "bearer",
+    forwardedFor: nextIp("login-fallback"),
     body: {
       email: "admin@example.com",
       password: "AdminPassword123!",
@@ -315,11 +347,137 @@ test("cookie auth works, bearer fallback remains available, and removed debug en
   assert.equal(permissionsCheckResponse.status, 404);
 });
 
-test("cookie-auth mutating requests require CSRF while GET stays exempt", async () => {
-  const loginResponse = await apiRequest<{ accessToken: string; user: { organizations: Array<{ id: string }> } }>(
+test("csrf endpoint requires authentication and issues session-bound tokens", async () => {
+  const unauthenticated = await apiRequest("GET", "/auth/csrf");
+  assert.equal(unauthenticated.status, 401);
+
+  const loginResponse = await apiRequest<{ user: unknown }>("POST", "/auth/login", {
+    forwardedFor: nextIp("login-csrf-endpoint"),
+    body: {
+      email: "admin@example.com",
+      password: "AdminPassword123!",
+    },
+  });
+  const authCookie = extractCookiePair(getSetCookie(loginResponse.headers));
+
+  const { csrfToken } = await issueCsrf(authCookie);
+  // Формат signed double-submit: <random>.<hmac>, обе части base64url.
+  assert.match(csrfToken, /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);
+});
+
+test("relogin invalidates the previous session's CSRF token and a fresh token succeeds", async () => {
+  const firstLogin = await apiRequest<{ user: { organizations: Array<{ id: string }> } }>(
     "POST",
     "/auth/login",
     {
+      forwardedFor: nextIp("login-csrf-relogin-1"),
+      body: {
+        email: "admin@example.com",
+        password: "AdminPassword123!",
+      },
+    },
+  );
+  const firstAuthCookie = extractCookiePair(getSetCookie(firstLogin.headers));
+  const organizationId = firstLogin.data.user.organizations[0]?.id ?? "";
+  assert.ok(organizationId);
+
+  const oldCsrf = await issueCsrf(firstAuthCookie);
+
+  const secondLogin = await apiRequest("POST", "/auth/login", {
+    forwardedFor: nextIp("login-csrf-relogin-2"),
+    body: {
+      email: "admin@example.com",
+      password: "AdminPassword123!",
+    },
+  });
+  const secondAuthCookie = extractCookiePair(getSetCookie(secondLogin.headers));
+
+  const connectorBody = {
+    status: "ENABLED",
+    config: {
+      host: "smtp.example.com",
+      port: 587,
+      secure: false,
+      username: "smtp-user",
+      password: "SuperSecret123!",
+      from: "no-reply@example.com",
+    },
+  };
+
+  // Токен выдан для jti первой сессии — со второй сессией он невалиден.
+  const staleCsrfAttempt = await apiRequest<{ message: string }>(
+    "PATCH",
+    "/notification-connectors/smtp_email",
+    {
+      cookie: mergeCookies(secondAuthCookie, oldCsrf.csrfCookie),
+      csrfToken: oldCsrf.csrfToken,
+      organizationId,
+      body: connectorBody,
+    },
+  );
+  assert.equal(staleCsrfAttempt.status, 403);
+  assert.equal(staleCsrfAttempt.data.message, "Invalid CSRF token");
+
+  // Перезапрос токена (как делает SDK при 403 "Invalid CSRF token") чинит запрос.
+  const freshCsrf = await issueCsrf(secondAuthCookie);
+  const retried = await apiRequest(
+    "PATCH",
+    "/notification-connectors/smtp_email",
+    {
+      cookie: mergeCookies(secondAuthCookie, freshCsrf.csrfCookie),
+      csrfToken: freshCsrf.csrfToken,
+      organizationId,
+      body: connectorBody,
+    },
+  );
+  assert.equal(retried.status, 200);
+});
+
+test("tampered CSRF tokens are rejected", async () => {
+  const loginResponse = await apiRequest<{ user: { organizations: Array<{ id: string }> } }>(
+    "POST",
+    "/auth/login",
+    {
+      forwardedFor: nextIp("login-csrf-tampered"),
+      body: {
+        email: "admin@example.com",
+        password: "AdminPassword123!",
+      },
+    },
+  );
+  const authCookie = extractCookiePair(getSetCookie(loginResponse.headers));
+  const organizationId = loginResponse.data.user.organizations[0]?.id ?? "";
+
+  const { csrfToken } = await issueCsrf(authCookie);
+  const [random, hmac] = csrfToken.split(".");
+  const tamperedTokens = [
+    `${random}.AAAA${hmac?.slice(4)}`,
+    csrfToken.slice(0, -2),
+    random ?? "",
+    "",
+  ];
+
+  for (const tampered of tamperedTokens) {
+    const response = await apiRequest<{ message: string }>(
+      "PATCH",
+      "/notification-connectors/smtp_email",
+      {
+        cookie: mergeCookies(authCookie, `XSRF-TOKEN=${tampered}`),
+        csrfToken: tampered,
+        organizationId,
+        body: { status: "ENABLED" },
+      },
+    );
+    assert.equal(response.status, 403, `expected 403 for token ${JSON.stringify(tampered)}`);
+  }
+});
+
+test("cookie-auth mutating requests require CSRF while GET stays exempt", async () => {
+  const loginResponse = await apiRequest<{ user: { organizations: Array<{ id: string }> } }>(
+    "POST",
+    "/auth/login",
+    {
+      forwardedFor: nextIp("login-csrf"),
       body: {
         email: "admin@example.com",
         password: "AdminPassword123!",
@@ -382,6 +540,8 @@ test("cookie-auth mutating requests require CSRF while GET stays exempt", async 
 
 test("logout revokes the current token, clears auth/csrf cookies, and protected endpoints reject the old token", async () => {
   const loginResponse = await apiRequest<{ accessToken: string }>("POST", "/auth/login", {
+    authTransport: "bearer",
+    forwardedFor: nextIp("login-logout"),
     body: {
       email: "admin@example.com",
       password: "AdminPassword123!",
@@ -463,6 +623,28 @@ test("bearer requests are rejected when AUTH_BEARER_ENABLED=false", async () => 
     });
 
     assert.equal(response.status, 401);
+
+    // Клиентский запрос bearer-ответа не может пересилить серверную политику.
+    const loginResponse = await fetch(`${isolatedBaseUrl}/auth/login`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "X-Auth-Transport": "bearer",
+      },
+      body: JSON.stringify({
+        email: "admin@example.com",
+        password: "AdminPassword123!",
+      }),
+    });
+    assert.equal(loginResponse.status, 201);
+    const loginData = (await loginResponse.json()) as {
+      accessToken?: string;
+      user?: unknown;
+    };
+    assert.equal(loginData.accessToken, undefined);
+    assert.ok(loginData.user);
+    assert.match(loginResponse.headers.get("set-cookie") ?? "", /HttpOnly/);
   } finally {
     if (originalBearerEnabled === undefined) {
       delete process.env.AUTH_BEARER_ENABLED;
@@ -563,7 +745,7 @@ test("saving SMTP connector secrets without CONFIG_ENCRYPTION_KEY returns a clea
     process.env.APP_ENV = "development";
     process.env.ALLOWED_ORIGINS = allowedOrigin;
     delete process.env.CONFIG_ENCRYPTION_KEY;
-    process.env.JWT_SECRET = "test-secret";
+    process.env.JWT_SECRET = "test-secret-test-secret-test-secret-0000";
     process.env.JWT_ACCESS_EXPIRES_IN = "15m";
     process.env.AUTH_PASSWORD_RESET_TOKEN_TTL_MINUTES = "30";
     process.env.AUTH_PASSWORD_RESET_URL = "http://localhost:3001/reset-password";
@@ -609,6 +791,7 @@ test("saving SMTP connector secrets without CONFIG_ENCRYPTION_KEY returns a clea
         Accept: "application/json",
         "Content-Type": "application/json",
         Origin: allowedOrigin,
+        "X-Auth-Transport": "bearer",
       },
       body: JSON.stringify({
         email: "admin@example.com",
@@ -656,7 +839,7 @@ test("saving SMTP connector secrets without CONFIG_ENCRYPTION_KEY returns a clea
     process.env.APP_ENV = "development";
     process.env.ALLOWED_ORIGINS = allowedOrigin;
     process.env.CONFIG_ENCRYPTION_KEY = configEncryptionKey;
-    process.env.JWT_SECRET = "test-secret";
+    process.env.JWT_SECRET = "test-secret-test-secret-test-secret-0000";
     process.env.JWT_ACCESS_EXPIRES_IN = "15m";
     process.env.AUTH_PASSWORD_RESET_TOKEN_TTL_MINUTES = "30";
     process.env.AUTH_PASSWORD_RESET_URL = "http://localhost:3001/reset-password";
@@ -756,6 +939,89 @@ test("installer setup rejects repeat calls and concurrent retries without creati
   } finally {
     await isolatedApp?.close();
     await isolatedPrisma?.$disconnect();
+    process.env.DATABASE_URL = databaseUrl;
+    dropDatabase(dbName);
+  }
+});
+
+test("installer setup with INSTALL_TOKEN configured requires X-Install-Token until installed", async () => {
+  const dbName = `project_kit_security_token_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`;
+  const dbUrl = `postgresql://postgres:postgres@127.0.0.1:5432/${dbName}?schema=public`;
+  const installToken = "e2e-install-token-0123456789abcdef0123456789abcdef";
+  let isolatedApp: INestApplication | undefined;
+  let isolatedPrisma: InstanceType<typeof PrismaService> | undefined;
+
+  runCommand("createdb", ["-h", "127.0.0.1", "-p", "5432", "-U", "postgres", dbName], repoRoot);
+  runCommand("pnpm", ["exec", "prisma", "migrate", "deploy"], apiDir, {
+    DATABASE_URL: dbUrl,
+  });
+
+  try {
+    process.env.DATABASE_URL = dbUrl;
+    process.env.TRUST_PROXY = "1";
+    process.env.INSTALL_TOKEN = installToken;
+
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    isolatedApp = moduleRef.createNestApplication();
+    configureApp(isolatedApp);
+    await isolatedApp.listen(0, "127.0.0.1");
+    const address = isolatedApp.getHttpServer().address();
+    assert.ok(address && typeof address === "object" && "port" in address);
+    const isolatedBaseUrl = `http://127.0.0.1:${address.port}/api`;
+    isolatedPrisma = isolatedApp.get(PrismaService);
+
+    const payload = {
+      appName: "Project Kit",
+      organizationName: "Default Organization",
+      organizationSlug: "default",
+      adminEmail: "admin@example.com",
+      adminPassword: "AdminPassword123!",
+      adminName: "Admin",
+    };
+    const setupRequest = (headers: Record<string, string>) =>
+      fetch(`${isolatedBaseUrl}/installer/setup`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          ...headers,
+        },
+        body: JSON.stringify(payload),
+      });
+
+    const missingToken = await setupRequest({ "x-forwarded-for": "198.51.100.31" });
+    assert.equal(missingToken.status, 403);
+
+    const wrongToken = await setupRequest({
+      "x-forwarded-for": "198.51.100.32",
+      "X-Install-Token": "wrong-token",
+    });
+    assert.equal(wrongToken.status, 403);
+    assert.equal(await isolatedPrisma.installation.count({ where: { installed: true } }), 0);
+
+    const correctToken = await setupRequest({
+      "x-forwarded-for": "198.51.100.33",
+      "X-Install-Token": installToken,
+    });
+    assert.equal(correctToken.status, 201);
+    assert.equal(await isolatedPrisma.installation.count({ where: { installed: true } }), 1);
+
+    // После установки — 409 независимо от токена.
+    const repeatWithToken = await setupRequest({
+      "x-forwarded-for": "198.51.100.34",
+      "X-Install-Token": installToken,
+    });
+    assert.equal(repeatWithToken.status, 409);
+
+    const repeatWithoutToken = await setupRequest({ "x-forwarded-for": "198.51.100.35" });
+    assert.equal(repeatWithoutToken.status, 409);
+  } finally {
+    await isolatedApp?.close();
+    await isolatedPrisma?.$disconnect();
+    delete process.env.INSTALL_TOKEN;
     process.env.DATABASE_URL = databaseUrl;
     dropDatabase(dbName);
   }

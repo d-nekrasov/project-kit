@@ -32,7 +32,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(
-    req: { headers: Record<string, string | string[] | undefined> },
+    req: {
+      headers: Record<string, string | string[] | undefined>;
+      sessionJti?: string;
+    },
     payload: JwtPayload,
   ): Promise<CurrentUser> {
     if (!payload?.sub || !payload.jti) {
@@ -42,6 +45,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (await this.tokenBlacklistService.isRevoked(payload.jti)) {
       throw new UnauthorizedException();
     }
+
+    // The current-user cache is shared per user across sessions, so the jti
+    // travels on the request instead of the cached CurrentUser object.
+    req.sessionJti = payload.jti;
 
     return this.authService.getCurrentUserById(payload.sub);
   }

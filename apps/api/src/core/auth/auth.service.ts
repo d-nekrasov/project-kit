@@ -18,7 +18,7 @@ import {
 } from "../audit-logs/constants/audit-actions.constants";
 import { AuthPasswordResetMailService } from "./auth-password-reset-mail.service";
 import { AuthMessageResponseDto } from "./dto/auth-message-response.dto";
-import { AuthResponseDto } from "./dto/auth-response.dto";
+import { AuthLoginResultDto } from "./dto/auth-response.dto";
 import { ForgotPasswordDto } from "./dto/forgot-password.dto";
 import { LoginDto } from "./dto/login.dto";
 import { ResetPasswordDto } from "./dto/reset-password.dto";
@@ -27,6 +27,7 @@ import { ValidateResetPasswordTokenResponseDto } from "./dto/validate-reset-pass
 import { CurrentUser } from "./types/current-user.type";
 import { JwtPayload } from "./types/jwt-payload.type";
 import { CurrentOrganization } from "../organization-context/types/current-organization.type";
+import { RealtimeEventsService } from "../realtime-events/realtime-events.service";
 import { CurrentUserCacheService } from "./current-user-cache.service";
 import { TokenBlacklistService } from "./token-blacklist.service";
 
@@ -61,12 +62,13 @@ export class AuthService {
     private readonly authPasswordResetMailService: AuthPasswordResetMailService,
     private readonly tokenBlacklistService: TokenBlacklistService,
     private readonly currentUserCacheService: CurrentUserCacheService,
+    private readonly realtimeEventsService: RealtimeEventsService,
   ) {}
 
   async login(
     dto: LoginDto,
     requestMetadata?: RequestMetadata,
-  ): Promise<AuthResponseDto> {
+  ): Promise<AuthLoginResultDto> {
     const normalizedEmail = dto.email.trim().toLowerCase();
     const user = await this.prisma.user.findUnique({
       where: { email: normalizedEmail },
@@ -139,6 +141,7 @@ export class AuthService {
 
     await this.tokenBlacklistService.revoke(payload.jti, expiresAt);
     await this.currentUserCacheService.invalidate(payload.sub);
+    this.realtimeEventsService.emitSessionRevoked(payload.jti);
 
     await this.auditLogsService.write({
       action: AUDIT_ACTIONS.AUTH_LOGOUT,

@@ -1,5 +1,6 @@
 import { Controller, Get, HttpCode, Param, Patch, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { SessionJti } from '../auth/decorators/session-jti.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser as CurrentUserType } from '../auth/types/current-user.type';
 import { MyNotificationsQueryDto } from './dto/my-notifications-query.dto';
@@ -19,8 +20,11 @@ export class NotificationsController {
   @Post('stream-token')
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
-  streamToken(@CurrentUser() currentUser: CurrentUserType): Promise<NotificationStreamTokenResponseDto> {
-    return this.notificationsService.createStreamToken(currentUser);
+  streamToken(
+    @CurrentUser() currentUser: CurrentUserType,
+    @SessionJti() sessionJti: string | undefined
+  ): Promise<NotificationStreamTokenResponseDto> {
+    return this.notificationsService.createStreamToken(currentUser, sessionJti);
   }
 
   @Get('stream')
@@ -29,7 +33,7 @@ export class NotificationsController {
     @Req() request: NotificationSseRequest,
     @Res() response: NotificationSseResponse
   ): Promise<void> {
-    const { userId } = await this.notificationsService.validateStreamToken(token);
+    const { userId, parentJti } = await this.notificationsService.validateStreamToken(token);
 
     response.status?.(200);
     response.setHeader?.('Content-Type', 'text/event-stream');
@@ -37,7 +41,7 @@ export class NotificationsController {
     response.setHeader?.('Connection', 'keep-alive');
     response.setHeader?.('X-Accel-Buffering', 'no');
     response.flushHeaders?.();
-    await this.notificationsRealtimeService.registerClient(userId, request, response);
+    await this.notificationsRealtimeService.registerClient(userId, parentJti, request, response);
   }
 
   @Get('my')
