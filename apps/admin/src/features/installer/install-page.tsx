@@ -27,7 +27,9 @@ const installSchema = z.object({
   adminEmail: z.string().email(),
   adminPassword: z.string().min(8),
   adminName: z.string().min(2),
-  locale: z.enum(['ru', 'en'])
+  locale: z.enum(['ru', 'en']),
+  // Обязателен, когда на сервере задан INSTALL_TOKEN (production); в dev можно оставить пустым.
+  installToken: z.string().optional()
 });
 
 type InstallForm = z.infer<typeof installSchema>;
@@ -47,7 +49,8 @@ export function InstallPage() {
       adminEmail: 'admin@example.com',
       adminPassword: 'password123',
       adminName: 'Admin',
-      locale: 'ru'
+      locale: 'ru',
+      installToken: ''
     }
   });
 
@@ -71,7 +74,8 @@ export function InstallPage() {
             <form
               className="grid gap-4"
               onSubmit={form.handleSubmit(async (values) => {
-                await sdk.installer.setup(values);
+                const { installToken, ...dto } = values;
+                await sdk.installer.setup(dto, installToken ? { installToken } : undefined);
                 window.location.assign('/login');
               })}
             >
@@ -171,6 +175,25 @@ export function InstallPage() {
                     <FormLabel>Admin Password</FormLabel>
                     <FormControl>
                       <Input type="password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="installToken"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Install token</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        autoComplete="off"
+                        placeholder="Value of INSTALL_TOKEN from the server environment"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

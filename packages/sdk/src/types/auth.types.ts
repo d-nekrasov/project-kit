@@ -49,8 +49,13 @@ export type CurrentUser = {
 };
 
 export type AuthResponse = {
-  accessToken: string;
-  tokenType: 'Bearer';
+  /**
+   * Присутствует только когда клиент явно запросил bearer-ответ
+   * (заголовок X-Auth-Transport: bearer) и сервер разрешает bearer-транспорт.
+   * В cookie-режиме токен доставляется HttpOnly-кукой и в теле отсутствует.
+   */
+  accessToken?: string;
+  tokenType?: 'Bearer';
   expiresIn: string;
   user: CurrentUser;
 };

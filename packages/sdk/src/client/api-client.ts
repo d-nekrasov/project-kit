@@ -24,6 +24,10 @@ export class ApiClient {
     this.csrfEndpoint = options.csrf?.endpoint;
   }
 
+  get usesBearerTransport(): boolean {
+    return Boolean(this.getAccessToken);
+  }
+
   get<T>(path: string, options?: RequestOptions): Promise<T> {
     return this.request<T>('GET', path, options);
   }
@@ -134,7 +138,9 @@ export class ApiClient {
     headers: Record<string, string>,
     options: RequestOptions,
   ): boolean {
-    if (!this.csrfEndpoint || options.skipCsrf || isSafeMethod(method)) {
+    // skipAuth-запросы (login, reset-password, installer setup) выполняются вне
+    // сессии: CSRF-токен привязан к jti и для них не выдаётся и не требуется.
+    if (!this.csrfEndpoint || options.skipCsrf || options.skipAuth || isSafeMethod(method)) {
       return false;
     }
 

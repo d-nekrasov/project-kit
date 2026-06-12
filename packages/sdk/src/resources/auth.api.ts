@@ -20,7 +20,12 @@ export class AuthApi {
   login(dto: LoginDto): Promise<AuthResponse> {
     return this.client.post<AuthResponse>('/auth/login', dto, {
       skipAuth: true,
-      skipOrganization: true
+      skipOrganization: true,
+      // В bearer-режиме явно просим сервер вернуть accessToken в теле ответа;
+      // cookie-клиенты получают только { user, expiresIn } и HttpOnly-куку.
+      ...(this.client.usesBearerTransport
+        ? { headers: { 'X-Auth-Transport': 'bearer' } }
+        : {})
     });
   }
 

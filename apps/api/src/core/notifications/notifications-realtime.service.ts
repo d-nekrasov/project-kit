@@ -9,19 +9,36 @@ import { ConfigService } from "@nestjs/config";
 import { randomUUID } from "node:crypto";
 import { parseIntegerEnv } from "../../common/utils/env.util";
 import { RedisService } from "../../infrastructure/redis/redis.service";
+import { TokenBlacklistService } from "../auth/token-blacklist.service";
+import { RealtimeEventsService } from "../realtime-events/realtime-events.service";
 import type {
   NotificationSseClient,
   NotificationSseRequest,
   NotificationSseResponse,
 } from "./types/notification-realtime.types";
 
-type RealtimeEnvelope = {
+type RealtimeDeliverEnvelope = {
+  type?: "deliver";
   userId: string;
   event: string;
   data: unknown;
 };
 
+type RealtimeDisconnectEnvelope = {
+  type: "disconnect";
+  parentJti?: string;
+  userId?: string;
+};
+
+type RealtimeEnvelope = RealtimeDeliverEnvelope | RealtimeDisconnectEnvelope;
+
+type DisconnectCriteria = {
+  parentJti?: string;
+  userId?: string;
+};
+
 const NOTIFICATIONS_REALTIME_CHANNEL = "project-kit:notifications:realtime";
+const DEFAULT_BLACKLIST_CHECK_INTERVAL_MS = 60_000;
 
 @Injectable()
 export class NotificationsRealtimeService {
@@ -33,11 +50,14 @@ export class NotificationsRealtimeService {
   private readonly maxClients: number;
   private readonly maxClientsPerUser: number;
   private readonly heartbeatIntervalMs: number;
+  private readonly blacklistCheckTicks: number;
   private subscriberInitialized = false;
 
   constructor(
     configService: ConfigService,
     private readonly redisService: RedisService,
+    private readonly tokenBlacklistService: TokenBlacklistService,
+    realtimeEventsService: RealtimeEventsService,
   ) {
     this.maxClients = Math.max(
       1,
@@ -57,10 +77,37 @@ export class NotificationsRealtimeService {
         25000,
       ),
     );
+    const blacklistCheckIntervalMs = Math.max(
+      1,
+      parseIntegerEnv(
+        configService.get<string>("SSE_BLACKLIST_CHECK_INTERVAL_MS"),
+        DEFAULT_BLACKLIST_CHECK_INTERVAL_MS,
+      ),
+    );
+    this.blacklistCheckTicks = Math.max(
+      1,
+      Math.round(blacklistCheckIntervalMs / this.heartbeatIntervalMs),
+    );
+
+    realtimeEventsService.onSessionRevoked((jti) => {
+      void this.publishDisconnect({ parentJti: jti }).catch((error) => {
+        this.logger.error(
+          `Failed to publish disconnect for revoked session: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      });
+    });
+    realtimeEventsService.onUserDeactivated((userId) => {
+      void this.publishDisconnect({ userId }).catch((error) => {
+        this.logger.error(
+          `Failed to publish disconnect for deactivated user: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      });
+    });
   }
 
   async registerClient(
     userId: string,
+    parentJti: string,
     request: NotificationSseRequest,
     response: NotificationSseResponse,
   ): Promise<string> {
@@ -90,6 +137,7 @@ export class NotificationsRealtimeService {
 
     const clientId = randomUUID();
     const cleanup = () => this.removeClient(userId, clientId);
+    let heartbeatTicks = 0;
     const heartbeat = setInterval(() => {
       if (response.writableEnded || response.destroyed) {
         cleanup();
@@ -100,12 +148,28 @@ export class NotificationsRealtimeService {
         response.write(": keep-alive\n\n");
       } catch {
         cleanup();
+        return;
+      }
+
+      heartbeatTicks += 1;
+      if (heartbeatTicks % this.blacklistCheckTicks === 0) {
+        // Safety net for missed disconnect events: drop the stream once the
+        // parent session has been revoked.
+        void this.tokenBlacklistService
+          .isRevoked(parentJti)
+          .then((revoked) => {
+            if (revoked) {
+              this.closeClient(client);
+            }
+          })
+          .catch(() => {});
       }
     }, this.heartbeatIntervalMs);
 
     const client: NotificationSseClient = {
       id: clientId,
       userId,
+      parentJti,
       response,
       createdAt: new Date(),
       heartbeat,
@@ -159,6 +223,46 @@ export class NotificationsRealtimeService {
     this.deliverLocally(userId, event, data);
   }
 
+  async publishDisconnect(criteria: DisconnectCriteria): Promise<void> {
+    // Always close local connections immediately; the Redis echo to this
+    // instance is harmless because removal is idempotent.
+    this.disconnectLocally(criteria);
+
+    if (this.redisService.isRedisEnabled() && this.redisService.getRedisUrl()) {
+      const publisher = await this.redisService.getPublisherClient();
+      await publisher?.publish(
+        NOTIFICATIONS_REALTIME_CHANNEL,
+        JSON.stringify({
+          type: "disconnect",
+          parentJti: criteria.parentJti,
+          userId: criteria.userId,
+        } satisfies RealtimeEnvelope),
+      );
+    }
+  }
+
+  disconnectLocally(criteria: DisconnectCriteria): void {
+    if (!criteria.parentJti && !criteria.userId) {
+      return;
+    }
+
+    const matched: NotificationSseClient[] = [];
+    for (const userClients of this.clients.values()) {
+      for (const client of userClients.values()) {
+        if (
+          (criteria.parentJti && client.parentJti === criteria.parentJti) ||
+          (criteria.userId && client.userId === criteria.userId)
+        ) {
+          matched.push(client);
+        }
+      }
+    }
+
+    for (const client of matched) {
+      this.closeClient(client);
+    }
+  }
+
   deliverLocally(userId: string, event: string, data: unknown): void {
     const userClients = this.clients.get(userId);
     if (!userClients) {
@@ -205,12 +309,30 @@ export class NotificationsRealtimeService {
 
       try {
         const envelope = JSON.parse(message) as RealtimeEnvelope;
+        if (envelope.type === "disconnect") {
+          this.disconnectLocally({
+            parentJti: envelope.parentJti,
+            userId: envelope.userId,
+          });
+          return;
+        }
+
         this.deliverLocally(envelope.userId, envelope.event, envelope.data);
       } catch {
         this.logger.warn("Ignored malformed notification realtime message");
       }
     });
     this.subscriberInitialized = true;
+  }
+
+  private closeClient(client: NotificationSseClient): void {
+    try {
+      client.response.end?.();
+    } catch {
+      // Connection is already gone; cleanup below is all that matters.
+    }
+
+    client.cleanup();
   }
 
   private writeToClient(

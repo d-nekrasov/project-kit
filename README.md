@@ -457,11 +457,14 @@ Optional Bearer header when `AUTH_BEARER_ENABLED=true`:
 
 `Authorization: Bearer <accessToken>`
 
+By default `POST /api/auth/login` returns only `{ user, expiresIn }` and delivers the JWT via the `httpOnly` cookie. To receive `accessToken` in the response body (non-browser API clients), send `X-Auth-Transport: bearer` — it works only when `AUTH_BEARER_ENABLED=true`.
+
 Example:
 
 ```bash
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
+  -H "X-Auth-Transport: bearer" \
   -d '{
     "email": "admin@example.com",
     "password": "password123"

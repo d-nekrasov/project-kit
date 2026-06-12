@@ -1,8 +1,16 @@
-import { ForbiddenException, Injectable } from "@nestjs/common";
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { randomBytes } from "node:crypto";
+import { JwtService } from "@nestjs/jwt";
+import { createHmac, randomBytes } from "node:crypto";
 import { parseDurationToMs } from "../../common/utils/duration.util";
+import { AuthTransportService } from "./auth-transport.service";
+import { JwtPayload } from "./types/jwt-payload.type";
 import { extractCookieValue } from "./utils/cookie-value.util";
+import { timingSafeStringEqual } from "./utils/timing-safe-compare.util";
 
 const DEFAULT_CSRF_COOKIE_NAME = "XSRF-TOKEN";
 const DEFAULT_CSRF_HEADER_NAME = "X-CSRF-Token";
@@ -16,12 +24,32 @@ const DEFAULT_EXCLUDED_PATHS = new Set([
 
 type SameSiteValue = "strict" | "lax" | "none";
 
+const CSRF_KEY_DERIVATION_INFO = "csrf-key-v1";
+
 @Injectable()
 export class AuthCsrfService {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly jwtService: JwtService,
+    private readonly authTransportService: AuthTransportService,
+  ) {}
 
-  generateToken(): string {
-    return randomBytes(32).toString("hex");
+  // Signed double-submit: токен = <random>.<hmac>, где
+  // hmac = HMAC-SHA256(CSRF_SECRET, `${random}.${jti}`) — привязка к сессии.
+  generateToken(jti: string): string {
+    const random = randomBytes(32).toString("base64url");
+    return `${random}.${this.computeHmac(random, jti)}`;
+  }
+
+  issueTokenForRequest(
+    headers: Record<string, string | string[] | undefined>,
+  ): string {
+    const jti = this.extractJtiFromHeaders(headers);
+    if (!jti) {
+      throw new UnauthorizedException();
+    }
+
+    return this.generateToken(jti);
   }
 
   getCookieName(): string {
@@ -82,9 +110,65 @@ export class AuthCsrfService {
     const csrfCookie = this.extractTokenFromCookieHeader(cookieHeader);
     const csrfHeader = this.extractTokenFromHeaders(headers);
 
-    if (!csrfCookie || !csrfHeader || csrfCookie !== csrfHeader) {
+    if (
+      !csrfCookie ||
+      !csrfHeader ||
+      !timingSafeStringEqual(csrfCookie, csrfHeader)
+    ) {
       throw new ForbiddenException("Invalid CSRF token");
     }
+
+    const jti = this.extractJtiFromHeaders(headers);
+    if (!jti || !this.isTokenValidForSession(csrfHeader, jti)) {
+      throw new ForbiddenException("Invalid CSRF token");
+    }
+  }
+
+  private isTokenValidForSession(token: string, jti: string): boolean {
+    const separatorIndex = token.indexOf(".");
+    if (separatorIndex <= 0 || separatorIndex === token.length - 1) {
+      return false;
+    }
+
+    const random = token.slice(0, separatorIndex);
+    const providedHmac = token.slice(separatorIndex + 1);
+    return timingSafeStringEqual(providedHmac, this.computeHmac(random, jti));
+  }
+
+  private extractJtiFromHeaders(
+    headers: Record<string, string | string[] | undefined>,
+  ): string | null {
+    const accessToken = this.authTransportService.extractAccessToken(headers);
+    if (!accessToken) {
+      return null;
+    }
+
+    try {
+      const payload = this.jwtService.verify<JwtPayload>(accessToken);
+      return payload.jti ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  private computeHmac(random: string, jti: string): string {
+    return createHmac("sha256", this.getCsrfSecret())
+      .update(`${random}.${jti}`)
+      .digest("base64url");
+  }
+
+  private getCsrfSecret(): Buffer {
+    const configured = this.configService.get<string>("CSRF_SECRET")?.trim();
+    if (configured) {
+      return Buffer.from(configured, "utf8");
+    }
+
+    // CSRF_SECRET не задан: деривируем независимый ключ от JWT_SECRET,
+    // чтобы не требовать обязательный второй секрет в конфигурации.
+    const jwtSecret = this.configService.get<string>("JWT_SECRET") ?? "";
+    return createHmac("sha256", jwtSecret)
+      .update(CSRF_KEY_DERIVATION_INFO)
+      .digest();
   }
 
   private getMaxAgeMs(): number {

@@ -38,3 +38,37 @@ test("AuthTransportService honors AUTH_BEARER_ENABLED override", () => {
   assert.equal(disabled.extractAccessToken({ authorization: "Bearer token" }), null);
   assert.equal(enabled.extractAccessToken({ authorization: "Bearer token" }), "token");
 });
+
+test("AuthTransportService.isBearerResponseRequested requires both the header and enabled bearer transport", () => {
+  const enabled = createService({ APP_ENV: "development" });
+
+  assert.equal(enabled.isBearerResponseRequested({}), false);
+  assert.equal(
+    enabled.isBearerResponseRequested({ "x-auth-transport": "cookie" }),
+    false,
+  );
+  assert.equal(
+    enabled.isBearerResponseRequested({ "x-auth-transport": "bearer" }),
+    true,
+  );
+  assert.equal(
+    enabled.isBearerResponseRequested({ "x-auth-transport": " Bearer " }),
+    true,
+  );
+  assert.equal(
+    enabled.isBearerResponseRequested({ "x-auth-transport": ["bearer"] }),
+    true,
+  );
+});
+
+test("AuthTransportService.isBearerResponseRequested cannot override disabled bearer transport", () => {
+  const disabled = createService({
+    APP_ENV: "development",
+    AUTH_BEARER_ENABLED: "false",
+  });
+
+  assert.equal(
+    disabled.isBearerResponseRequested({ "x-auth-transport": "bearer" }),
+    false,
+  );
+});

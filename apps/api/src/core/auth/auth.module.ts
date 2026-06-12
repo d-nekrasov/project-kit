@@ -3,11 +3,13 @@ import { ConfigService } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
 import { ConfigEncryptionModule } from "../../common/security/config-encryption.module";
+import { validateJwtSecret } from "../../common/security/jwt-secret.util";
 import { CasbinModule } from "../../infrastructure/casbin/casbin.module";
 import { PrismaModule } from "../../infrastructure/prisma/prisma.module";
 import { RedisModule } from "../../infrastructure/redis/redis.module";
 import { RedisService } from "../../infrastructure/redis/redis.service";
 import { PermissionsModule } from "../permissions/permissions.module";
+import { RealtimeEventsModule } from "../realtime-events/realtime-events.module";
 import { AuditLogsModule } from "../audit-logs/audit-logs.module";
 import { SystemLogsModule } from "../system-logs/system-logs.module";
 import { EmailSmtpNotificationConnector } from "../notifications/connectors/email-smtp-notification.connector";
@@ -38,6 +40,7 @@ import { TokenBlacklistService } from "./token-blacklist.service";
     SystemLogsModule,
     AuthRateLimitModule,
     CurrentUserCacheModule,
+    RealtimeEventsModule,
     PassportModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
@@ -51,16 +54,9 @@ import { TokenBlacklistService } from "./token-blacklist.service";
         ).toLowerCase();
         const isProd = appEnv === "production";
 
-        if (!secret) {
-          throw new Error("JWT_SECRET is required");
-        }
-        if (isProd && secret === "change_me") {
-          throw new Error("JWT_SECRET must be changed in production");
-        }
-        if (!isProd && secret === "change_me") {
-          logger.warn(
-            'JWT_SECRET is set to insecure default value "change_me".',
-          );
+        const { warnings } = validateJwtSecret(secret, isProd);
+        for (const warning of warnings) {
+          logger.warn(warning);
         }
 
         return {
@@ -104,6 +100,6 @@ import { TokenBlacklistService } from "./token-blacklist.service";
     },
     TokenBlacklistService,
   ],
-  exports: [AuthService, AuthCsrfService, AuthTransportService],
+  exports: [AuthService, AuthCsrfService, AuthTransportService, TokenBlacklistService],
 })
 export class AuthModule {}

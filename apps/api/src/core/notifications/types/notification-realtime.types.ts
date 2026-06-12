@@ -6,6 +6,7 @@ export type NotificationSseResponse = {
   flushHeaders?(): void;
   status?(code: number): unknown;
   setHeader?(name: string, value: string): unknown;
+  end?(): unknown;
   writableEnded?: boolean;
   destroyed?: boolean;
 };
@@ -13,6 +14,7 @@ export type NotificationSseResponse = {
 export type NotificationSseClient = {
   id: string;
   userId: string;
+  parentJti: string;
   response: NotificationSseResponse;
   createdAt: Date;
   heartbeat: NodeJS.Timeout;
@@ -26,6 +28,7 @@ export type NotificationSseRequest = {
 export type NotificationStreamTokenPayload = {
   sub: string;
   purpose: 'notification_stream';
+  parentJti: string;
 };
 
 export type NotificationRealtimeCreatedEvent = {

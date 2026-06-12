@@ -2,6 +2,7 @@ import type { ApiClient } from '../client/api-client';
 import type {
   InstallerStatusResponse,
   SetupInstallerDto,
+  SetupInstallerOptions,
   SetupInstallerResponse
 } from '../types/installer.types';
 
@@ -15,10 +16,11 @@ export class InstallerApi {
     });
   }
 
-  setup(dto: SetupInstallerDto): Promise<SetupInstallerResponse> {
+  setup(dto: SetupInstallerDto, options?: SetupInstallerOptions): Promise<SetupInstallerResponse> {
     return this.client.post<SetupInstallerResponse>('/installer/setup', dto, {
       skipAuth: true,
-      skipOrganization: true
+      skipOrganization: true,
+      headers: options?.installToken ? { 'X-Install-Token': options.installToken } : undefined
     });
   }
 }

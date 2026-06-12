@@ -39,6 +39,13 @@ const RESET_PASSWORD_RATE_LIMIT = {
   limit: 10,
   ttlMs: FIFTEEN_MINUTES_IN_MS,
 };
+// Лимит выше, чем у reset-password: админка вызывает validate при каждом
+// открытии/обновлении страницы сброса (в dev StrictMode — дважды).
+const RESET_PASSWORD_VALIDATE_RATE_LIMIT = {
+  key: "reset-password-validate",
+  limit: 20,
+  ttlMs: FIFTEEN_MINUTES_IN_MS,
+};
 
 @Controller("auth")
 export class AuthController {
@@ -66,7 +73,14 @@ export class AuthController {
   ): Promise<AuthResponseDto> {
     return this.authService.login(dto, getRequestMetadata(req)).then((result) => {
       res.setHeader("Set-Cookie", this.authCookieService.buildAuthCookie(result.accessToken));
-      return result;
+
+      if (this.authTransportService.isBearerResponseRequested(req.headers)) {
+        return result;
+      }
+
+      // Cookie-режим: токен доставляется только HttpOnly-кукой,
+      // expiresIn оставляем для клиентских UX-таймеров.
+      return { expiresIn: result.expiresIn, user: result.user };
     });
   }
 
@@ -99,6 +113,8 @@ export class AuthController {
   }
 
   @Post("reset-password/validate")
+  @UseGuards(AuthRateLimitGuard)
+  @AuthRateLimit(RESET_PASSWORD_VALIDATE_RATE_LIMIT)
   validateResetPasswordToken(
     @Body() dto: ValidateResetPasswordTokenDto,
   ): Promise<ValidateResetPasswordTokenResponseDto> {
@@ -121,13 +137,18 @@ export class AuthController {
   }
 
   @Get("csrf")
+  @UseGuards(JwtAuthGuard)
   getCsrfToken(
     @Res({ passthrough: true })
     res: {
       setHeader(name: string, value: string | string[]): void;
     },
+    @Req()
+    req: {
+      headers: Record<string, string | string[] | undefined>;
+    },
   ): { csrfToken: string; headerName: string; cookieName: string } {
-    const csrfToken = this.authCsrfService.generateToken();
+    const csrfToken = this.authCsrfService.issueTokenForRequest(req.headers);
     res.setHeader("Set-Cookie", this.authCsrfService.buildCsrfCookie(csrfToken));
     return {
       csrfToken,
