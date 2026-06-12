@@ -944,6 +944,89 @@ test("installer setup rejects repeat calls and concurrent retries without creati
   }
 });
 
+test("installer setup with INSTALL_TOKEN configured requires X-Install-Token until installed", async () => {
+  const dbName = `project_kit_security_token_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`;
+  const dbUrl = `postgresql://postgres:postgres@127.0.0.1:5432/${dbName}?schema=public`;
+  const installToken = "e2e-install-token-0123456789abcdef0123456789abcdef";
+  let isolatedApp: INestApplication | undefined;
+  let isolatedPrisma: InstanceType<typeof PrismaService> | undefined;
+
+  runCommand("createdb", ["-h", "127.0.0.1", "-p", "5432", "-U", "postgres", dbName], repoRoot);
+  runCommand("pnpm", ["exec", "prisma", "migrate", "deploy"], apiDir, {
+    DATABASE_URL: dbUrl,
+  });
+
+  try {
+    process.env.DATABASE_URL = dbUrl;
+    process.env.TRUST_PROXY = "1";
+    process.env.INSTALL_TOKEN = installToken;
+
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    isolatedApp = moduleRef.createNestApplication();
+    configureApp(isolatedApp);
+    await isolatedApp.listen(0, "127.0.0.1");
+    const address = isolatedApp.getHttpServer().address();
+    assert.ok(address && typeof address === "object" && "port" in address);
+    const isolatedBaseUrl = `http://127.0.0.1:${address.port}/api`;
+    isolatedPrisma = isolatedApp.get(PrismaService);
+
+    const payload = {
+      appName: "Project Kit",
+      organizationName: "Default Organization",
+      organizationSlug: "default",
+      adminEmail: "admin@example.com",
+      adminPassword: "AdminPassword123!",
+      adminName: "Admin",
+    };
+    const setupRequest = (headers: Record<string, string>) =>
+      fetch(`${isolatedBaseUrl}/installer/setup`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          ...headers,
+        },
+        body: JSON.stringify(payload),
+      });
+
+    const missingToken = await setupRequest({ "x-forwarded-for": "198.51.100.31" });
+    assert.equal(missingToken.status, 403);
+
+    const wrongToken = await setupRequest({
+      "x-forwarded-for": "198.51.100.32",
+      "X-Install-Token": "wrong-token",
+    });
+    assert.equal(wrongToken.status, 403);
+    assert.equal(await isolatedPrisma.installation.count({ where: { installed: true } }), 0);
+
+    const correctToken = await setupRequest({
+      "x-forwarded-for": "198.51.100.33",
+      "X-Install-Token": installToken,
+    });
+    assert.equal(correctToken.status, 201);
+    assert.equal(await isolatedPrisma.installation.count({ where: { installed: true } }), 1);
+
+    // После установки — 409 независимо от токена.
+    const repeatWithToken = await setupRequest({
+      "x-forwarded-for": "198.51.100.34",
+      "X-Install-Token": installToken,
+    });
+    assert.equal(repeatWithToken.status, 409);
+
+    const repeatWithoutToken = await setupRequest({ "x-forwarded-for": "198.51.100.35" });
+    assert.equal(repeatWithoutToken.status, 409);
+  } finally {
+    await isolatedApp?.close();
+    await isolatedPrisma?.$disconnect();
+    delete process.env.INSTALL_TOKEN;
+    process.env.DATABASE_URL = databaseUrl;
+    dropDatabase(dbName);
+  }
+});
+
 test("installer setup is rate-limited by IP before installation completes", async () => {
   const dbName = `project_kit_security_rate_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`;
   const dbUrl = `postgresql://postgres:postgres@127.0.0.1:5432/${dbName}?schema=public`;
