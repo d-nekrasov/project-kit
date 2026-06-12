@@ -9,6 +9,7 @@ import { selectCurrentUserCacheStore } from "../src/core/auth/select-current-use
 import { InMemoryCurrentUserCacheStore } from "../src/core/auth/stores/in-memory-current-user-cache.store";
 import { RedisCurrentUserCacheStore } from "../src/core/auth/stores/redis-current-user-cache.store";
 import { CurrentUser } from "../src/core/auth/types/current-user.type";
+import { RealtimeEventsService } from "../src/core/realtime-events/realtime-events.service";
 import { RolesService } from "../src/core/roles/roles.service";
 import { UsersService } from "../src/core/users/users.service";
 
@@ -267,6 +268,7 @@ function createAuthServiceWithCache(cacheService: CurrentUserCacheService) {
     {} as never,
     {} as never,
     cacheService,
+    new RealtimeEventsService(),
   );
 
   return { service, findUniqueCalls };
@@ -333,6 +335,7 @@ test("UsersService.updateStatus invalidates the cached user", async () => {
     { notify: async () => undefined } as never,
     { write: async () => undefined } as never,
     cache as never,
+    new RealtimeEventsService(),
   );
   const currentUser = createCurrentUser({
     id: "admin-1",
@@ -347,6 +350,61 @@ test("UsersService.updateStatus invalidates the cached user", async () => {
   );
 
   assert.deepEqual(cache.invalidateCalls, ["user-2"]);
+});
+
+test("UsersService.updateStatus emits a user deactivated event when blocking", async () => {
+  const cache = new RecordingCache();
+  const realtimeEvents = new RealtimeEventsService();
+  const deactivatedUserIds: string[] = [];
+  realtimeEvents.onUserDeactivated((userId) => deactivatedUserIds.push(userId));
+
+  const buildUser = (status: string) => ({
+    id: "user-2",
+    email: "target@example.com",
+    name: "Target",
+    status,
+    memberships: [],
+    systemRoles: [],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+  let nextStatus = "BLOCKED";
+  const prisma = {
+    user: {
+      findUnique: async () => buildUser("ACTIVE"),
+      update: async () => buildUser(nextStatus),
+    },
+  };
+  const service = new UsersService(
+    prisma as never,
+    {} as never,
+    { write: async () => undefined } as never,
+    { notify: async () => undefined } as never,
+    { write: async () => undefined } as never,
+    cache as never,
+    realtimeEvents,
+  );
+  const currentUser = createCurrentUser({
+    id: "admin-1",
+    systemRoles: ["super_admin"],
+  });
+
+  await service.updateStatus(
+    "user-2",
+    currentUser,
+    "org-1",
+    "BLOCKED" as never,
+  );
+  assert.deepEqual(deactivatedUserIds, ["user-2"]);
+
+  nextStatus = "ACTIVE";
+  await service.updateStatus(
+    "user-2",
+    currentUser,
+    "org-1",
+    "ACTIVE" as never,
+  );
+  assert.deepEqual(deactivatedUserIds, ["user-2"]);
 });
 
 test("RolesService.updatePermissions invalidates all cached users", async () => {

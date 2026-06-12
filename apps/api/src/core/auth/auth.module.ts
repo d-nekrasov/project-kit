@@ -9,6 +9,7 @@ import { PrismaModule } from "../../infrastructure/prisma/prisma.module";
 import { RedisModule } from "../../infrastructure/redis/redis.module";
 import { RedisService } from "../../infrastructure/redis/redis.service";
 import { PermissionsModule } from "../permissions/permissions.module";
+import { RealtimeEventsModule } from "../realtime-events/realtime-events.module";
 import { AuditLogsModule } from "../audit-logs/audit-logs.module";
 import { SystemLogsModule } from "../system-logs/system-logs.module";
 import { EmailSmtpNotificationConnector } from "../notifications/connectors/email-smtp-notification.connector";
@@ -39,6 +40,7 @@ import { TokenBlacklistService } from "./token-blacklist.service";
     SystemLogsModule,
     AuthRateLimitModule,
     CurrentUserCacheModule,
+    RealtimeEventsModule,
     PassportModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
@@ -98,6 +100,6 @@ import { TokenBlacklistService } from "./token-blacklist.service";
     },
     TokenBlacklistService,
   ],
-  exports: [AuthService, AuthCsrfService, AuthTransportService],
+  exports: [AuthService, AuthCsrfService, AuthTransportService, TokenBlacklistService],
 })
 export class AuthModule {}

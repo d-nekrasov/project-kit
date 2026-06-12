@@ -6,8 +6,10 @@ import { CasbinModule } from '../../infrastructure/casbin/casbin.module';
 import { PrismaModule } from '../../infrastructure/prisma/prisma.module';
 import { RedisModule } from '../../infrastructure/redis/redis.module';
 import { AuditLogsModule } from '../audit-logs/audit-logs.module';
+import { AuthModule } from '../auth/auth.module';
 import { OrganizationContextModule } from '../organization-context/organization-context.module';
 import { PermissionsModule } from '../permissions/permissions.module';
+import { RealtimeEventsModule } from '../realtime-events/realtime-events.module';
 import { SystemLogsModule } from '../system-logs/system-logs.module';
 import { EmailSmtpNotificationConnector } from './connectors/email-smtp-notification.connector';
 import { InAppNotificationConnector } from './connectors/in-app-notification.connector';
@@ -27,8 +29,10 @@ import { NotificationsService } from './notifications.service';
     RedisModule,
     SystemLogsModule,
     AuditLogsModule,
+    AuthModule,
     OrganizationContextModule,
     PermissionsModule,
+    RealtimeEventsModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
